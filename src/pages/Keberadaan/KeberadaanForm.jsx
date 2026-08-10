@@ -19,7 +19,7 @@ const KOSONG = {
   dokumenNama: '',
 }
 
-export default function KeberadaanForm({ profiles, rekod, onSimpan, onBatal }) {
+export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan, onBatal }) {
   const [data, setData] = useState(rekod ?? KOSONG)
   const [adaJulat, setAdaJulat] = useState(Boolean(rekod && rekod.tarikhTamat !== rekod.tarikhMula))
   const [failDokumen, setFailDokumen] = useState(null)
@@ -44,6 +44,18 @@ export default function KeberadaanForm({ profiles, rekod, onSimpan, onBatal }) {
     setData((d) => ({ ...d, urusan, jenis: '', jenisLain: '', masaKeluar: '', masaKembali: '' }))
     setAdaJulat(false)
   }
+
+  useEffect(() => {
+    // Default "Pilih Nama" kepada diri sendiri bila isi borang baru (bukan edit)
+    // - staff tak perlu klik dropdown setiap kali, sebab dah login akaun sendiri.
+    if (rekod) return
+    if (data.profilEmel) return
+    if (!emelSendiri) return
+    const p = profiles.find((pr) => pr.emel === emelSendiri)
+    if (p) {
+      setData((d) => ({ ...d, profilEmel: p.emel, nama: p.nama, kategori: p.kategori, jawatan: p.jawatan }))
+    }
+  }, [profiles, emelSendiri, rekod, data.profilEmel])
 
   useEffect(() => {
     // Untuk KWB, tarikhTamat sentiasa sama dengan tarikhMula (1 hari sahaja)

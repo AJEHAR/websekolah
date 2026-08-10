@@ -117,6 +117,7 @@ function KeberadaanIsi({ user }) {
             <KeberadaanForm
               profiles={profilesAktif}
               rekod={rekodEdit}
+              emelSendiri={user.email}
               onSimpan={simpanRekod}
               onBatal={() => { setTunjukBorang(false); setRekodEdit(null) }}
             />

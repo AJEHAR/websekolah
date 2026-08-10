@@ -7,8 +7,8 @@ Projek asas (skeleton) laman web sekolah — React + Vite + Tailwind CSS, dihosk
 - **Fon:** Poppins
 - **Gaya:** Minimalis moden, mesra accessibility (kontras tinggi, saiz teks lebih besar, fokus kibod jelas)
 - **Pendekatan:** Mobile-first — reka untuk telefon dahulu, "upscale" untuk desktop
-  - Mobile (< 1024px): header ringkas (logo + butang log masuk sahaja) + **bottom tab bar** (Utama/Berita/Galeri/Hubungi) gaya app
-  - Desktop (≥ 1024px): header penuh dengan nav links + butang log masuk teks, bottom tab bar disembunyikan
+  - Mobile (< 1024px): header ringkas (logo + hamburger + log masuk) + **SideDrawer** (slide dari kiri) untuk semua navigasi
+  - Desktop (≥ 1024px): header penuh dengan nav links + butang log masuk teks
   - Semua sasaran tekan (butang, tab) minimum 44px tinggi untuk mesra ibu jari
 
 ## Struktur Fail
@@ -23,7 +23,7 @@ skpk-website/
 │   ├── components/
 │   │   ├── Navbar.jsx       # header - digunakan pada semua page
 │   │   ├── Footer.jsx       # digunakan pada semua page
-│   │   └── BottomTabBar.jsx # navigasi mobile (app-like), disembunyi di desktop
+│   │   └── SideDrawer.jsx   # navigasi mobile (slide dari kiri), semua page
 │   ├── pages/
 │   │   └── Home.jsx       # page pertama (kosong/asas)
 │   ├── App.jsx            # routing - tambah <Route> baru di sini
@@ -184,7 +184,7 @@ Staff yang **daftar sendiri** (isi profile kali pertama tanpa admin pra-daftar) 
 **Page biasa (tiada sub-page):**
 1. Cipta fail di `src/pages/NamaPage.jsx`
 2. Daftar dalam `src/App.jsx`: `<Route path="/nama-page" element={<NamaPage />} />`
-3. Tambah link di `src/components/Navbar.jsx` dan/atau `src/components/BottomTabBar.jsx`
+3. Tambah dalam senarai `navLinks` di `src/components/Navbar.jsx` (dipakai sekali untuk nav desktop DAN SideDrawer mobile)
 
 **Seksyen dengan sub-page (contoh: Berita, atau nanti "Tentang Kami"):**
 1. Cipta folder `src/pages/NamaSeksyen/`
@@ -199,10 +199,10 @@ Staff yang **daftar sendiri** (isi profile kali pertama tanpa admin pra-daftar) 
    ```
    Lihat `src/pages/Berita/` sebagai contoh sebenar (BeritaLayout, BeritaList, BeritaDetail).
 
-**Nota:** Nav (Navbar & BottomTabBar) guna React Router — navigasi berlaku tanpa reload penuh browser (SPA). Link ke page yang belum didaftar dalam `App.jsx` akan jadi blank.
+**Nota:** Nav (Navbar & SideDrawer) guna React Router — navigasi berlaku tanpa reload penuh browser (SPA). Link ke page yang belum didaftar dalam `App.jsx` akan jadi blank.
 
 ## Langkah Seterusnya (page demi page)
-- [x] Asas: Navbar, Footer, BottomTabBar (mobile-first), Home (kosong)
+- [x] Asas: Navbar, Footer, SideDrawer (mobile-first, navigasi penuh), Home (kosong)
 - [x] Struktur routing + contoh nested route: Berita (senarai + sub-page artikel), Galeri, Hubungi (semua kosong buat masa ini)
 - [x] Firebase Authentication (Google Sign-In) - kod sedia, perlu isi `.env` bila projek Firebase siap
 - [x] Page Profile (pusat data staff: Nama, IC, Jawatan, Kategori, Gambar) + Firestore security rules

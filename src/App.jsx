@@ -1,7 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
-import BottomTabBar from './components/BottomTabBar.jsx'
 import Home from './pages/Home.jsx'
 import Galeri from './pages/Galeri.jsx'
 import Hubungi from './pages/Hubungi.jsx'
@@ -17,8 +16,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-base">
       <Navbar />
-      {/* pb-20 elak kandungan tertutup bottom tab bar pada mobile */}
-      <div className="flex-1 pb-20 lg:pb-0">
+      <div className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
 
@@ -39,7 +37,6 @@ export default function App() {
         </Routes>
       </div>
       <Footer />
-      <BottomTabBar />
     </div>
   )
 }

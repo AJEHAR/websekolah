@@ -47,6 +47,7 @@ function Isi({ user }) {
           <KeberadaanForm
             profiles={profiles}
             rekod={rekodEdit}
+            emelSendiri={user.email}
             onSimpan={simpanEdit}
             onBatal={() => setRekodEdit(null)}
           />
