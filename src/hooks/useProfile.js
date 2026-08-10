@@ -38,7 +38,11 @@ export function useProfile(user) {
       if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
       if (!emel) throw new Error('Perlu log masuk dahulu')
       const ref = doc(db, 'profiles', emelKeDocId(emel))
-      const sediaAda = profile ? {} : { createdAt: serverTimestamp(), createdBy: user.uid }
+      // Profile baru (self-register) -> status "menunggu" (perlu kelulusan admin).
+      // Edit profile sedia ada -> status TAK diubah (kekal apa-apa nilai sebelum ni).
+      const sediaAda = profile
+        ? {}
+        : { createdAt: serverTimestamp(), createdBy: user.uid, status: 'menunggu' }
       await setDoc(
         ref,
         {

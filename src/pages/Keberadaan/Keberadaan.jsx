@@ -10,14 +10,43 @@ import {
   padamKeberadaan,
 } from '../../hooks/useKeberadaan.js'
 import { todayISO, tambahHariISO } from '../../lib/dateUtils.js'
+import AksesGate from '../../components/AksesGate.jsx'
 import KeberadaanForm from './KeberadaanForm.jsx'
 import SeksyenTarikh from './SeksyenTarikh.jsx'
 import LogKeberadaan from './LogKeberadaan.jsx'
 
 export default function Keberadaan() {
   const { user, signInWithGoogle } = useAuth()
+
+  if (!user) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
+        <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
+          <h1 className="text-xl font-bold text-ink">Keberadaan</h1>
+          <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
+          <button
+            onClick={signInWithGoogle}
+            className="mt-6 h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold"
+          >
+            Log Masuk dengan Google
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  return (
+    <AksesGate user={user}>
+      <KeberadaanIsi user={user} />
+    </AksesGate>
+  )
+}
+
+function KeberadaanIsi({ user }) {
   const { isAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
+  // Staff yang masih "menunggu" kelulusan tak boleh dipilih dalam borang keberadaan
+  const profilesAktif = profiles.filter((p) => p.status !== 'menunggu')
 
   const hariIni = todayISO()
   const esok = tambahHariISO(hariIni, 1)
@@ -55,23 +84,6 @@ export default function Keberadaan() {
     muatSemuaSemula()
   }
 
-  if (!user) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
-        <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
-          <h1 className="text-xl font-bold text-ink">Keberadaan</h1>
-          <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
-          <button
-            onClick={signInWithGoogle}
-            className="mt-6 h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold"
-          >
-            Log Masuk dengan Google
-          </button>
-        </div>
-      </main>
-    )
-  }
-
   return (
     <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8 lg:py-16 space-y-10">
       <div>
@@ -103,7 +115,7 @@ export default function Keberadaan() {
               </button>
             </div>
             <KeberadaanForm
-              profiles={profiles}
+              profiles={profilesAktif}
               rekod={rekodEdit}
               onSimpan={simpanRekod}
               onBatal={() => { setTunjukBorang(false); setRekodEdit(null) }}

@@ -3,12 +3,21 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKeberadaanSaya, kemaskiniKeberadaan, padamKeberadaan } from '../../hooks/useKeberadaan.js'
 import { useState } from 'react'
+import AksesGate from '../../components/AksesGate.jsx'
 import KeberadaanCard from '../Keberadaan/KeberadaanCard.jsx'
 import KeberadaanForm from '../Keberadaan/KeberadaanForm.jsx'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
 
 export default function SenaraiKeberadaanSaya() {
   const { user } = useAuth()
+  return (
+    <AksesGate user={user}>
+      <Isi user={user} />
+    </AksesGate>
+  )
+}
+
+function Isi({ user }) {
   const { isAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
   const { senarai, loading, muatSemula } = useKeberadaanSaya(user?.email)

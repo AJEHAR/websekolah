@@ -7,6 +7,7 @@ import { simpanProfileAdmin, padamProfileAdmin } from '../../hooks/useAdminProfi
 import AdminProfileForm from './AdminProfileForm.jsx'
 import SenaraiStaff from './SenaraiStaff.jsx'
 import UrusAdmin from './UrusAdmin.jsx'
+import MenungguKelulusan from './MenungguKelulusan.jsx'
 
 export default function Admin() {
   const { user, loading: loadingAuth, signInWithGoogle } = useAuth()
@@ -109,11 +110,24 @@ export default function Admin() {
       </section>
 
       <section>
-        <h2 className="text-base font-bold text-ink mb-4">Senarai Staff ({profiles.length})</h2>
-        <SenaraiStaff profiles={profiles} loading={loadingProfiles} onEdit={edit} onPadam={padam} />
+        <h2 className="text-base font-bold text-ink mb-1">Menunggu Kelulusan</h2>
+        <p className="text-xs text-inkmuted mb-4">Staff yang daftar sendiri, belum diluluskan.</p>
+        <MenungguKelulusan profiles={profiles} loading={loadingProfiles} onSelesai={muatSemula} />
       </section>
 
-      <UrusAdmin profiles={profiles} currentUser={user} />
+      <section>
+        <h2 className="text-base font-bold text-ink mb-4">
+          Senarai Staff ({profiles.filter((p) => p.status !== 'menunggu').length})
+        </h2>
+        <SenaraiStaff
+          profiles={profiles.filter((p) => p.status !== 'menunggu')}
+          loading={loadingProfiles}
+          onEdit={edit}
+          onPadam={padam}
+        />
+      </section>
+
+      <UrusAdmin profiles={profiles.filter((p) => p.status !== 'menunggu')} currentUser={user} />
     </main>
   )
 }

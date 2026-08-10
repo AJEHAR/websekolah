@@ -25,8 +25,17 @@ service cloud.firestore {
     match /profiles/{docId} {
       // Semua staff yang log masuk boleh baca (termasuk No. IC)
       allow read: if request.auth != null;
-      allow create: if isAdmin() || isPemilik(request.resource.data.emel);
-      allow update: if isAdmin() || isPemilik(resource.data.emel);
+
+      // Self-register: staff cipta profile sendiri MESTI status='menunggu'
+      // (elak staff terus set diri sendiri 'diluluskan'). Admin boleh cipta apa-apa status.
+      allow create: if isAdmin() ||
+        (isPemilik(request.resource.data.emel) && request.resource.data.status == 'menunggu');
+
+      // Self-edit: staff boleh kemas kini profile sendiri TAPI TAK BOLEH ubah field 'status'
+      // (elak self-approve). Admin boleh ubah apa-apa termasuk status (kelulusan).
+      allow update: if isAdmin() ||
+        (isPemilik(resource.data.emel) && request.resource.data.status == resource.data.status);
+
       allow delete: if isAdmin();
     }
 

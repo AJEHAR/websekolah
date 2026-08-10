@@ -166,6 +166,15 @@ Route `/admin` — sekatan akses automatik (perlu log masuk + wujud dalam koleks
 
 **Urus Admin:** admin sedia ada boleh naikkan staff lain jadi admin, atau buang admin — terus dalam Panel Admin, tak perlu masuk Firebase Console lagi (kecuali admin **pertama**, yang mesti disetup manual — lihat "Tetapkan admin pertama" dalam bahagian Setup Firebase). Sekatan keselamatan: admin **tak boleh buang diri sendiri** (disekat di client DAN di Firestore Rules), dan **mesti ada sekurang-kurangnya 1 admin** dalam sistem pada bila-bila masa (disekat di client).
 
+## Tapisan Kelulusan Profile
+
+Staff yang **daftar sendiri** (isi profile kali pertama tanpa admin pra-daftar) automatik dapat status `menunggu` — *stuck* (disekat oleh `AksesGate`) daripada akses Keberadaan sampai admin lulus di Panel Admin (seksyen "Menunggu Kelulusan"). Profile yang **admin cipta/edit** automatik `diluluskan` terus.
+
+- **Lulus** → status jadi `diluluskan`, staff terus boleh akses
+- **Tolak** → profile dipadam, staff perlu daftar semula
+- Profile lama (sebelum ciri ni wujud, tiada field `status`) dianggap `diluluskan` secara automatik (elak kunci staff sedia ada)
+- **Keselamatan:** Firestore Rules kuatkuasakan supaya staff **tak boleh** ubah `status` diri sendiri (elak *self-approve*) — hanya admin boleh tukar field tu
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

@@ -53,6 +53,19 @@ export default function Profile() {
               onBatal={profile ? () => setModeEdit(false) : undefined}
             />
           </>
+        ) : profile.status === 'menunggu' ? (
+          <div className="text-center py-6">
+            <h1 className="text-lg font-bold text-ink">Menunggu Kelulusan Admin</h1>
+            <p className="text-inkmuted mt-2 text-sm">
+              Profile anda ({profile.nama}) sudah dihantar dan sedang menunggu kelulusan admin.
+            </p>
+            <button
+              onClick={() => setModeEdit(true)}
+              className="mt-5 text-sm font-semibold text-brand-red"
+            >
+              Kemas kini maklumat
+            </button>
+          </div>
         ) : (
           <ProfileView profile={profile} onEdit={() => setModeEdit(true)} />
         )}
