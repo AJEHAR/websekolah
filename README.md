@@ -118,7 +118,7 @@ kehadiran/{id auto}
   ├── tarikhMula, tarikhTamat   ← sama nilai jika 1 hari sahaja
   ├── masaKeluar, masaKembali  ← KWB sahaja
   ├── tempat
-  ├── dokumenURL, dokumenNama  ← Firebase Storage
+  ├── dokumenURL, dokumenNama  ← Google Drive (via Apps Script)
   └── createdAt, createdBy, updatedAt
 ```
 
@@ -126,7 +126,32 @@ kehadiran/{id auto}
 
 **Kebenaran:** semua staff log masuk boleh baca semua rekod. Admin boleh edit/padam rekod sesiapa; staff biasa hanya boleh edit/padam rekod sendiri.
 
-**Deploy storage rules:** Salin kandungan `storage.rules` ke Firebase Console > Storage > Rules.
+**Storan gambar/dokumen:** guna Google Drive (bukan Firebase Storage) - lihat bahagian "Setup Google Drive Upload (Apps Script)" di bawah.
+
+## Setup Google Drive Upload (Apps Script)
+
+Gambar profile & dokumen keberadaan disimpan di **Google Drive**, bukan Firebase Storage. Ini bermakna projek Firebase kekal pada **Spark plan (percuma, tiada kad kredit)** sepenuhnya - Storage adalah satu-satunya sebab biasa projek Firebase perlu naik ke Blaze plan, dan kita dah elak keperluan tu terus.
+
+**Cara setup:**
+1. Pergi ke [script.google.com](https://script.google.com) → New project
+2. Padam kod default, salin-tampal **semua** kandungan `appscript/Code.gs` daripada projek ni
+3. Project Settings (ikon gear) → Script Properties → Add property:
+   - `RAHSIA_UPLOAD` = satu rentetan rahsia rawak (contoh: `skpk-2026-x9k2m`) - anda cipta sendiri
+4. Deploy → New deployment → Type: **Web app**
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+5. Salin **Web app URL** yang diberikan
+6. Dalam `.env` projek React, isi:
+   ```
+   VITE_APPS_SCRIPT_URL=<web app URL dari langkah 5>
+   VITE_DRIVE_UPLOAD_SECRET=<sama dengan RAHSIA_UPLOAD di langkah 3>
+   ```
+
+Fail akan disimpan dalam Google Drive akaun yang deploy Apps Script ni, di bawah folder "Laman Web Sekolah - Upload" (folder dicipta automatik, dengan sub-folder `profil` dan `kehadiran`).
+
+**Nota keselamatan:** kaedah "rahsia dikongsi" (`RAHSIA_UPLOAD`) ni mudah tapi bukan sempurna - sesiapa yang tahu URL + rahsia boleh upload fail. Memandangkan Web App URL & rahsia tak terdedah dalam kod client (cuma dalam `.env`, tak commit ke git), risiko rendah untuk kegunaan dalaman sekolah. Kalau nak lebih selamat kemudian, boleh tambah pengesahan token Firebase Auth dalam `doPost()`.
+
+**Kalau `.env` kosong:** upload gambar/dokumen akan gagal dengan mesej "Google Drive upload belum disetup" (bukan crash) - selaras dengan cara app ni "downgrade" bila Firebase pun belum disetup.
 
 ## Panel Admin
 
@@ -166,7 +191,7 @@ Route `/admin` — sekatan akses automatik (perlu log masuk + wujud dalam koleks
 - [x] Struktur routing + contoh nested route: Berita (senarai + sub-page artikel), Galeri, Hubungi (semua kosong buat masa ini)
 - [x] Firebase Authentication (Google Sign-In) - kod sedia, perlu isi `.env` bila projek Firebase siap
 - [x] Page Profile (pusat data staff: Nama, IC, Jawatan, Kategori, Gambar) + Firestore security rules
-- [x] Page Keberadaan (isi borang, hari ini/esok ikut Guru/PPM/AKP, log julat tarikh) + Storage rules
+- [x] Page Keberadaan (isi borang, hari ini/esok ikut Guru/PPM/AKP, log julat tarikh) + Google Drive upload (Apps Script)
 - [x] Panel Admin (senarai staff, tambah/edit/padam profile, pra-daftar sebelum staff log masuk)
 - [ ] Isi kandungan sebenar: Home, Berita (integrasi Google Sheet/Firestore), Galeri, Hubungi
 - [ ] Page: Tentang Kami / Sejarah Sekolah (contoh seksyen dengan sub-page)

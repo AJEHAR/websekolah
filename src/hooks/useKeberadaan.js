@@ -10,8 +10,8 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage, isFirebaseConfigured } from '../lib/firebase.js'
+import { db, isFirebaseConfigured } from '../lib/firebase.js'
+import { muatNaikKeDrive } from '../lib/driveUpload.js'
 
 const KOLEKSI = 'kehadiran'
 
@@ -36,12 +36,8 @@ export async function padamKeberadaan(id) {
 }
 
 export async function muatNaikDokumen(fail, emel) {
-  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
-  const path = `kehadiran/${emel}-${Date.now()}-${fail.name}`
-  const storageRef = ref(storage, path)
-  await uploadBytes(storageRef, fail)
-  const url = await getDownloadURL(storageRef)
-  return { url, nama: fail.name }
+  const hasil = await muatNaikKeDrive(fail, 'kehadiran')
+  return { url: hasil.previewUrl, nama: fail.name }
 }
 
 // Rekod yang aktif pada satu tarikh (tarikhMula <= tarikh <= tarikhTamat)

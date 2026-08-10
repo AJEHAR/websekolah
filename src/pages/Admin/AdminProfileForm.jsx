@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { storage } from '../../lib/firebase.js'
+import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { JAWATAN_OPTIONS, KATEGORI_OPTIONS } from '../Profile/constants.js'
 
 export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
@@ -32,10 +31,8 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
 
       let gambarURL = profile?.gambarURL ?? null
       if (failGambar) {
-        const path = `profil/${emel}-${Date.now()}`
-        const storageRef = ref(storage, path)
-        await uploadBytes(storageRef, failGambar)
-        gambarURL = await getDownloadURL(storageRef)
+        const hasil = await muatNaikKeDrive(failGambar, 'profil')
+        gambarURL = hasil.url
       }
       await onSimpan(emel, { nama, ic, jawatan, kategori, gambarURL })
     } catch (err) {
