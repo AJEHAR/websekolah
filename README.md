@@ -173,6 +173,7 @@ Staff yang **daftar sendiri** (isi profile kali pertama tanpa admin pra-daftar) 
 - **Lulus** → status jadi `diluluskan`, staff terus boleh akses
 - **Tolak** → profile dipadam, staff perlu daftar semula
 - Profile lama (sebelum ciri ni wujud, tiada field `status`) dianggap `diluluskan` secara automatik (elak kunci staff sedia ada)
+- **Akaun admin** (contoh: akaun rasmi/generik sekolah, bukan akaun peribadi) **tak dipaksa** isi profile - ia pilihan sahaja. `AksesGate` terus benarkan akses admin walaupun tiada profile.
 - **Keselamatan:** Firestore Rules kuatkuasakan supaya staff **tak boleh** ubah `status` diri sendiri (elak *self-approve*) — hanya admin boleh tukar field tu
 
 ## Cara Tambah Page Baru
