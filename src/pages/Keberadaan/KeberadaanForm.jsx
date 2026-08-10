@@ -68,13 +68,43 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
 
   async function hantar(e) {
     e.preventDefault()
-    setMenyimpan(true)
     setRalat(null)
-    try {
-      if (!data.profilEmel) throw new Error('Sila pilih nama')
-      if (!data.tarikhMula) throw new Error('Sila isi tarikh')
-      if (!data.tempat) throw new Error('Sila isi tempat')
 
+    if (!data.profilEmel) {
+      setRalat('Sila pilih nama.')
+      return
+    }
+    if (senaraiJenis.length > 0 && !data.jenis) {
+      setRalat(`Sila pilih jenis ${data.urusan}.`)
+      return
+    }
+    if (data.jenis === 'Lain-lain (nyatakan)' && !data.jenisLain.trim()) {
+      setRalat('Sila nyatakan jenis.')
+      return
+    }
+    if (!data.tarikhMula) {
+      setRalat('Sila isi tarikh.')
+      return
+    }
+    if (!isKWB && adaJulat && !data.tarikhTamat) {
+      setRalat('Sila isi tarikh hingga.')
+      return
+    }
+    if (isKWB && !data.masaKeluar) {
+      setRalat('Sila isi masa keluar.')
+      return
+    }
+    if (isKWB && !data.masaKembali) {
+      setRalat('Sila isi masa kembali.')
+      return
+    }
+    if (!data.tempat.trim()) {
+      setRalat('Sila isi tempat.')
+      return
+    }
+
+    setMenyimpan(true)
+    try {
       let dokumenURL = data.dokumenURL
       let dokumenNama = data.dokumenNama
       if (failDokumen) {
@@ -83,7 +113,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
         dokumenNama = hasil.nama
       }
 
-      await onSimpan({ ...data, dokumenURL, dokumenNama })
+      await onSimpan({ ...data, tempat: data.tempat.trim(), dokumenURL, dokumenNama })
     } catch (err) {
       setRalat(err.message || 'Gagal simpan rekod. Cuba lagi.')
       console.error(err)
@@ -225,6 +255,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
             <input
               id="masaKembali"
               type="time"
+              required
               value={data.masaKembali}
               onChange={(e) => setData((d) => ({ ...d, masaKembali: e.target.value }))}
               className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"

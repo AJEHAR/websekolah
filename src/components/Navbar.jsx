@@ -1,24 +1,15 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { LogIn, LogOut, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useIsAdmin } from '../hooks/useIsAdmin.js'
+import { NAV_ITEMS, ADMIN_NAV_ITEM } from '../lib/navConfig.js'
 import SideDrawer from './SideDrawer.jsx'
-
-// Nav penuh untuk desktop (lg:) DAN senarai penuh dalam SideDrawer (mobile)
-const navLinks = [
-  { label: 'Utama', to: '/' },
-  { label: 'Berita', to: '/berita' },
-  { label: 'Galeri', to: '/galeri' },
-  { label: 'Hubungi', to: '/hubungi' },
-  { label: 'Keberadaan', to: '/keberadaan' },
-  { label: 'Profil', to: '/profil' },
-]
 
 export default function Navbar() {
   const { user, signInWithGoogle, signOutUser } = useAuth()
   const { isAdmin } = useIsAdmin(user)
-  const links = isAdmin ? [...navLinks, { label: 'Panel Admin', to: '/admin' }] : navLinks
+  const links = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -26,21 +17,25 @@ export default function Navbar() {
       <header className="sticky top-0 z-40 bg-ink text-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-2">
-            <button
-              onClick={() => setDrawerOpen(true)}
-              aria-label="Buka menu"
-              className="lg:hidden flex items-center justify-center h-11 w-11 rounded-card hover:bg-white/10 shrink-0 -ml-2"
-            >
-              <Menu size={22} />
-            </button>
+            {/* Group kiri: hamburger (mobile) + logo - sentiasa kekal kiri */}
+            <div className="flex items-center gap-1 min-w-0">
+              <button
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Buka menu"
+                className="lg:hidden flex items-center justify-center h-11 w-11 rounded-card hover:bg-white/10 shrink-0 -ml-2"
+              >
+                <Menu size={22} />
+              </button>
 
-            <Link to="/" className="flex items-center gap-3 min-w-0">
-              <img src="/logo.png" alt="Logo SK Pendidikan Khas Kuantan" className="h-10 w-10 object-contain shrink-0" />
-              <span className="text-sm font-semibold leading-tight truncate">
-                eCBA4082
-              </span>
-            </Link>
+              <Link to="/" className="flex items-center gap-3 min-w-0">
+                <img src="/logo.png" alt="Logo SK Pendidikan Khas Kuantan" className="h-10 w-10 object-contain shrink-0" />
+                <span className="text-sm font-semibold leading-tight truncate">
+                  eCBA4082
+                </span>
+              </Link>
+            </div>
 
+            {/* Group kanan: nav penuh + login - desktop sahaja */}
             <nav className="hidden lg:flex items-center gap-1">
               {links.map((link) => (
                 <NavLink
@@ -75,20 +70,6 @@ export default function Navbar() {
                 </button>
               )}
             </nav>
-
-            <button
-              onClick={user ? signOutUser : signInWithGoogle}
-              className="lg:hidden flex items-center justify-center h-11 w-11 rounded-full bg-brand-red shrink-0 overflow-hidden"
-              aria-label={user ? 'Log keluar' : 'Log masuk dengan Google'}
-            >
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="" className="h-full w-full object-cover" />
-              ) : user ? (
-                <LogOut size={20} />
-              ) : (
-                <LogIn size={20} />
-              )}
-            </button>
           </div>
         </div>
       </header>

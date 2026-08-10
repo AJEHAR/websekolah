@@ -52,5 +52,30 @@ service cloud.firestore {
       allow update: if isAdmin() || isPemilik(resource.data.profilEmel);
       allow delete: if isAdmin() || isPemilik(resource.data.profilEmel);
     }
+
+    // Kumpulan Guru Bertugas & senarai Tugas kongsi - semua staff log masuk
+    // boleh baca (perlu tahu kumpulan/tugas sendiri), admin sahaja boleh urus.
+    match /kumpulanBertugas/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    match /tugasBertugas/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // Blok Laporan 3K (Pentadbiran/Akademik/Sokongan/Kantin, dll) - admin urus.
+    match /blokLaporan3K/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // Rekod Laporan 3K harian - mana-mana staff log masuk boleh isi/kemas kini
+    // (bukan admin sahaja, sebab sesiapa boleh jadi guru bertugas yang isi laporan).
+    match /laporan3K/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
   }
 }

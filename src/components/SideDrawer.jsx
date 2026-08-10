@@ -1,5 +1,9 @@
-import { NavLink } from 'react-router-dom'
-import { X, Home, Newspaper, Image, Phone, CalendarCheck, User, ShieldCheck, LogIn, LogOut } from 'lucide-react'
+import { useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import {
+  X, Home, Newspaper, Image, Phone, CalendarCheck, Users,
+  User, ShieldCheck, LogIn, LogOut, ChevronDown,
+} from 'lucide-react'
 
 const IKON = {
   '/': Home,
@@ -7,11 +11,19 @@ const IKON = {
   '/galeri': Image,
   '/hubungi': Phone,
   '/keberadaan': CalendarCheck,
+  '/guru-bertugas': Users,
   '/profil': User,
   '/admin': ShieldCheck,
 }
 
 export default function SideDrawer({ open, onClose, links, user, onSignIn, onSignOut }) {
+  const location = useLocation()
+  const [dibuka, setDibuka] = useState({})
+
+  function toggl(label) {
+    setDibuka((s) => ({ ...s, [label]: !s[label] }))
+  }
+
   return (
     <>
       {/* Overlay gelap di belakang - tap untuk tutup */}
@@ -47,18 +59,57 @@ export default function SideDrawer({ open, onClose, links, user, onSignIn, onSig
         <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
           {links.map((link) => {
             const Ikon = IKON[link.to] ?? Home
+
+            if (!link.children) {
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.to === '/'}
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-4 py-3 rounded-card text-sm font-medium text-ink hover:bg-base"
+                  style={({ isActive }) => (isActive ? { backgroundColor: '#F2C230' } : undefined)}
+                >
+                  <Ikon size={18} />
+                  {link.label}
+                </NavLink>
+              )
+            }
+
+            // Item boleh expand/collapse (accordion) - ada anak page.
+            // Auto-terbuka kalau mana-mana anak sepadan dengan lokasi semasa.
+            const anakAktif = link.children.some((c) => location.pathname.startsWith(c.to))
+            const terbuka = dibuka[link.label] ?? anakAktif
+
             return (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.to === '/'}
-                onClick={onClose}
-                className="flex items-center gap-3 px-4 py-3 rounded-card text-sm font-medium text-ink hover:bg-base"
-                style={({ isActive }) => (isActive ? { backgroundColor: '#F2C230' } : undefined)}
-              >
-                <Ikon size={18} />
-                {link.label}
-              </NavLink>
+              <div key={link.label}>
+                <button
+                  onClick={() => toggl(link.label)}
+                  aria-expanded={terbuka}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-card text-sm font-medium text-ink hover:bg-base"
+                >
+                  <Ikon size={18} />
+                  <span className="flex-1 text-left">{link.label}</span>
+                  <ChevronDown size={16} className={`transition-transform ${terbuka ? 'rotate-180' : ''}`} />
+                </button>
+
+                {terbuka && (
+                  <div className="ml-6 mt-1 mb-1 flex flex-col gap-0.5 border-l border-border pl-3">
+                    {link.children.map((anak) => (
+                      <NavLink
+                        key={anak.to}
+                        to={anak.to}
+                        end
+                        onClick={onClose}
+                        className="px-3 py-2.5 rounded-card text-sm text-inkmuted hover:bg-base hover:text-ink"
+                        style={({ isActive }) => (isActive ? { backgroundColor: '#F2C230', color: '#1A1A1A' } : undefined)}
+                      >
+                        {anak.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
             )
           })}
         </nav>

@@ -13,6 +13,10 @@ Projek asas (skeleton) laman web sekolah — React + Vite + Tailwind CSS, dihosk
 
 ## Struktur Fail
 
+**Nota nav:** Berita/Galeri/Hubungi dibuang dari Navbar/SideDrawer (route/page tetap wujud, boleh diakses terus via URL kalau perlu). Navbar mobile sekarang cuma logo+kod sekolah (kiri) dan hamburger — semua akses lain (login, Keberadaan, Profil, dll) melalui SideDrawer.
+
+**Nota navigasi sub-page:** Keberadaan, Panel Admin, Guru Bertugas, dan Profil semua ada sub-page, tapi navigasi antara sub-page tu BUKAN tab pills dalam page — sebaliknya guna **accordion dalam SideDrawer** (`src/lib/navConfig.js` + `SideDrawer.jsx`). Tekan nama seksyen (contoh "Keberadaan") dalam drawer untuk expand/collapse senarai sub-page dia. Auto-expand kalau sedang berada dalam salah satu sub-page tu. Setiap Layout page (KeberadaanLayout, AdminLayout, GuruBertugasLayout) papar label ringkas sub-page semasa, bukan tab.
+
 **Nota reka bentuk:** Projek ni sengaja reka macam app native (Android/iOS), bukan website tradisional — sebab tu **tiada Footer** (app tak ulang jenama/hak cipta di hujung setiap screen). Maklumat hak cipta & tagline sekolah ada dalam **SideDrawer** (bahagian bawah menu) sahaja.
 
 **Nota routing:** Projek ni guna `BrowserRouter` (URL bersih, contoh `sekolah.syazr.com/profil` - tiada `#`) dengan teknik "spa-github-pages" untuk elak 404 bila refresh/buka terus URL dalam. Cara ia berfungsi: `public/404.html` redirect balik ke `index.html` dengan path di-encode dalam query string; skrip dalam `index.html` "baca balik" dan betulkan URL sebelum React Router jalan. Kedua-dua fail ni MESTI kekal dalam projek - jangan padam.
@@ -168,7 +172,14 @@ Fail akan disimpan dalam Google Drive akaun yang deploy Apps Script ni, di bawah
 
 ## Panel Admin
 
-Route `/admin` — sekatan akses automatik (perlu log masuk + wujud dalam koleksi `admins`). Link "Panel Admin" hanya terpapar dalam Navbar untuk admin.
+Dipecah jadi sub-page (nested route) dengan tab pills — sama corak macam Keberadaan:
+```
+/admin              -> redirect ke /admin/staff
+/admin/staff        -> Senarai staff aktif + butang terapung (+) tambah staff baru
+/admin/menunggu     -> Menunggu Kelulusan
+/admin/pentadbir    -> Urus Admin (tambah/buang admin)
+```
+Sekatan akses automatik (perlu log masuk + wujud dalam koleksi `admins`). Link "Panel Admin" hanya terpapar dalam Navbar/SideDrawer untuk admin.
 
 **Fungsi:**
 - Senarai semua staff (carian ikut nama/emel/jawatan)
@@ -188,6 +199,54 @@ Staff yang **daftar sendiri** (isi profile kali pertama tanpa admin pra-daftar) 
 - Profile lama (sebelum ciri ni wujud, tiada field `status`) dianggap `diluluskan` secara automatik (elak kunci staff sedia ada)
 - **Akaun admin** (contoh: akaun rasmi/generik sekolah, bukan akaun peribadi) **tak dipaksa** isi profile - ia pilihan sahaja. `AksesGate` terus benarkan akses admin walaupun tiada profile.
 - **Keselamatan:** Firestore Rules kuatkuasakan supaya staff **tak boleh** ubah `status` diri sendiri (elak *self-approve*) — hanya admin boleh tukar field tu
+
+## Page Guru Bertugas
+
+4 sub-page (tab pills, sama corak macam Keberadaan/Panel Admin):
+```
+/guru-bertugas            -> redirect ke /guru-bertugas/kumpulan
+/guru-bertugas/kumpulan   -> Kumpulan & Tugas Guru Bertugas (siap)
+/guru-bertugas/3k         -> Laporan 3K (akan dibina)
+/guru-bertugas/banci      -> Laporan Banci (akan dibina)
+/guru-bertugas/harian     -> Laporan Harian (akan dibina)
+```
+
+**Struktur data:**
+```
+kumpulanBertugas/{id auto}
+  ├── nama, warnaBg, warnaTeks
+  ├── ahli   [{ emel, nama, jawatan }, ...]  ← dari koleksi profiles
+  └── createdAt, updatedAt
+
+tugasBertugas/{id auto}   ← senarai kongsi (SAMA untuk semua kumpulan)
+  ├── perkara, turutan
+  └── createdAt, updatedAt
+```
+
+Kumpulan ni akan jadi **rujukan bersama** untuk Laporan Harian & Laporan 3K nanti — reka bentuk data sengaja dibuat berasingan (koleksi sendiri) supaya senang "sambung" dari laporan-laporan tu. Jadual pusingan (kumpulan mana bertugas bila) **belum** dibina — akan dibincang semula bila sampai Laporan Harian.
+
+**Kebenaran:** semua staff log masuk boleh baca (nampak kumpulan & tugas). Hanya admin boleh tambah/edit/padam kumpulan dan tugas.
+
+## Laporan 3K (dalam Guru Bertugas)
+
+Diisi setiap hari persekolahan. Flow: pilih tarikh -> pilih blok (kad) -> modal keluar dengan **catatan** (teks) untuk Keselamatan & Kebersihan (semua blok), dan Disiplin (kalau blok tu ada suis "Ada Disiplin") -> lepas isi catatan, pilih **satu** nama guru (mewakili keseluruhan rekod blok tu, bukan satu guru per catatan).
+
+**Struktur data:**
+```
+blokLaporan3K/{id auto}       <- admin urus (Panel Admin > Blok 3K)
+  nama, adaDisiplin, turutan
+
+laporan3K/{tarikh_blokId}     <- ID deterministik = upsert automatik
+  tarikh, blokId, blokNama
+  catatanKeselamatan (teks)
+  catatanKebersihan  (teks)
+  catatanDisiplin     (teks)   <- hanya jika blok.adaDisiplin
+  guru { emel, nama }          <- SATU guru mewakili keseluruhan rekod
+```
+
+Sebab ID dokumen `tarikh_blokId`, isi borang kali kedua untuk tarikh+blok yang sama akan **kemas kini** rekod sedia ada (bukan cipta rekod baru) - selaras dengan keputusan "1 rekod sahaja setiap blok setiap hari".
+
+**Kebenaran:** blok (`blokLaporan3K`) admin sahaja boleh urus; rekod laporan (`laporan3K`) mana-mana staff log masuk boleh isi/kemas kini (bukan admin sahaja).
 
 ## Cara Tambah Page Baru
 
