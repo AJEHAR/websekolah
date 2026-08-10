@@ -6,6 +6,7 @@ import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { simpanProfileAdmin, padamProfileAdmin } from '../../hooks/useAdminProfiles.js'
 import AdminProfileForm from './AdminProfileForm.jsx'
 import SenaraiStaff from './SenaraiStaff.jsx'
+import UrusAdmin from './UrusAdmin.jsx'
 
 export default function Admin() {
   const { user, loading: loadingAuth, signInWithGoogle } = useAuth()
@@ -111,6 +112,8 @@ export default function Admin() {
         <h2 className="text-base font-bold text-ink mb-4">Senarai Staff ({profiles.length})</h2>
         <SenaraiStaff profiles={profiles} loading={loadingProfiles} onEdit={edit} onPadam={padam} />
       </section>
+
+      <UrusAdmin profiles={profiles} currentUser={user} />
     </main>
   )
 }

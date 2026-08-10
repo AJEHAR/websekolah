@@ -164,6 +164,8 @@ Route `/admin` — sekatan akses automatik (perlu log masuk + wujud dalam koleks
 - Padam profile staff
 - Label "Belum log masuk" terpapar untuk profile yang admin cipta tapi staff belum log masuk lagi (tiada `uid` dalam rekod)
 
+**Urus Admin:** admin sedia ada boleh naikkan staff lain jadi admin, atau buang admin — terus dalam Panel Admin, tak perlu masuk Firebase Console lagi (kecuali admin **pertama**, yang mesti disetup manual — lihat "Tetapkan admin pertama" dalam bahagian Setup Firebase). Sekatan keselamatan: admin **tak boleh buang diri sendiri** (disekat di client DAN di Firestore Rules), dan **mesti ada sekurang-kurangnya 1 admin** dalam sistem pada bila-bila masa (disekat di client).
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

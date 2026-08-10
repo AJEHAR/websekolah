@@ -16,7 +16,10 @@ service cloud.firestore {
 
     match /admins/{emelAdmin} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow create: if isAdmin();
+      // Sekatan tambahan: admin tak boleh buang rekod admin diri sendiri
+      // (sekatan "mesti ada sekurang-kurangnya 1 admin" diuruskan di client)
+      allow delete: if isAdmin() && emelAdmin != request.auth.token.email;
     }
 
     match /profiles/{docId} {
