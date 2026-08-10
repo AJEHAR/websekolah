@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { collection, doc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'laporan3K'
@@ -45,4 +45,9 @@ export async function simpanLaporan3K(tarikh, blokId, blokNama, data, uid) {
     { tarikh, blokId, blokNama, ...data, updatedAt: serverTimestamp(), updatedBy: uid },
     { merge: true }
   )
+}
+
+export async function padamLaporan3K(tarikh, blokId) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  await deleteDoc(doc(db, KOLEKSI, idRekod(tarikh, blokId)))
 }

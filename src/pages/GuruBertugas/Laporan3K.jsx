@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { Pencil, Trash2, Plus } from 'lucide-react'
 import { useBlokLaporan3K } from '../../hooks/useBlokLaporan3K.js'
-import { useLaporan3KTarikh, simpanLaporan3K } from '../../hooks/useLaporan3K.js'
+import { useLaporan3KTarikh, simpanLaporan3K, padamLaporan3K } from '../../hooks/useLaporan3K.js'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { todayISO } from '../../lib/dateUtils.js'
 import Laporan3KModal from './Laporan3KModal.jsx'
@@ -23,6 +24,12 @@ export default function Laporan3K() {
   async function simpan(data) {
     await simpanLaporan3K(tarikh, blokDipilih.id, blokDipilih.nama, data, user.uid)
     setBlokDipilih(null)
+    muatSemula()
+  }
+
+  async function padam(blokId) {
+    if (!window.confirm('Padam rekod Laporan 3K untuk blok dan tarikh ini?')) return
+    await padamLaporan3K(tarikh, blokId)
     muatSemula()
   }
 
@@ -48,12 +55,29 @@ export default function Laporan3K() {
           {bloks.map((b) => {
             const r = rekodUntukBlok(b.id)
             return (
-              <button
-                key={b.id}
-                onClick={() => setBlokDipilih(b)}
-                className="text-left p-4 rounded-card border border-border bg-surface hover:border-brand-red transition-colors"
-              >
-                <p className="text-sm font-semibold text-ink">{b.nama}</p>
+              <div key={b.id} className="p-4 rounded-card border border-border bg-surface">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-ink">{b.nama}</p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => setBlokDipilih(b)}
+                      aria-label={r ? 'Edit rekod' : 'Isi rekod'}
+                      className="p-1.5 rounded-card hover:bg-base text-inkmuted"
+                    >
+                      {r ? <Pencil size={15} /> : <Plus size={15} />}
+                    </button>
+                    {r && (
+                      <button
+                        onClick={() => padam(b.id)}
+                        aria-label="Padam rekod"
+                        className="p-1.5 rounded-card hover:bg-base text-brand-red"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {r ? (
                   <div className="mt-2 text-xs text-inkmuted space-y-1">
                     <p className="text-ink font-medium">{r.guru?.nama}</p>
@@ -64,7 +88,7 @@ export default function Laporan3K() {
                 ) : (
                   <p className="mt-2 text-xs text-brand-red">Belum diisi</p>
                 )}
-              </button>
+              </div>
             )
           })}
         </div>

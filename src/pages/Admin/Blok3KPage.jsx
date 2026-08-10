@@ -6,26 +6,52 @@ export default function Blok3KPage() {
   const { senarai, loading, muatSemula } = useBlokLaporan3K()
   const [namaBaru, setNamaBaru] = useState('')
   const [adaDisiplinBaru, setAdaDisiplinBaru] = useState(false)
+  const [menyimpan, setMenyimpan] = useState(false)
+  const [ralat, setRalat] = useState(null)
 
   async function tambah(e) {
     e.preventDefault()
-    if (!namaBaru.trim()) return
-    const turutanBaru = senarai.length > 0 ? Math.max(...senarai.map((b) => b.turutan ?? 0)) + 1 : 1
-    await tambahBlok(namaBaru.trim(), adaDisiplinBaru, turutanBaru)
-    setNamaBaru('')
-    setAdaDisiplinBaru(false)
-    muatSemula()
+    setRalat(null)
+    if (!namaBaru.trim()) {
+      setRalat('Sila isi nama blok.')
+      return
+    }
+    setMenyimpan(true)
+    try {
+      const turutanBaru = senarai.length > 0 ? Math.max(...senarai.map((b) => b.turutan ?? 0)) + 1 : 1
+      await tambahBlok(namaBaru.trim(), adaDisiplinBaru, turutanBaru)
+      setNamaBaru('')
+      setAdaDisiplinBaru(false)
+      muatSemula()
+    } catch (err) {
+      setRalat(err.message || 'Gagal tambah blok. Cuba lagi.')
+      console.error(err)
+    } finally {
+      setMenyimpan(false)
+    }
   }
 
   async function togglDisiplin(b) {
-    await kemaskiniBlok(b.id, { adaDisiplin: !b.adaDisiplin })
-    muatSemula()
+    setRalat(null)
+    try {
+      await kemaskiniBlok(b.id, { adaDisiplin: !b.adaDisiplin })
+      muatSemula()
+    } catch (err) {
+      setRalat(err.message || 'Gagal kemas kini blok. Cuba lagi.')
+      console.error(err)
+    }
   }
 
   async function padam(id) {
     if (!window.confirm('Padam blok ini? Rekod Laporan 3K sedia ada untuk blok ni akan kekal dalam sistem.')) return
-    await padamBlok(id)
-    muatSemula()
+    setRalat(null)
+    try {
+      await padamBlok(id)
+      muatSemula()
+    } catch (err) {
+      setRalat(err.message || 'Gagal padam blok. Cuba lagi.')
+      console.error(err)
+    }
   }
 
   return (
@@ -34,7 +60,7 @@ export default function Blok3KPage() {
         Blok ni digunakan dalam Laporan 3K (Guru Bertugas). Suis "Ada Disiplin" tentukan sama ada blok tu perlu isi perkara Disiplin sekali (contoh: Kantin).
       </p>
 
-      <form onSubmit={tambah} className="flex flex-wrap items-center gap-2 mb-5">
+      <form onSubmit={tambah} className="flex flex-wrap items-center gap-2 mb-2">
         <input
           type="text"
           value={namaBaru}
@@ -51,10 +77,16 @@ export default function Blok3KPage() {
           />
           Ada Disiplin
         </label>
-        <button type="submit" className="h-11 px-4 rounded-card bg-brand-red text-white text-sm font-semibold flex items-center gap-1.5">
-          <Plus size={16} /> Tambah
+        <button
+          type="submit"
+          disabled={menyimpan}
+          className="h-11 px-4 rounded-card bg-brand-red text-white text-sm font-semibold flex items-center gap-1.5 disabled:opacity-60"
+        >
+          <Plus size={16} /> {menyimpan ? 'Menyimpan…' : 'Tambah'}
         </button>
       </form>
+
+      {ralat && <p className="text-sm text-brand-red mb-4">{ralat}</p>}
 
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>

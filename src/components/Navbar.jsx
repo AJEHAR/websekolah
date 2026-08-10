@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { Menu, ChevronDown } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useIsAdmin } from '../hooks/useIsAdmin.js'
 import { NAV_ITEMS, ADMIN_NAV_ITEM } from '../lib/navConfig.js'
@@ -37,19 +37,42 @@ export default function Navbar() {
 
             {/* Group kanan: nav penuh + login - desktop sahaja */}
             <nav className="hidden lg:flex items-center gap-1">
-              {links.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  end={link.to === '/'}
-                  className="px-4 py-2 rounded-card text-sm font-medium transition-colors text-white/85 hover:bg-white/10"
-                  style={({ isActive }) =>
-                    isActive ? { backgroundColor: '#F2C230', color: '#1A1A1A' } : undefined
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              ))}
+              {links.map((link) =>
+                link.children ? (
+                  <div key={link.to} className="relative group">
+                    <button className="px-4 py-2 rounded-card text-sm font-medium text-white/85 hover:bg-white/10 flex items-center gap-1">
+                      {link.label}
+                      <ChevronDown size={14} />
+                    </button>
+                    <div className="absolute left-0 top-full pt-1 hidden group-hover:block group-focus-within:block z-50">
+                      <div className="bg-surface border border-border rounded-card shadow-soft py-1.5 min-w-[200px]">
+                        {link.children.map((anak) => (
+                          <NavLink
+                            key={anak.to}
+                            to={anak.to}
+                            end
+                            className="block px-4 py-2.5 text-sm text-ink hover:bg-base"
+                          >
+                            {anak.label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.to === '/'}
+                    className="px-4 py-2 rounded-card text-sm font-medium transition-colors text-white/85 hover:bg-white/10"
+                    style={({ isActive }) =>
+                      isActive ? { backgroundColor: '#F2C230', color: '#1A1A1A' } : undefined
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                )
+              )}
 
               {user ? (
                 <button
