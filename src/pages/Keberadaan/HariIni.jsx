@@ -8,6 +8,7 @@ import { KUMPULAN_KEBERADAAN, kumpulanKategori } from './constants.js'
 import KumpulanCard from './KumpulanCard.jsx'
 import FloatingTambahButton from './FloatingTambahButton.jsx'
 import BorangModal from './BorangModal.jsx'
+import DetailModal from './DetailModal.jsx'
 
 export default function HariIni() {
   const { user } = useOutletContext()
@@ -20,6 +21,7 @@ export default function HariIni() {
 
   const [tunjukBorang, setTunjukBorang] = useState(false)
   const [rekodEdit, setRekodEdit] = useState(null)
+  const [rekodLihat, setRekodLihat] = useState(null)
 
   async function simpan(data) {
     if (rekodEdit) await kemaskiniKeberadaan(rekodEdit.id, data)
@@ -55,6 +57,7 @@ export default function HariIni() {
               senarai={senarai.filter((r) => kumpulanKategori(r.kategori) === kumpulan)}
               currentUserEmel={user.email}
               isAdmin={isAdmin}
+              onLihat={setRekodLihat}
               onEdit={edit}
               onPadam={padam}
             />
@@ -71,6 +74,7 @@ export default function HariIni() {
         emelSendiri={user.email}
         onSimpan={simpan}
       />
+      <DetailModal rekod={rekodLihat} onClose={() => setRekodLihat(null)} />
     </div>
   )
 }

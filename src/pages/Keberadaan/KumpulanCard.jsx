@@ -1,7 +1,7 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { warnaBadge, labelRingkas } from './badgeUtils.js'
 
-export default function KumpulanCard({ tajuk, senarai, currentUserEmel, isAdmin, onEdit, onPadam }) {
+export default function KumpulanCard({ tajuk, senarai, currentUserEmel, isAdmin, onLihat, onEdit, onPadam }) {
   return (
     <div className="bg-surface border border-border rounded-card overflow-hidden">
       <div className="bg-base px-3 py-2 border-b border-border">
@@ -26,16 +26,21 @@ export default function KumpulanCard({ tajuk, senarai, currentUserEmel, isAdmin,
                 >
                   {labelRingkas(r)}
                 </span>
-                {bolehUrus && (
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    <button onClick={() => onEdit(r)} aria-label="Edit rekod" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
-                      <Pencil size={14} />
-                    </button>
-                    <button onClick={() => onPadam(r.id)} aria-label="Padam rekod" className="p-1.5 rounded-card hover:bg-base text-brand-red">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <button onClick={() => onLihat(r)} aria-label="Lihat butiran" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
+                    <Eye size={14} />
+                  </button>
+                  {bolehUrus && (
+                    <>
+                      <button onClick={() => onEdit(r)} aria-label="Edit rekod" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
+                        <Pencil size={14} />
+                      </button>
+                      <button onClick={() => onPadam(r.id)} aria-label="Padam rekod" className="p-1.5 rounded-card hover:bg-base text-brand-red">
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             )
           })}
