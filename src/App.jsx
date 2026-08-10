@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
-import Footer from './components/Footer.jsx'
 import Home from './pages/Home.jsx'
 import Galeri from './pages/Galeri.jsx'
 import Hubungi from './pages/Hubungi.jsx'
@@ -47,7 +46,6 @@ export default function App() {
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}
         </Routes>
       </div>
-      <Footer />
     </div>
   )
 }

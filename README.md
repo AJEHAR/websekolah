@@ -13,6 +13,8 @@ Projek asas (skeleton) laman web sekolah — React + Vite + Tailwind CSS, dihosk
 
 ## Struktur Fail
 
+**Nota reka bentuk:** Projek ni sengaja reka macam app native (Android/iOS), bukan website tradisional — sebab tu **tiada Footer** (app tak ulang jenama/hak cipta di hujung setiap screen). Maklumat hak cipta & tagline sekolah ada dalam **SideDrawer** (bahagian bawah menu) sahaja.
+
 **Nota routing:** Projek ni guna `BrowserRouter` (URL bersih, contoh `sekolah.syazr.com/profil` - tiada `#`) dengan teknik "spa-github-pages" untuk elak 404 bila refresh/buka terus URL dalam. Cara ia berfungsi: `public/404.html` redirect balik ke `index.html` dengan path di-encode dalam query string; skrip dalam `index.html` "baca balik" dan betulkan URL sebelum React Router jalan. Kedua-dua fail ni MESTI kekal dalam projek - jangan padam.
 
 ```
@@ -22,7 +24,6 @@ skpk-website/
 ├── src/
 │   ├── components/
 │   │   ├── Navbar.jsx       # header - digunakan pada semua page
-│   │   ├── Footer.jsx       # digunakan pada semua page
 │   │   └── SideDrawer.jsx   # navigasi mobile (slide dari kiri), semua page
 │   ├── pages/
 │   │   └── Home.jsx       # page pertama (kosong/asas)
@@ -211,7 +212,7 @@ Staff yang **daftar sendiri** (isi profile kali pertama tanpa admin pra-daftar) 
 **Nota:** Nav (Navbar & SideDrawer) guna React Router — navigasi berlaku tanpa reload penuh browser (SPA). Link ke page yang belum didaftar dalam `App.jsx` akan jadi blank.
 
 ## Langkah Seterusnya (page demi page)
-- [x] Asas: Navbar, Footer, SideDrawer (mobile-first, navigasi penuh), Home (kosong)
+- [x] Asas: Navbar, SideDrawer (mobile-first, navigasi penuh) - reka bentuk gaya app, tiada Footer
 - [x] Struktur routing + contoh nested route: Berita (senarai + sub-page artikel), Galeri, Hubungi (semua kosong buat masa ini)
 - [x] Firebase Authentication (Google Sign-In) - kod sedia, perlu isi `.env` bila projek Firebase siap
 - [x] Page Profile (pusat data staff: Nama, IC, Jawatan, Kategori, Gambar) + Firestore security rules

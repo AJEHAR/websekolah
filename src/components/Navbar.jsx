@@ -37,7 +37,7 @@ export default function Navbar() {
             <Link to="/" className="flex items-center gap-3 min-w-0">
               <img src="/logo.png" alt="Logo SK Pendidikan Khas Kuantan" className="h-10 w-10 object-contain shrink-0" />
               <span className="text-sm font-semibold leading-tight truncate">
-                SK Pendidikan Khas Kuantan
+                eCBA4082
               </span>
             </Link>
 

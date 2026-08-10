@@ -30,15 +30,15 @@ export default function SideDrawer({ open, onClose, links, user, onSignIn, onSig
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-border shrink-0">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
-            <span className="text-sm font-semibold text-ink">Menu</span>
+        <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src="/logo.png" alt="" className="h-8 w-8 object-contain shrink-0" />
+            <span className="text-sm font-semibold text-ink truncate">SK Pendidikan Khas Kuantan</span>
           </div>
           <button
             onClick={onClose}
             aria-label="Tutup menu"
-            className="p-2 rounded-card hover:bg-base text-inkmuted"
+            className="p-2 rounded-card hover:bg-base text-inkmuted shrink-0"
           >
             <X size={20} />
           </button>
@@ -91,6 +91,13 @@ export default function SideDrawer({ open, onClose, links, user, onSignIn, onSig
               <LogIn size={17} /> Log Masuk dengan Google
             </button>
           )}
+        </div>
+
+        <div className="px-4 py-3 border-t border-border shrink-0 text-center">
+          <p className="text-[11px] font-medium text-inkmuted">Usaha Tetap Jaya</p>
+          <p className="text-[10px] text-inkmuted mt-0.5">
+            &copy; {new Date().getFullYear()} SK Pendidikan Khas Kuantan. Hak cipta terpelihara.
+          </p>
         </div>
       </aside>
     </>
