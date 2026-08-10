@@ -12,6 +12,9 @@ Projek asas (skeleton) laman web sekolah — React + Vite + Tailwind CSS, dihosk
   - Semua sasaran tekan (butang, tab) minimum 44px tinggi untuk mesra ibu jari
 
 ## Struktur Fail
+
+**Nota routing:** Projek ni guna `BrowserRouter` (URL bersih, contoh `sekolah.syazr.com/profil` - tiada `#`) dengan teknik "spa-github-pages" untuk elak 404 bila refresh/buka terus URL dalam. Cara ia berfungsi: `public/404.html` redirect balik ke `index.html` dengan path di-encode dalam query string; skrip dalam `index.html` "baca balik" dan betulkan URL sebelum React Router jalan. Kedua-dua fail ni MESTI kekal dalam projek - jangan padam.
+
 ```
 skpk-website/
 ├── public/

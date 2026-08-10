@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ms">
+  <head>
+    <meta charset="utf-8" />
+    <title>SK Pendidikan Khas Kuantan</title>
+    <script type="text/javascript">
+      // Teknik "spa-github-pages" - GitHub Pages serve fail ni bila path tak
+      // jumpa (contoh: refresh di /profil). Skrip ni "encode" path asal dan
+      // redirect balik ke index.html; index.html pula "baca balik" dan
+      // betulkan URL sebelum React Router jalan (lihat index.html).
+      var pathSegmentsToKeep = 0; // 0 sebab guna custom domain (root) - bukan /nama-repo/
+
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
