@@ -130,7 +130,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
         </select>
       </div>
 
-      {!isKWB && (
+      {senaraiJenis.length > 0 && (
         <div>
           <label htmlFor="jenis" className="block text-sm font-medium text-ink mb-1">
             Jenis {data.urusan}

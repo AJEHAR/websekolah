@@ -104,13 +104,22 @@ Nota: Senarai Keberadaan kini guna koleksi utama `kehadiran` (bukan sub-koleksi)
 - Semua staff yang log masuk boleh lihat profile (termasuk No. IC) staff lain
 - Hanya admin atau pemilik profile sendiri boleh edit
 
+**Analisis Keberadaan (Profile):** carta bar interaktif — tukar tahun, papar jumlah hari Rasmi, setiap jenis Cuti, dan Jumlah Semua Cuti. KWB sengaja dikecualikan (bukan "ketiadaan", cuma keluar sekejap). Lihat `StatistikKeberadaan.jsx` dan fungsi `hariDalamTahun()` dalam `dateUtils.js`.
+
 **Setkan admin:** Selepas Firestore aktif, cipta dokumen secara manual di koleksi `admins` dengan ID = emel admin (contoh: `admins/pengetua@moe-dl.edu.my`). Boleh buat terus dalam Firebase Console.
 
 **Deploy security rules:** Salin kandungan `firestore.rules` ke Firebase Console > Firestore Database > Rules, atau guna Firebase CLI (`firebase deploy --only firestore:rules`).
 
 ## Page Keberadaan
 
-Empat seksyen: Isi Borang, Keberadaan Hari Ini (Guru/AKP), Keberadaan Esok (Guru/AKP), Log Keberadaan (julat tarikh). Rekod sendiri juga terpapar di Profile page (`/profil/kehadiran`).
+Dipecah jadi sub-page (nested route) dengan tab pills — bukan satu page panjang:
+```
+/keberadaan            -> redirect ke /keberadaan/hari-ini
+/keberadaan/hari-ini   -> Hari Ini (kad Guru/PPM/AKP berasingan)
+/keberadaan/esok       -> Esok (struktur sama)
+/keberadaan/log        -> Log (julat tarikh)
+```
+Borang diisi melalui **butang terapung (+)** di kanan bawah — bukan seksyen tetap dalam page. Setiap rekod papar **badge berwarna** ikut jenis urusan (Rasmi=hijau, Cuti=kuning, KWB=merah) — lihat `badgeUtils.js`. Rekod sendiri juga terpapar di Profile page (`/profil/kehadiran`).
 
 **Struktur data (Firestore, koleksi utama `kehadiran`):**
 ```

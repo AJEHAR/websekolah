@@ -1,9 +1,10 @@
 import { FileText, Pencil, Trash2 } from 'lucide-react'
 import { formatTarikhRingkas } from '../../lib/dateUtils.js'
+import { warnaBadge, labelRingkas } from './badgeUtils.js'
 
 export default function KeberadaanCard({ rekod, bolehUrus, onEdit, onPadam }) {
-  const jenisPaparan = rekod.jenis === 'Lain-lain (nyatakan)' ? rekod.jenisLain : rekod.jenis
   const tarikhSama = rekod.tarikhMula === rekod.tarikhTamat
+  const warna = warnaBadge(rekod.urusan)
 
   return (
     <div className="p-4 rounded-card border border-border bg-surface">
@@ -24,13 +25,13 @@ export default function KeberadaanCard({ rekod, bolehUrus, onEdit, onPadam }) {
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-base border border-border text-ink">
-          {rekod.urusan}
+      <div className="mt-3">
+        <span
+          className="text-xs font-medium px-2.5 py-1 rounded-full"
+          style={{ backgroundColor: warna.bg, color: warna.teks }}
+        >
+          {labelRingkas(rekod)}
         </span>
-        {jenisPaparan && (
-          <span className="text-xs text-inkmuted">{jenisPaparan}</span>
-        )}
       </div>
 
       <div className="mt-2 text-xs text-inkmuted space-y-0.5">
@@ -38,7 +39,6 @@ export default function KeberadaanCard({ rekod, bolehUrus, onEdit, onPadam }) {
           {tarikhSama
             ? formatTarikhRingkas(rekod.tarikhMula)
             : `${formatTarikhRingkas(rekod.tarikhMula)} – ${formatTarikhRingkas(rekod.tarikhTamat)}`}
-          {rekod.masaKeluar && ` · ${rekod.masaKeluar}${rekod.masaKembali ? `–${rekod.masaKembali}` : ''}`}
         </p>
         <p>Tempat: {rekod.tempat}</p>
       </div>

@@ -1,10 +1,10 @@
 export const URUSAN_OPTIONS = ['Rasmi', 'Cuti', 'Keluar Waktu Bekerja (KWB)']
 
 // Senarai "Jenis" ditapis ikut Urusan yang dipilih.
-// KWB tiada senarai jenis - terus ke masa keluar/kembali.
 export const JENIS_MENGIKUT_URUSAN = {
   Rasmi: ['Rasmi (Tiada di sekolah)', 'Rasmi (Berada di sekolah)'],
   Cuti: ['Cuti Rehat Khas', 'Cuti Rehat', 'Cuti Sakit', 'Cuti Tanpa Rekod', 'Lain-lain (nyatakan)'],
+  'Keluar Waktu Bekerja (KWB)': ['Klinik/Hospital', 'Pelaporan PBD', 'Urusan Bank', 'Lain-lain (nyatakan)'],
 }
 
 // Kumpulan paparan untuk Keberadaan Hari Ini / Esok - 3 seksyen berasingan,

@@ -19,3 +19,19 @@ export function formatTarikhRingkas(iso) {
   const d = new Date(`${iso}T00:00:00`)
   return d.toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+
+// Kira bilangan hari (inklusif) dari julat [tarikhMula, tarikhTamat] yang
+// bertindih dengan tahun tertentu - untuk analisis keberadaan tahunan.
+export function hariDalamTahun(tarikhMula, tarikhTamat, tahun) {
+  const mula = new Date(`${tarikhMula}T00:00:00`)
+  const tamat = new Date(`${tarikhTamat}T00:00:00`)
+  const awalTahun = new Date(`${tahun}-01-01T00:00:00`)
+  const akhirTahun = new Date(`${tahun}-12-31T00:00:00`)
+
+  const mulaEfektif = mula < awalTahun ? awalTahun : mula
+  const tamatEfektif = tamat > akhirTahun ? akhirTahun : tamat
+
+  if (mulaEfektif > tamatEfektif) return 0
+  const bezaMs = tamatEfektif.getTime() - mulaEfektif.getTime()
+  return Math.round(bezaMs / (1000 * 60 * 60 * 24)) + 1
+}
