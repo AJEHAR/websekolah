@@ -14,12 +14,30 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-const app = initializeApp(firebaseConfig)
+// Bendera untuk semak sama ada .env sudah diisi dengan config Firebase sebenar.
+// Bila false (contoh: masa testing awal sebelum Firebase project disediakan),
+// auth/db/storage dibiarkan null - hooks & AuthContext akan "downgrade" dengan
+// selamat (papar mesej, bukan crash) bukannya cuba sambung ke Firebase.
+export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey)
 
-export const auth = getAuth(app)
-export const db = getFirestore(app)
-export const storage = getStorage(app)
-export const googleProvider = new GoogleAuthProvider()
+let app = null
+export let auth = null
+export let db = null
+export let storage = null
+export let googleProvider = null
 
-// Hadkan log masuk kepada domain emel sekolah sahaja (pilihan - tukar/buang ikut keperluan)
-// googleProvider.setCustomParameters({ hd: 'moe-dl.edu.my' })
+if (isFirebaseConfigured) {
+  app = initializeApp(firebaseConfig)
+  auth = getAuth(app)
+  db = getFirestore(app)
+  storage = getStorage(app)
+  googleProvider = new GoogleAuthProvider()
+
+  // Hadkan log masuk kepada domain emel sekolah sahaja (pilihan - tukar/buang ikut keperluan)
+  // googleProvider.setCustomParameters({ hd: 'moe-dl.edu.my' })
+} else {
+  console.warn(
+    '[Firebase] .env belum diisi - auth/database dilumpuhkan sementara untuk testing UI. ' +
+    'Isi VITE_FIREBASE_* dalam .env untuk aktifkan semula.'
+  )
+}

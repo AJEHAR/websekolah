@@ -1,4 +1,4 @@
-# Laman Web SK Pendidikan Khas Kuantan cba4082
+# Laman Web SK Pendidikan Khas Kuantan
 
 Projek asas (skeleton) laman web sekolah — React + Vite + Tailwind CSS, dihoskan di GitHub Pages.
 
@@ -65,6 +65,10 @@ git push -u origin main
 1. Pergi ke repo GitHub → **Settings** → **Pages**
 2. Di bahagian **Source**, pilih **GitHub Actions**
 3. Setiap kali anda push ke branch `main`, web akan auto-deploy (workflow sudah disediakan di `.github/workflows/deploy.yml`)
+
+## Testing Tanpa Firebase Disetup Lagi
+
+Kalau `.env` masih kosong, app **tak akan crash**. Home/Berita/Galeri/Hubungi boleh diuji macam biasa. Page yang perlukan log masuk (Profile/Keberadaan/Admin) akan papar butang "Log Masuk dengan Google" seperti biasa, tapi bila ditekan akan papar makluman "Firebase belum disetup" — bukan crash/page putih. Isi `.env` (lihat bahagian Setup Firebase) untuk aktifkan penuh.
 
 ## Setup Firebase (untuk langkah seterusnya)
 

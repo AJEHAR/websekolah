@@ -1,14 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
-import { auth, googleProvider } from '../lib/firebase.js'
+import { auth, googleProvider, isFirebaseConfigured } from '../lib/firebase.js'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(isFirebaseConfigured)
 
   useEffect(() => {
+    if (!isFirebaseConfigured) return
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser)
       setLoading(false)
@@ -16,8 +17,18 @@ export function AuthProvider({ children }) {
     return unsubscribe
   }, [])
 
-  const signInWithGoogle = () => signInWithPopup(auth, googleProvider)
-  const signOutUser = () => signOut(auth)
+  const signInWithGoogle = () => {
+    if (!isFirebaseConfigured) {
+      window.alert('Firebase belum disetup lagi. Isi maklumat dalam fail .env dahulu (lihat README).')
+      return Promise.resolve()
+    }
+    return signInWithPopup(auth, googleProvider)
+  }
+
+  const signOutUser = () => {
+    if (!isFirebaseConfigured) return Promise.resolve()
+    return signOut(auth)
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOutUser }}>

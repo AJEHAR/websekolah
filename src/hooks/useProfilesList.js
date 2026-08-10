@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
-import { db } from '../lib/firebase.js'
+import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 export function useProfilesList() {
   const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(true)
 
   const muatSemula = useCallback(async () => {
+    if (!isFirebaseConfigured) {
+      setProfiles([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const snap = await getDocs(collection(db, 'profiles'))

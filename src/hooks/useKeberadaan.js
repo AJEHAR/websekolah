@@ -11,11 +11,12 @@ import {
   where,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../lib/firebase.js'
+import { db, storage, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'kehadiran'
 
 export async function tambahKeberadaan(data, user) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await addDoc(collection(db, KOLEKSI), {
     ...data,
     createdAt: serverTimestamp(),
@@ -25,14 +26,17 @@ export async function tambahKeberadaan(data, user) {
 }
 
 export async function kemaskiniKeberadaan(id, data) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await updateDoc(doc(db, KOLEKSI, id), { ...data, updatedAt: serverTimestamp() })
 }
 
 export async function padamKeberadaan(id) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await deleteDoc(doc(db, KOLEKSI, id))
 }
 
 export async function muatNaikDokumen(fail, emel) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   const path = `kehadiran/${emel}-${Date.now()}-${fail.name}`
   const storageRef = ref(storage, path)
   await uploadBytes(storageRef, fail)
@@ -47,6 +51,11 @@ export function useKeberadaanTarikh(tarikh) {
   const [loading, setLoading] = useState(true)
 
   const muatSemula = useCallback(async () => {
+    if (!isFirebaseConfigured) {
+      setSenarai([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const q = query(collection(db, KOLEKSI), where('tarikhMula', '<=', tarikh))
@@ -71,7 +80,7 @@ export function useLogKeberadaan(dari, hingga, aktif) {
   const [loading, setLoading] = useState(false)
 
   const muatSemula = useCallback(async () => {
-    if (!aktif || !dari || !hingga) return
+    if (!aktif || !dari || !hingga || !isFirebaseConfigured) return
     setLoading(true)
     try {
       const q = query(collection(db, KOLEKSI), where('tarikhMula', '<=', hingga))
@@ -98,7 +107,7 @@ export function useKeberadaanSaya(emel) {
   const [loading, setLoading] = useState(true)
 
   const muatSemula = useCallback(async () => {
-    if (!emel) {
+    if (!emel || !isFirebaseConfigured) {
       setSenarai([])
       setLoading(false)
       return

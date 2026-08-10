@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from '../lib/firebase.js'
+import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 export function useIsAdmin(user) {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -9,7 +9,7 @@ export function useIsAdmin(user) {
   useEffect(() => {
     let batal = false
     async function semak() {
-      if (!user?.email) {
+      if (!isFirebaseConfigured || !user?.email) {
         setIsAdmin(false)
         setLoading(false)
         return
