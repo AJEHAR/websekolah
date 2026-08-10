@@ -40,14 +40,14 @@ export default function Kumpulan() {
   return (
     <div className="space-y-8">
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-ink">Kumpulan Guru Bertugas ({senarai.length})</h2>
+        <div className="flex items-center justify-between mb-4 gap-3">
+          <h2 className="text-sm font-semibold text-ink shrink-0">Kumpulan ({senarai.length})</h2>
           {isAdmin && (
             <button
               onClick={() => { setKumpulanEdit(null); setTunjukBorang(true) }}
-              className="flex items-center gap-1.5 text-xs font-semibold text-brand-red"
+              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-red px-3 py-2 rounded-card shrink-0"
             >
-              <Plus size={16} /> Tambah Kumpulan
+              <Plus size={14} /> Tambah Kumpulan
             </button>
           )}
         </div>
@@ -66,7 +66,7 @@ export default function Kumpulan() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold text-ink mb-4">Tugas Guru Bertugas</h2>
+        <h2 className="text-sm font-semibold text-ink mb-4">Tugas</h2>
         <TugasBertugasSenarai isAdmin={isAdmin} />
       </section>
 

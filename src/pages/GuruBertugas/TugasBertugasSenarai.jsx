@@ -56,7 +56,7 @@ export default function TugasBertugasSenarai({ isAdmin }) {
             value={teksBaru}
             onChange={(e) => setTeksBaru(e.target.value)}
             placeholder="Tambah tugasan baru…"
-            className="flex-1 h-11 px-3 rounded-card border border-border bg-surface text-sm"
+            className="flex-1 min-w-0 h-11 px-3 rounded-card border border-border bg-surface text-sm"
           />
           <button type="submit" aria-label="Tambah tugasan" className="h-11 w-11 rounded-card bg-brand-red text-white flex items-center justify-center shrink-0">
             <Plus size={18} />
@@ -80,7 +80,7 @@ export default function TugasBertugasSenarai({ isAdmin }) {
                     type="text"
                     value={teksEdit}
                     onChange={(e) => setTeksEdit(e.target.value)}
-                    className="flex-1 h-9 px-2 rounded-card border border-border bg-surface text-sm"
+                    className="flex-1 min-w-0 h-9 px-2 rounded-card border border-border bg-surface text-sm"
                     autoFocus
                   />
                   <button onClick={() => simpanEdit(t.id)} aria-label="Simpan" className="p-1.5 rounded-card hover:bg-base text-green-700 shrink-0">

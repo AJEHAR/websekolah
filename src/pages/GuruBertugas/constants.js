@@ -1,12 +1,12 @@
-// Pilihan warna untuk kumpulan - setiap satu ada pasangan latar (bg) & teks
-// yang kontras sesuai, konsisten dengan gaya badge di seluruh app.
+// Pilihan warna untuk kumpulan - guna tona lebih pekat (bukan pastel) supaya
+// setiap kumpulan senang dibezakan sepintas lalu, dengan teks putih di atasnya.
 export const WARNA_PILIHAN = [
-  { nama: 'Biru', bg: '#E6F1FB', teks: '#0C447C' },
-  { nama: 'Hijau', bg: '#EAF3DE', teks: '#27500A' },
-  { nama: 'Ungu', bg: '#EEEDFE', teks: '#3C3489' },
-  { nama: 'Merah Jambu', bg: '#FBEAF0', teks: '#72243E' },
-  { nama: 'Oren', bg: '#FAECE7', teks: '#712B13' },
-  { nama: 'Kuning', bg: '#FAEEDA', teks: '#633806' },
-  { nama: 'Teal', bg: '#E1F5EE', teks: '#085041' },
-  { nama: 'Kelabu', bg: '#F1EFE8', teks: '#444441' },
+  { nama: 'Biru', bg: '#378ADD', teks: '#FFFFFF' },
+  { nama: 'Hijau', bg: '#639922', teks: '#FFFFFF' },
+  { nama: 'Ungu', bg: '#7F77DD', teks: '#FFFFFF' },
+  { nama: 'Merah Jambu', bg: '#D4537E', teks: '#FFFFFF' },
+  { nama: 'Oren', bg: '#D85A30', teks: '#FFFFFF' },
+  { nama: 'Kuning', bg: '#BA7517', teks: '#FFFFFF' },
+  { nama: 'Teal', bg: '#1D9E75', teks: '#FFFFFF' },
+  { nama: 'Kelabu', bg: '#5F5E5A', teks: '#FFFFFF' },
 ]

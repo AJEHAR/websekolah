@@ -35,3 +35,15 @@ export function hariDalamTahun(tarikhMula, tarikhTamat, tahun) {
   const bezaMs = tamatEfektif.getTime() - mulaEfektif.getTime()
   return Math.round(bezaMs / (1000 * 60 * 60 * 24)) + 1
 }
+
+const NAMA_HARI = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu']
+
+export function namaHari(tarikhISO) {
+  const d = new Date(`${tarikhISO}T00:00:00`)
+  return NAMA_HARI[d.getDay()]
+}
+
+// bulan: 1-12
+export function bilanganHariDalamBulan(tahun, bulan) {
+  return new Date(tahun, bulan, 0).getDate()
+}
