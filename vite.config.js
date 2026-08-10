@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// PENTING: Tukar 'nama-repo-github-anda' kepada nama repo GitHub sebenar
-// Contoh: jika repo anda https://github.com/username/skpk-website
-// maka base perlu jadi '/skpk-website/'
+// Guna custom domain (sekolah.syazr.com) - base kekal '/' sebab domain
+// serve terus dari root, bukan dari sub-folder repo GitHub.
+// Kalau nanti custom domain ditanggalkan dan balik guna default GitHub Pages
+// URL (ajehar.github.io/websekolah/), tukar semula base kepada '/websekolah/'.
 export default defineConfig({
   plugins: [react()],
-  base: '/nama-repo-github-anda/',
+  base: '/',
 })

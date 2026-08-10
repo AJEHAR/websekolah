@@ -37,15 +37,20 @@ npm install
 npm run dev
 ```
 
-### 2. PENTING — Tetapkan base path
-Buka `vite.config.js` dan tukar:
-```js
-base: '/nama-repo-github-anda/',
-```
-kepada nama repo GitHub sebenar. Contoh, jika repo anda `https://github.com/username/skpk-website`, maka:
-```js
-base: '/skpk-website/',
-```
+### 2. Custom domain sudah disetkan
+`vite.config.js` sudah ditetapkan `base: '/'` dan fail `public/CNAME` sudah ada dengan `sekolah.syazr.com` — sesuai untuk custom domain. (Kalau nanti custom domain ditanggalkan dan balik guna default GitHub Pages URL, base perlu ditukar semula kepada `/websekolah/`.)
+
+**Setup DNS (buat di penyedia domain syazr.com anda):**
+Tambah rekod DNS jenis **CNAME**:
+| Jenis | Host/Nama | Nilai/Sasaran |
+|-------|-----------|---------------|
+| CNAME | `sekolah` | `ajehar.github.io` |
+
+**Setup di GitHub:**
+1. Repo `ajehar/websekolah` → **Settings** → **Pages**
+2. Bahagian **Custom domain**, masukkan `sekolah.syazr.com` → Save
+3. Tunggu GitHub sahkan DNS (boleh ambil beberapa minit hingga beberapa jam)
+4. Bila dah sah, hidupkan **Enforce HTTPS**
 
 ### 3. Push ke GitHub
 ```bash
