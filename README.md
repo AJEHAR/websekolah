@@ -117,14 +117,17 @@ Nota: Senarai Keberadaan kini guna koleksi utama `kehadiran` (bukan sub-koleksi)
 
 ## Page Keberadaan
 
+**Nota:** "Rekod Saya" (dulu `/profil/kehadiran`) dipindah ke bawah kumpulan Keberadaan (`/keberadaan/saya`) - lebih logik dikumpul sekali dengan Hari Ini/Esok/Log berbanding di bawah Profil. Tile "Senarai Keberadaan" dalam Profile page masih ada, cuma pautan dia dikemas kini.
+
 Dipecah jadi sub-page (nested route) dengan tab pills — bukan satu page panjang:
 ```
 /keberadaan            -> redirect ke /keberadaan/hari-ini
 /keberadaan/hari-ini   -> Hari Ini (kad Guru/PPM/AKP berasingan)
 /keberadaan/esok       -> Esok (struktur sama)
 /keberadaan/log        -> Log (julat tarikh)
+/keberadaan/saya       -> Rekod Saya (dipindah dari /profil/kehadiran - lihat nota bawah)
 ```
-Borang diisi melalui **butang terapung (+)** di kanan bawah — bukan seksyen tetap dalam page. Setiap rekod papar **badge berwarna** ikut jenis urusan (Rasmi=hijau, Cuti=kuning, KWB=merah) — lihat `badgeUtils.js`. Rekod sendiri juga terpapar di Profile page (`/profil/kehadiran`).
+Borang diisi melalui **butang terapung (+)** di kanan bawah — bukan seksyen tetap dalam page. Setiap rekod papar **badge berwarna** ikut jenis urusan (Rasmi=hijau, Cuti=kuning, KWB=merah) — lihat `badgeUtils.js`. Rekod sendiri juga terpapar di tab "Rekod Saya" (`/keberadaan/saya`).
 
 **Struktur data (Firestore, koleksi utama `kehadiran`):**
 ```
@@ -247,6 +250,17 @@ laporan3K/{tarikh_blokId}     <- ID deterministik = upsert automatik
 Sebab ID dokumen `tarikh_blokId`, isi borang kali kedua untuk tarikh+blok yang sama akan **kemas kini** rekod sedia ada (bukan cipta rekod baru) - selaras dengan keputusan "1 rekod sahaja setiap blok setiap hari".
 
 **Kebenaran:** blok (`blokLaporan3K`) admin sahaja boleh urus; rekod laporan (`laporan3K`) mana-mana staff log masuk boleh isi/kemas kini (bukan admin sahaja).
+
+## Catatan Wajib (Rasmi/Cuti) & Paparan Ringkas
+
+Borang Keberadaan sekarang ada medan **Catatan** (wajib) untuk Rasmi (nama urusan rasmi, contoh "Mesyuarat JPN") dan Cuti (sebab cuti, contoh "Demam") - tak terpakai untuk KWB.
+
+**Peraturan paparan ringkas** (Kalendar Bulanan & Senarai Keberadaan Saya) - lihat `labelSenarai()` dalam `badgeUtils.js`:
+- **Rasmi** -> papar Catatan (nama urusan)
+- **Cuti** -> papar Jenis SAHAJA (bukan catatan/sebab - demi privasi, sebab sebab cuti mungkin sensitif)
+- **KWB** -> sama macam biasa (jenis + masa)
+
+Detail penuh (termasuk catatan sebenar untuk Cuti, tempat, dokumen) cuma terpapar bila tekan ikon **mata** (`DetailModal.jsx`).
 
 ## Cara Tambah Page Baru
 

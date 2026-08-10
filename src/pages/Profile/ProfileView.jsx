@@ -41,7 +41,7 @@ export default function ProfileView({ profile, onEdit }) {
         <h2 className="text-sm font-semibold text-ink mb-3">Akses Pantas</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Link
-            to="/profil/kehadiran"
+            to="/keberadaan/saya"
             className="flex flex-col items-center justify-center gap-2 p-5 rounded-card border border-border bg-surface hover:border-brand-red transition-colors text-center"
           >
             <CalendarCheck size={22} className="text-brand-red" />

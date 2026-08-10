@@ -10,6 +10,7 @@ const KOSONG = {
   urusan: URUSAN_OPTIONS[0],
   jenis: '',
   jenisLain: '',
+  catatan: '',
   tarikhMula: '',
   tarikhTamat: '',
   masaKeluar: '',
@@ -41,7 +42,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
   }
 
   function ubahUrusan(urusan) {
-    setData((d) => ({ ...d, urusan, jenis: '', jenisLain: '', masaKeluar: '', masaKembali: '' }))
+    setData((d) => ({ ...d, urusan, jenis: '', jenisLain: '', catatan: '', masaKeluar: '', masaKembali: '' }))
     setAdaJulat(false)
   }
 
@@ -82,6 +83,10 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
       setRalat('Sila nyatakan jenis.')
       return
     }
+    if (!isKWB && !data.catatan.trim()) {
+      setRalat(data.urusan === 'Rasmi' ? 'Sila isi catatan nama urusan rasmi.' : 'Sila isi catatan sebab cuti.')
+      return
+    }
     if (!data.tarikhMula) {
       setRalat('Sila isi tarikh.')
       return
@@ -113,7 +118,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
         dokumenNama = hasil.nama
       }
 
-      await onSimpan({ ...data, tempat: data.tempat.trim(), dokumenURL, dokumenNama })
+      await onSimpan({ ...data, tempat: data.tempat.trim(), catatan: data.catatan.trim(), dokumenURL, dokumenNama })
     } catch (err) {
       setRalat(err.message || 'Gagal simpan rekod. Cuba lagi.')
       console.error(err)
@@ -190,6 +195,23 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
             value={data.jenisLain}
             onChange={(e) => setData((d) => ({ ...d, jenisLain: e.target.value }))}
             className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
+          />
+        </div>
+      )}
+
+      {!isKWB && (
+        <div>
+          <label htmlFor="catatan" className="block text-sm font-medium text-ink mb-1">
+            {data.urusan === 'Rasmi' ? 'Catatan (Nama Urusan Rasmi)' : 'Catatan (Sebab Cuti)'}
+          </label>
+          <input
+            id="catatan"
+            type="text"
+            required
+            value={data.catatan}
+            onChange={(e) => setData((d) => ({ ...d, catatan: e.target.value }))}
+            className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
+            placeholder={data.urusan === 'Rasmi' ? 'contoh: Mesyuarat JPN' : 'contoh: Demam'}
           />
         </div>
       )}

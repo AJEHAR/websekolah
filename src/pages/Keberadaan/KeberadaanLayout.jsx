@@ -6,6 +6,7 @@ const TAJUK_SUBPAGE = {
   '/keberadaan/hari-ini': 'Hari Ini',
   '/keberadaan/esok': 'Esok',
   '/keberadaan/log': 'Log',
+  '/keberadaan/saya': 'Rekod Saya',
 }
 
 export default function KeberadaanLayout() {

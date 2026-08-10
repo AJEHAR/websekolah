@@ -29,6 +29,12 @@ export default function DetailModal({ rekod, onClose }) {
         </span>
 
         <dl className="text-sm space-y-2 border-t border-border pt-3">
+          {rekod.catatan && (
+            <div className="flex justify-between gap-3">
+              <dt className="text-inkmuted">{rekod.urusan === 'Rasmi' ? 'Nama Urusan' : 'Sebab Cuti'}</dt>
+              <dd className="text-ink font-medium text-right">{rekod.catatan}</dd>
+            </div>
+          )}
           <div className="flex justify-between gap-3">
             <dt className="text-inkmuted">Tarikh</dt>
             <dd className="text-ink font-medium text-right">

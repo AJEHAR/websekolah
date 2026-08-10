@@ -14,3 +14,12 @@ export function labelRingkas(rekod) {
   }
   return jenisPaparan || rekod.urusan
 }
+
+// Untuk paparan ringkas (Kalendar Bulanan, Senarai Keberadaan Saya):
+// Rasmi -> papar Catatan (nama urusan rasmi); Cuti -> papar Jenis sahaja (bukan catatan/sebab,
+// demi privasi); KWB -> sama macam labelRingkas biasa.
+export function labelSenarai(rekod) {
+  if (rekod.urusan === 'Rasmi') return rekod.catatan || rekod.jenis
+  if (rekod.urusan === 'Cuti') return rekod.jenis === 'Lain-lain (nyatakan)' ? rekod.jenisLain : rekod.jenis
+  return labelRingkas(rekod)
+}

@@ -41,14 +41,14 @@ export default function App() {
           <Route path="/hubungi" element={<Hubungi />} />
 
           <Route path="/profil" element={<Profile />} />
-          <Route path="/profil/kehadiran" element={<SenaraiKeberadaanSaya />} />
 
-          {/* Keberadaan - tab pills (Hari Ini/Esok/Log) dalam satu layout */}
+          {/* Keberadaan - tab pills (Hari Ini/Esok/Log/Saya) dalam satu layout */}
           <Route path="/keberadaan" element={<KeberadaanLayout />}>
             <Route index element={<Navigate to="hari-ini" replace />} />
             <Route path="hari-ini" element={<HariIni />} />
             <Route path="esok" element={<Esok />} />
             <Route path="log" element={<Log />} />
+            <Route path="saya" element={<SenaraiKeberadaanSaya />} />
           </Route>
 
           {/* Panel Admin - tab pills (Staff/Menunggu Kelulusan/Pentadbir) */}

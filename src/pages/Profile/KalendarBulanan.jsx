@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
+import { Eye } from 'lucide-react'
 import { namaHari, bilanganHariDalamBulan } from '../../lib/dateUtils.js'
-import { warnaBadge, labelRingkas } from '../Keberadaan/badgeUtils.js'
+import { warnaBadge, labelSenarai } from '../Keberadaan/badgeUtils.js'
+import DetailModal from '../Keberadaan/DetailModal.jsx'
 
 const NAMA_BULAN = [
   'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun',
@@ -17,6 +19,7 @@ function pad2(n) {
 export default function KalendarBulanan({ senarai }) {
   const [tahun, setTahun] = useState(TAHUN_SEMASA)
   const [bulan, setBulan] = useState(new Date().getMonth() + 1)
+  const [rekodLihat, setRekodLihat] = useState(null)
 
   const hariDalamBulan = bilanganHariDalamBulan(tahun, bulan)
 
@@ -60,14 +63,24 @@ export default function KalendarBulanan({ senarai }) {
           return (
             <div
               key={hari}
-              className="flex items-center gap-3 px-3 py-2"
+              className="flex items-center gap-2 px-3 py-2"
               style={rekod ? { backgroundColor: warna.bg } : undefined}
             >
               <span className="text-xs font-semibold text-inkmuted w-6 shrink-0">{hari}</span>
               {rekod ? (
-                <span className="text-xs font-medium truncate" style={{ color: warna.teks }}>
-                  {labelRingkas(rekod)} · {rekod.tempat}
-                </span>
+                <>
+                  <span className="text-xs font-medium truncate flex-1 min-w-0" style={{ color: warna.teks }}>
+                    {labelSenarai(rekod)}
+                  </span>
+                  <button
+                    onClick={() => setRekodLihat(rekod)}
+                    aria-label="Lihat butiran"
+                    className="p-1 rounded-card hover:bg-black/10 shrink-0"
+                    style={{ color: warna.teks }}
+                  >
+                    <Eye size={14} />
+                  </button>
+                </>
               ) : hujungMinggu ? (
                 <span className="text-xs text-inkmuted">{namaHariIni}</span>
               ) : null}
@@ -75,6 +88,8 @@ export default function KalendarBulanan({ senarai }) {
           )
         })}
       </div>
+
+      <DetailModal rekod={rekodLihat} onClose={() => setRekodLihat(null)} />
     </div>
   )
 }

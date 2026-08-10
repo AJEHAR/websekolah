@@ -9,6 +9,7 @@ export const NAV_ITEMS = [
       { label: 'Hari Ini', to: '/keberadaan/hari-ini' },
       { label: 'Esok', to: '/keberadaan/esok' },
       { label: 'Log', to: '/keberadaan/log' },
+      { label: 'Rekod Saya', to: '/keberadaan/saya' },
     ],
   },
   {
@@ -21,14 +22,7 @@ export const NAV_ITEMS = [
       { label: 'Harian', to: '/guru-bertugas/harian' },
     ],
   },
-  {
-    label: 'Profil',
-    to: '/profil',
-    children: [
-      { label: 'Profil Saya', to: '/profil' },
-      { label: 'Senarai Keberadaan Saya', to: '/profil/kehadiran' },
-    ],
-  },
+  { label: 'Profil', to: '/profil' },
 ]
 
 // Ditambah secara berasingan (hanya untuk admin) - lihat Navbar.jsx
