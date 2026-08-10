@@ -119,6 +119,17 @@ kehadiran/{id auto}
 
 **Deploy storage rules:** Salin kandungan `storage.rules` ke Firebase Console > Storage > Rules.
 
+## Panel Admin
+
+Route `/admin` — sekatan akses automatik (perlu log masuk + wujud dalam koleksi `admins`). Link "Panel Admin" hanya terpapar dalam Navbar untuk admin.
+
+**Fungsi:**
+- Senarai semua staff (carian ikut nama/emel/jawatan)
+- Tambah staff baru (pra-daftar guna emel — sebelum staff tu log masuk kali pertama)
+- Edit profile staff sedia ada (emel dikunci selepas dicipta — ia ID dokumen)
+- Padam profile staff
+- Label "Belum log masuk" terpapar untuk profile yang admin cipta tapi staff belum log masuk lagi (tiada `uid` dalam rekod)
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**
@@ -146,9 +157,10 @@ kehadiran/{id auto}
 - [x] Struktur routing + contoh nested route: Berita (senarai + sub-page artikel), Galeri, Hubungi (semua kosong buat masa ini)
 - [x] Firebase Authentication (Google Sign-In) - kod sedia, perlu isi `.env` bila projek Firebase siap
 - [x] Page Profile (pusat data staff: Nama, IC, Jawatan, Kategori, Gambar) + Firestore security rules
-- [x] Page Keberadaan (isi borang, hari ini/esok ikut Guru/AKP, log julat tarikh) + Storage rules
+- [x] Page Keberadaan (isi borang, hari ini/esok ikut Guru/PPM/AKP, log julat tarikh) + Storage rules
+- [x] Panel Admin (senarai staff, tambah/edit/padam profile, pra-daftar sebelum staff log masuk)
 - [ ] Isi kandungan sebenar: Home, Berita (integrasi Google Sheet/Firestore), Galeri, Hubungi
 - [ ] Page: Tentang Kami / Sejarah Sekolah (contoh seksyen dengan sub-page)
-- [ ] Panel Admin (senarai semua staff, tambah/edit profile staff lain)
+- [ ] Laporan Harian (kira kehadiran Guru + PPM sahaja, AKP dikecualikan)
 
 Kita akan bina setiap item di atas satu per satu.

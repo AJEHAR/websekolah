@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom'
 import { LogIn, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useIsAdmin } from '../hooks/useIsAdmin.js'
 
 // Nav penuh untuk desktop sahaja (mobile guna BottomTabBar)
 const navLinks = [
@@ -14,6 +15,8 @@ const navLinks = [
 
 export default function Navbar() {
   const { user, signInWithGoogle, signOutUser } = useAuth()
+  const { isAdmin } = useIsAdmin(user)
+  const links = isAdmin ? [...navLinks, { label: 'Panel Admin', to: '/admin' }] : navLinks
 
   return (
     <header className="sticky top-0 z-40 bg-ink text-white">
@@ -27,7 +30,7 @@ export default function Navbar() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {links.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}

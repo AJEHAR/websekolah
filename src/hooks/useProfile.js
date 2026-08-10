@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase.js'
-
-// ID dokumen Firestore = emel yang "dibersihkan" (Firestore tak benarkan '/' dalam doc ID)
-function emelKeDocId(emel) {
-  return emel.trim().toLowerCase().replace(/\//g, '_')
-}
+import { emelKeDocId } from '../lib/emelUtils.js'
 
 export function useProfile(user) {
   const [profile, setProfile] = useState(null)

@@ -11,6 +11,7 @@ import Keberadaan from './pages/Keberadaan/Keberadaan.jsx'
 import BeritaLayout from './pages/Berita/BeritaLayout.jsx'
 import BeritaList from './pages/Berita/BeritaList.jsx'
 import BeritaDetail from './pages/Berita/BeritaDetail.jsx'
+import Admin from './pages/Admin/Admin.jsx'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/profil" element={<Profile />} />
           <Route path="/profil/kehadiran" element={<SenaraiKeberadaanSaya />} />
           <Route path="/keberadaan" element={<Keberadaan />} />
+          <Route path="/admin" element={<Admin />} />
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}
         </Routes>
