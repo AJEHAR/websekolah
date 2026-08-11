@@ -52,7 +52,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 lg:py-10">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
       <h1 className="text-xl sm:text-2xl font-bold text-ink">Panel Admin</h1>
       <p className="text-xs text-inkmuted mt-1 mb-5">
         {TAJUK_SUBPAGE[location.pathname] ?? ''}

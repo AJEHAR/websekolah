@@ -37,13 +37,15 @@ export default function SenaraiKeberadaanSaya() {
 
   if (rekodEdit) {
     return (
-      <KeberadaanForm
-        profiles={profiles}
-        rekod={rekodEdit}
-        emelSendiri={user.email}
-        onSimpan={simpanEdit}
-        onBatal={() => setRekodEdit(null)}
-      />
+      <div className="max-w-lg">
+        <KeberadaanForm
+          profiles={profiles}
+          rekod={rekodEdit}
+          emelSendiri={user.email}
+          onSimpan={simpanEdit}
+          onBatal={() => setRekodEdit(null)}
+        />
+      </div>
     )
   }
 

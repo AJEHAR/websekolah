@@ -18,7 +18,7 @@ export default function Daftar() {
 
   if (selesai) {
     return (
-      <div className="bg-surface border border-border rounded-card p-8 text-center">
+      <div className="max-w-lg bg-surface border border-border rounded-card p-8 text-center">
         <p className="text-sm font-medium text-ink mb-5">Rekod keberadaan berjaya dihantar.</p>
         <div className="flex gap-3 justify-center">
           <button
@@ -39,7 +39,7 @@ export default function Daftar() {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-card p-6 sm:p-8">
+    <div className="max-w-lg bg-surface border border-border rounded-card p-6 sm:p-8">
       <KeberadaanForm
         profiles={profilesAktif}
         rekod={null}
