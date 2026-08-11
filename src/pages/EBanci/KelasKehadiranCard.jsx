@@ -47,8 +47,12 @@ export default function KelasKehadiranCard({ kelas, rekod, onIsi, onLihat, onPad
       <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border">
         {sudahIsi ? (
           <>
-            <button onClick={onIsi} aria-label="Edit kehadiran" className="p-2 rounded-card hover:bg-base text-inkmuted">
-              <Pencil size={16} />
+            <button
+              onClick={onIsi}
+              className="flex-1 h-9 rounded-card text-white text-xs font-semibold flex items-center justify-center gap-1"
+              style={{ backgroundColor: '#378ADD' }}
+            >
+              <Pencil size={13} /> Edit
             </button>
             <button onClick={onLihat} aria-label="Lihat butiran" className="p-2 rounded-card hover:bg-base text-inkmuted">
               <Eye size={16} />
