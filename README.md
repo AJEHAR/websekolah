@@ -278,8 +278,8 @@ Dua page baru, struktur sahaja (sub-page semua *placeholder* "akan dibina kemudi
 /maklumat-murid/maklumat-asas    -> Maklumat Asas Murid
 
 /ebanci                          -> redirect ke kehadiran-murid
-/ebanci/kehadiran-murid          -> Kehadiran Murid (guru isi setiap hari persekolahan)
-/ebanci/papan-rmt                -> Papan Kehadiran RMT (data diambil dari Kehadiran Murid)
+/ebanci/kehadiran-murid          -> Kehadiran Murid (SIAP - lihat bahagian bawah)
+/ebanci/papan-rmt                -> Papan Kehadiran RMT (placeholder - akan dibina)
 ```
 
 **Nota:** Kedua-dua page ni **berkait** - Kehadiran Murid akan jadi sumber data untuk Papan Kehadiran RMT, dan berkemungkinan Maklumat Murid (terutama Maklumat Asas Murid) jadi rujukan senarai murid untuk Kehadiran Murid. Struktur data & hubungan sebenar akan dibincang dan dibina langkah demi langkah.
@@ -324,6 +324,25 @@ Route `/maklumat-murid/semakan` - jadual PENUH (semua lajur nampak, macam buka f
 **Kelengkapan Data Ikut Kelas** - analisis dibina TERUS dalam page ni: setiap kelas dikira bilangan medan kosong, disusun kelas paling tak lengkap dulu. Kelas 0 medan kosong papar "Lengkap" (hijau); ada medan kosong papar amaran (merah) + bilangan murid tak lengkap.
 
 **Panel Admin > Lajur Murid** (`/admin/lajur-murid`) - admin boleh nyahtanda lajur yang tak perlu papar dalam jadual Semakan Murid (contoh: sorok lajur kewangan/IC penjaga kalau nak jadual lebih ringkas). Tetapan simpan dalam `tetapan/lajurMurid`, terpakai untuk SEMUA staff (bukan setiap orang tetapan sendiri).
+
+## Kehadiran Murid (eBanci)
+
+Route `/ebanci/kehadiran-murid`. Flow: pilih tarikh -> senarai semua kelas (kad merah berkelip = belum diisi tarikh tu, biru = dah diisi) -> tekan kelas -> popup senarai semua ahli kelas (default semua hadir/hijau) -> tekan nama untuk tanda tak hadir (jadi kelabu) -> Submit.
+
+**Snapshot RMT (bukan rujukan langsung ke data murid semasa):** status RMT murid boleh berubah dalam bulan yang sama (kadang asrama, kadang RMT). Jadi setiap kali submit, `adalahRMT` untuk setiap murid **disimpan terus dalam rekod kehadiran hari tu** (snapshot pada masa submit), BUKAN dirujuk semula ke `murid.statusRMT` bila Papan Kehadiran RMT dibina nanti. Murid PRA sentiasa `adalahRMT: false` ("PRA lain", tak dikira RMT langsung).
+
+**Struktur data:**
+```
+kehadiranMurid/{tarikh_namaKelas}
+  tarikh, namaKelas
+  senaraiMurid: [{ idMurid, nama, hadir: bool, adalahRMT: bool }, ...]
+  jumlahMurid, jumlahHadir, jumlahTakHadir, peratusKehadiran   <- dikira & disimpan terus
+  updatedAt, updatedBy
+```
+
+Senarai kelas & ahli diambil terus dari koleksi `murid` (medan `namaKelas`) - tiada koleksi "kelas" berasingan. Kad kelas papar jumlah/hadir/tak hadir/peratus terus dari rekod tersimpan; ikon mata papar senarai penuh siapa hadir (dengan tag RMT) dan siapa tak hadir.
+
+**Kebenaran:** mana-mana staff log masuk boleh isi/edit/padam kehadiran mana-mana kelas (bukan admin sahaja, dan bukan terhad guru kelas tu sahaja).
 
 ## Cara Tambah Page Baru
 
