@@ -353,6 +353,18 @@ Route `/ebanci/papan-rmt`. Jadual **buku pajang bulanan** (bukan papan harian) -
 
 Baca terus daripada snapshot `adalahRMT`/`hadir`/`jantina` yang disimpan dalam `kehadiranMurid` masa Kehadiran Murid disubmit (BUKAN rujuk balik `murid.statusRMT` semasa) - ini yang buat papan ni tepat walaupun status murid berubah dalam bulan yang sama.
 
+## Jana Banci (dalam Guru Bertugas)
+
+Route `/guru-bertugas/banci`. Pilih tarikh -> 3 bahagian:
+
+1. **Senarai Kelas Belum Isi Kehadiran** - senarai ringkas nama kelas (tapis dari `murid.namaKelas` vs rekod `kehadiranMurid` untuk tarikh tu)
+2. **Kotak Salin WhatsApp** - mesej siap format "Kelas yang disenaraikan sila isi banci dengan segera: ..." dengan butang salin (`navigator.clipboard`)
+3. **Butang Jana Banci** - KELABU & tak boleh tekan kalau masih ada kelas belum isi; merah & boleh tekan bila semua kelas dah lengkap
+
+Bila ditekan, **Papan Banci Kehadiran** keluar - jadual Kategori (MBK Prasekolah/Asrama/Harian) x Bilangan/Hadir/Tidak Hadir/Peratus, + baris Keseluruhan - format ikut papan kehadiran fizikal sekolah. Ada butang salin teks untuk papan ni juga.
+
+**Kategori (`kategoriBanci`)** di-snapshot masa Kehadiran Murid disubmit (sama prinsip macam `adalahRMT`) - PRASEKOLAH/ASRAMA/HARIAN, mutually exclusive. Lihat `KehadiranMuridModal.jsx`.
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

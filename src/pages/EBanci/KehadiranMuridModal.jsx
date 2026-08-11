@@ -31,14 +31,20 @@ export default function KehadiranMuridModal({ kelas, rekod, tarikh, user, onClos
   async function hantar() {
     setMenyimpan(true)
     try {
-      const senaraiMurid = kelas.ahli.map((m) => ({
-        idMurid: m.idMurid,
-        nama: m.nama,
-        jantina: m.jantina,
-        hadir: Boolean(kehadiran[m.idMurid]),
-        // Snapshot status RMT PADA MASA INI - PRA tak dikira RMT langsung.
-        adalahRMT: !adalahPra(m) && m.statusRMT === 'YA',
-      }))
+      const senaraiMurid = kelas.ahli.map((m) => {
+        const pra = adalahPra(m)
+        const asrama = (m.statusAsrama || '').toUpperCase() === 'YA'
+        return {
+          idMurid: m.idMurid,
+          nama: m.nama,
+          jantina: m.jantina,
+          hadir: Boolean(kehadiran[m.idMurid]),
+          // Snapshot PADA MASA INI - status boleh berubah dalam bulan sama, jadi
+          // jangan rujuk balik data murid semasa bila jana laporan/papan kemudian.
+          adalahRMT: !pra && !asrama && m.statusRMT === 'YA',
+          kategoriBanci: pra ? 'PRASEKOLAH' : asrama ? 'ASRAMA' : 'HARIAN',
+        }
+      })
       await simpanKehadiranKelas(tarikh, kelas.namaKelas, senaraiMurid, user.uid)
       onSelesai()
     } finally {
