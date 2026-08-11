@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
+import { getRedirectResult, onAuthStateChanged, signInWithRedirect, signOut } from 'firebase/auth'
 import { auth, googleProvider, isFirebaseConfigured } from '../lib/firebase.js'
 
 const AuthContext = createContext(null)
@@ -10,6 +10,15 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!isFirebaseConfigured) return
+
+    // Semak hasil redirect (bila balik dari log masuk Google) - perlu untuk
+    // signInWithRedirect. Guna redirect (bukan popup) sebab GitHub Pages hantar
+    // header Cross-Origin-Opener-Policy yang block cara Firebase check popup
+    // tertutup (auth/cancelled-popup-request).
+    getRedirectResult(auth).catch((err) => {
+      console.error('Ralat redirect log masuk:', err)
+    })
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser)
       setLoading(false)
@@ -22,7 +31,7 @@ export function AuthProvider({ children }) {
       window.alert('Firebase belum disetup lagi. Isi maklumat dalam fail .env dahulu (lihat README).')
       return Promise.resolve()
     }
-    return signInWithPopup(auth, googleProvider)
+    return signInWithRedirect(auth, googleProvider)
   }
 
   const signOutUser = () => {
