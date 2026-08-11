@@ -6,6 +6,7 @@ export const NAV_ITEMS = [
     label: 'Keberadaan',
     to: '/keberadaan',
     children: [
+      { label: 'Daftar Keberadaan', to: '/keberadaan/daftar' },
       { label: 'Hari Ini', to: '/keberadaan/hari-ini' },
       { label: 'Esok', to: '/keberadaan/esok' },
       { label: 'Log', to: '/keberadaan/log' },
@@ -20,6 +21,24 @@ export const NAV_ITEMS = [
       { label: 'Laporan 3K', to: '/guru-bertugas/3k' },
       { label: 'Jana Banci', to: '/guru-bertugas/banci' },
       { label: 'Harian', to: '/guru-bertugas/harian' },
+    ],
+  },
+  {
+    label: 'Maklumat Murid',
+    to: '/maklumat-murid',
+    children: [
+      { label: 'Daftar Masuk Murid', to: '/maklumat-murid/daftar-masuk' },
+      { label: 'Daftar Keluar Murid', to: '/maklumat-murid/daftar-keluar' },
+      { label: 'Maklumat Asas Murid', to: '/maklumat-murid/maklumat-asas' },
+      { label: 'Analisis', to: '/maklumat-murid/analisis' },
+    ],
+  },
+  {
+    label: 'eBanci',
+    to: '/ebanci',
+    children: [
+      { label: 'Kehadiran Murid', to: '/ebanci/kehadiran-murid' },
+      { label: 'Papan Kehadiran RMT', to: '/ebanci/papan-rmt' },
     ],
   },
   { label: 'Profil', to: '/profil' },

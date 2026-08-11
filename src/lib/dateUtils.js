@@ -1,11 +1,20 @@
+// Format Date jadi 'YYYY-MM-DD' guna komponen waktu TEMPATAN (bukan toISOString
+// yang tukar ke UTC - punca bug "esok jadi hari ini" untuk zon UTC+8 macam Malaysia).
+function formatISOTempatan(d) {
+  const tahun = d.getFullYear()
+  const bulan = String(d.getMonth() + 1).padStart(2, '0')
+  const hari = String(d.getDate()).padStart(2, '0')
+  return `${tahun}-${bulan}-${hari}`
+}
+
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10)
+  return formatISOTempatan(new Date())
 }
 
 export function tambahHariISO(iso, hari) {
   const d = new Date(`${iso}T00:00:00`)
   d.setDate(d.getDate() + hari)
-  return d.toISOString().slice(0, 10)
+  return formatISOTempatan(d)
 }
 
 export function formatTarikhPaparan(iso) {

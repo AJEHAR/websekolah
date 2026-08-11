@@ -46,7 +46,7 @@ export default function Log() {
     <div>
       <form onSubmit={papar} className="flex flex-wrap items-end gap-3 mb-5">
         <div>
-          <label htmlFor="dari" className="block text-xs font-medium text-ink mb-1">Dari</label>
+          <label htmlFor="dari" className="block text-sm font-semibold text-ink mb-1">Dari</label>
           <input
             id="dari"
             type="date"
@@ -56,7 +56,7 @@ export default function Log() {
           />
         </div>
         <div>
-          <label htmlFor="hingga" className="block text-xs font-medium text-ink mb-1">Hingga</label>
+          <label htmlFor="hingga" className="block text-sm font-semibold text-ink mb-1">Hingga</label>
           <input
             id="hingga"
             type="date"

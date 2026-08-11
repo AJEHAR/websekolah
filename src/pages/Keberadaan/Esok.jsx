@@ -44,7 +44,7 @@ export default function Esok() {
 
   return (
     <div>
-      <p className="text-xs text-inkmuted mb-4">{formatTarikhPaparan(tarikh)}</p>
+      <p className="text-base sm:text-lg font-semibold text-ink mb-4">{formatTarikhPaparan(tarikh)}</p>
 
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>

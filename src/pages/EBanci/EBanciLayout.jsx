@@ -3,14 +3,11 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import AksesGate from '../../components/AksesGate.jsx'
 
 const TAJUK_SUBPAGE = {
-  '/keberadaan/daftar': 'Daftar Keberadaan',
-  '/keberadaan/hari-ini': 'Hari Ini',
-  '/keberadaan/esok': 'Esok',
-  '/keberadaan/log': 'Log',
-  '/keberadaan/saya': 'Rekod Saya',
+  '/ebanci/kehadiran-murid': 'Kehadiran Murid',
+  '/ebanci/papan-rmt': 'Papan Kehadiran RMT',
 }
 
-export default function KeberadaanLayout() {
+export default function EBanciLayout() {
   const { user, signInWithGoogle } = useAuth()
   const location = useLocation()
 
@@ -18,7 +15,7 @@ export default function KeberadaanLayout() {
     return (
       <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
         <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
-          <h1 className="text-xl font-bold text-ink">Keberadaan</h1>
+          <h1 className="text-xl font-bold text-ink">eBanci</h1>
           <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
           <button
             onClick={signInWithGoogle}
@@ -34,7 +31,7 @@ export default function KeberadaanLayout() {
   return (
     <AksesGate user={user}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-6 lg:py-10">
-        <h1 className="text-xl sm:text-2xl font-bold text-ink">Keberadaan</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-ink">eBanci</h1>
         <p className="text-xs text-inkmuted mt-1 mb-5">
           {TAJUK_SUBPAGE[location.pathname] ?? ''}
         </p>

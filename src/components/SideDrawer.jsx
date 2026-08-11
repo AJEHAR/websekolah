@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   X, Home, Newspaper, Image, Phone, CalendarCheck, Users,
-  User, ShieldCheck, LogIn, LogOut, ChevronDown,
+  User, ShieldCheck, LogIn, LogOut, ChevronDown, GraduationCap, ClipboardList,
 } from 'lucide-react'
 
 const IKON = {
@@ -12,6 +12,8 @@ const IKON = {
   '/hubungi': Phone,
   '/keberadaan': CalendarCheck,
   '/guru-bertugas': Users,
+  '/maklumat-murid': GraduationCap,
+  '/ebanci': ClipboardList,
   '/profil': User,
   '/admin': ShieldCheck,
 }

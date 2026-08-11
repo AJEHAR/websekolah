@@ -115,13 +115,18 @@ Nota: Senarai Keberadaan kini guna koleksi utama `kehadiran` (bukan sub-koleksi)
 
 **Deploy security rules:** Salin kandungan `firestore.rules` ke Firebase Console > Firestore Database > Rules, atau guna Firebase CLI (`firebase deploy --only firestore:rules`).
 
+## Bug Kritikal Dibetulkan: Tarikh UTC vs Tempatan
+
+`todayISO()` dan `tambahHariISO()` (dalam `dateUtils.js`) dulu guna `.toISOString()` yang tukar ke **UTC**. Untuk Malaysia (UTC+8), ni sebabkan "esok" dikira semula jadi "hari ini" (dan sebelum jam 8 pagi waktu Malaysia, "hari ini" pun boleh silap jadi semalam). Dibetulkan guna komponen tarikh tempatan (`getFullYear()`/`getMonth()`/`getDate()`) - lihat komen dalam `dateUtils.js`. **Elak guna `.toISOString()` untuk sebarang pengiraan tarikh akan datang dalam projek ni.**
+
 ## Page Keberadaan
 
 **Nota:** "Rekod Saya" (dulu `/profil/kehadiran`) dipindah ke bawah kumpulan Keberadaan (`/keberadaan/saya`) - lebih logik dikumpul sekali dengan Hari Ini/Esok/Log berbanding di bawah Profil. Tile "Senarai Keberadaan" dalam Profile page masih ada, cuma pautan dia dikemas kini.
 
 Dipecah jadi sub-page (nested route) dengan tab pills — bukan satu page panjang:
 ```
-/keberadaan            -> redirect ke /keberadaan/hari-ini
+/keberadaan            -> redirect ke /keberadaan/daftar
+/keberadaan/daftar     -> Daftar Keberadaan (borang terus - paling atas, senang dijumpai)
 /keberadaan/hari-ini   -> Hari Ini (kad Guru/PPM/AKP berasingan)
 /keberadaan/esok       -> Esok (struktur sama)
 /keberadaan/log        -> Log (julat tarikh)
@@ -261,6 +266,56 @@ Borang Keberadaan sekarang ada medan **Catatan** (wajib) untuk Rasmi (nama urusa
 - **KWB** -> sama macam biasa (jenis + masa)
 
 Detail penuh (termasuk catatan sebenar untuk Cuti, tempat, dokumen) cuma terpapar bila tekan ikon **mata** (`DetailModal.jsx`).
+
+## Maklumat Murid & eBanci (asas sahaja, akan dibincang lagi)
+
+Dua page baru, struktur sahaja (sub-page semua *placeholder* "akan dibina kemudian") - ikut corak sama macam Guru Bertugas (Layout + accordion drawer, tiada tab):
+
+```
+/maklumat-murid                  -> redirect ke daftar-masuk
+/maklumat-murid/daftar-masuk     -> Daftar Masuk Murid
+/maklumat-murid/daftar-keluar    -> Daftar Keluar Murid
+/maklumat-murid/maklumat-asas    -> Maklumat Asas Murid
+
+/ebanci                          -> redirect ke kehadiran-murid
+/ebanci/kehadiran-murid          -> Kehadiran Murid (guru isi setiap hari persekolahan)
+/ebanci/papan-rmt                -> Papan Kehadiran RMT (data diambil dari Kehadiran Murid)
+```
+
+**Nota:** Kedua-dua page ni **berkait** - Kehadiran Murid akan jadi sumber data untuk Papan Kehadiran RMT, dan berkemungkinan Maklumat Murid (terutama Maklumat Asas Murid) jadi rujukan senarai murid untuk Kehadiran Murid. Struktur data & hubungan sebenar akan dibincang dan dibina langkah demi langkah.
+
+## Maklumat Asas Murid (import XLSX)
+
+Sub-page `/maklumat-murid/maklumat-asas` dah berfungsi penuh:
+
+**Import:** Admin muat naik fail Excel "Senarai Keseluruhan Murid" (eksport TERUS dari MOEIS, tak perlu ubah apa-apa). Sistem **auto-kesan baris header** (cari baris yang ada "BIL." dan "ID MURID") - penting sebab fail rasmi ada beberapa baris tajuk sebelum header sebenar. Pratonton dulu (10 baris pertama + perbandingan) sebelum sahkan.
+
+**Mod GANTI SEPENUHNYA (bukan update/merge):** setiap import dianggap snapshot TERKINI sekolah - murid dalam fail ditambah/ditulis ganti, murid yang TIADA dalam fail (contoh: dah pindah/tamat) akan **DIPADAM**. Pratonton papar jelas: berapa baru, berapa dikemas kini, berapa akan dipadam - dengan amaran jelas sebelum sahkan.
+
+**Status RMT (medan terbitan, bukan dari Excel):** dikira automatik semasa import - kalau `STATUS ASRAMA` bukan "YA" (kosong/tiada data), murid tu automatik ditanda `statusRMT = 'YA'`. Ini akan jadi asas untuk eBanci > Papan Kehadiran RMT nanti.
+
+**Struktur data:**
+```
+murid/{idMurid}          <- ID dokumen = ID Murid (dari sistem MOEIS)
+  ├── 60 medan (lihat src/pages/MaklumatMurid/muridFields.js untuk pemetaan penuh)
+  └── updatedAt, updatedBy
+```
+
+Medan dikumpul 6 kategori untuk paparan (`KUMPULAN_MEDAN`): Identiti & Akademik, OKU & Ketidakupayaan, Kewangan, Penjaga 1, Penjaga 2, Alamat.
+
+**Kebenaran:** semua staff log masuk boleh **baca** (umum, sama macam Keberadaan) - termasuk data sensitif (IC penjaga, pendapatan, kategori OKU). Cuma admin boleh **import/edit/padam**.
+
+**Nota:** `xlsx` (SheetJS) ditambah sebagai dependency untuk baca fail Excel terus dalam browser (tiada server backend diperlukan) - saiz bundle naik ~350KB sebab ni.
+
+## Analisis Maklumat Murid
+
+Sub-page `/maklumat-murid/analisis` - semua statistik dikira client-side (`statistikMurid.js`) dari senarai murid:
+- Jumlah keseluruhan, Prasekolah, Bukan Prasekolah
+- Keterangan Bidang, Jantina, Kaum, Agama - setiap satu **dipisah** Prasekolah vs Bukan Prasekolah (carta bar, `SenaraiKiraan.jsx`)
+- Jumlah Murid Ikut Kelas (carta bar)
+- Jantina/Kaum/Agama Ikut Kelas (jadual silang, `JadualIkutKelas.jsx`)
+
+"Prasekolah" dikesan dari medan `tahunTingkatan` (fungsi `adalahPra()`).
 
 ## Cara Tambah Page Baru
 

@@ -6,6 +6,7 @@ import Hubungi from './pages/Hubungi.jsx'
 import Profile from './pages/Profile/Profile.jsx'
 import SenaraiKeberadaanSaya from './pages/Profile/SenaraiKeberadaanSaya.jsx'
 import KeberadaanLayout from './pages/Keberadaan/KeberadaanLayout.jsx'
+import Daftar from './pages/Keberadaan/Daftar.jsx'
 import HariIni from './pages/Keberadaan/HariIni.jsx'
 import Esok from './pages/Keberadaan/Esok.jsx'
 import Log from './pages/Keberadaan/Log.jsx'
@@ -22,6 +23,14 @@ import Kumpulan from './pages/GuruBertugas/Kumpulan.jsx'
 import Laporan3K from './pages/GuruBertugas/Laporan3K.jsx'
 import LaporanBanci from './pages/GuruBertugas/LaporanBanci.jsx'
 import LaporanHarian from './pages/GuruBertugas/LaporanHarian.jsx'
+import MaklumatMuridLayout from './pages/MaklumatMurid/MaklumatMuridLayout.jsx'
+import DaftarMasuk from './pages/MaklumatMurid/DaftarMasuk.jsx'
+import DaftarKeluar from './pages/MaklumatMurid/DaftarKeluar.jsx'
+import MaklumatAsas from './pages/MaklumatMurid/MaklumatAsas.jsx'
+import Analisis from './pages/MaklumatMurid/Analisis.jsx'
+import EBanciLayout from './pages/EBanci/EBanciLayout.jsx'
+import KehadiranMurid from './pages/EBanci/KehadiranMurid.jsx'
+import PapanRMT from './pages/EBanci/PapanRMT.jsx'
 
 export default function App() {
   return (
@@ -44,7 +53,8 @@ export default function App() {
 
           {/* Keberadaan - tab pills (Hari Ini/Esok/Log/Saya) dalam satu layout */}
           <Route path="/keberadaan" element={<KeberadaanLayout />}>
-            <Route index element={<Navigate to="hari-ini" replace />} />
+            <Route index element={<Navigate to="daftar" replace />} />
+            <Route path="daftar" element={<Daftar />} />
             <Route path="hari-ini" element={<HariIni />} />
             <Route path="esok" element={<Esok />} />
             <Route path="log" element={<Log />} />
@@ -67,6 +77,22 @@ export default function App() {
             <Route path="3k" element={<Laporan3K />} />
             <Route path="banci" element={<LaporanBanci />} />
             <Route path="harian" element={<LaporanHarian />} />
+          </Route>
+
+          {/* Maklumat Murid - Daftar Masuk/Keluar, Maklumat Asas */}
+          <Route path="/maklumat-murid" element={<MaklumatMuridLayout />}>
+            <Route index element={<Navigate to="daftar-masuk" replace />} />
+            <Route path="daftar-masuk" element={<DaftarMasuk />} />
+            <Route path="daftar-keluar" element={<DaftarKeluar />} />
+            <Route path="maklumat-asas" element={<MaklumatAsas />} />
+            <Route path="analisis" element={<Analisis />} />
+          </Route>
+
+          {/* eBanci - Kehadiran Murid, Papan Kehadiran RMT */}
+          <Route path="/ebanci" element={<EBanciLayout />}>
+            <Route index element={<Navigate to="kehadiran-murid" replace />} />
+            <Route path="kehadiran-murid" element={<KehadiranMurid />} />
+            <Route path="papan-rmt" element={<PapanRMT />} />
           </Route>
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}
