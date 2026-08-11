@@ -369,27 +369,58 @@ Bila ditekan, **Papan Banci Kehadiran** keluar - jadual Kategori (MBK Prasekolah
 
 ## eUBKS Ko (Unit Beruniform, Kelab dan Sukan)
 
-Page baru: `/eubks`. Sub-page: Murid UBKS (SIAP), Kehadiran/Laporan/Perancangan UBKS (placeholder - akan dibina kemudian).
+Page baru: `/eubks`. 4 sub-page: Murid UBKS, Kehadiran UBKS, Laporan UBKS (placeholder), Perancangan UBKS (placeholder).
 
-**Murid UBKS** (`/eubks/murid-ubks`) flow:
-1. Pilih Tahun sesi (default tahun semasa) - keahlian unit di-skop ikut tahun sesi (murid boleh berbeza unit tahun ke tahun)
-2. Admin "Tambah Unit" - taip nama unit sendiri (contoh: Pengakap, Kebitaraan)
-3. Tekan kad unit -> modal urus unit terbuka
-4. Dalam modal: pilih Tahun (darjah, contoh Tahun 6) -> senarai murid tahun tu (yang belum jadi ahli) -> tanda beberapa -> "Tambah ke Unit"
-5. Ulang langkah 4 untuk tahun/darjah lain dalam unit yang sama
-6. Boleh muat naik gambar unit (pilihan, guna Google Drive macam gambar profile)
+### Kategori Unit (Panel Admin > Kategori UBKS)
+
+Sebelum cipta unit, admin (seksyen `ubks`) kena setkan senarai kategori (contoh: Unit Beruniform/UB, Kelab/K, Sukan/S) - boleh tambah kategori baru bila-bila. Ni yang buat data boleh "merentasi" (contoh: Papan Kehadiran UBKS kumpul ikut kategori).
+
+### Murid UBKS (`/eubks/murid-ubks`)
+
+1. Pilih Tahun sesi (default tahun semasa)
+2. Admin "Tambah Unit" - taip nama unit + **wajib pilih kategori**
+3. Tekan kad unit -> modal urus unit
+4. Pilih Tahun (darjah) -> senarai murid tahun tu -> tandakan -> "Tambah ke Unit"
+5. Ulang untuk darjah lain
+6. **Tag LF (Kefungsian Rendah)** - dalam senarai ahli, admin boleh tandakan murid sebagai LF (ikon bintang). Murid LF dijangka SENTIASA hadir perjumpaan.
+7. Boleh muat naik gambar unit (pilihan)
+8. Carian nama unit disediakan pada senarai utama
+
+### Kehadiran UBKS (`/eubks/kehadiran-ubks`)
+
+Dua tab: **Isi Kehadiran** dan **Papan Kehadiran**.
+
+**Isi Kehadiran** - kehadiran ikut **perjumpaan** (1-12), bukan tarikh sahaja:
+1. Pilih Tahun sesi, Perjumpaan (1-12), Tarikh (default hari ini)
+2. Cari & pilih Unit (carian nama unit disediakan)
+3. Senarai ahli unit keluar - semua hadir (hijau) secara default, tekan nama untuk tanda tak hadir
+4. **Amaran LF** - murid bertag LF (ikon bintang kuning) bila ditekan untuk tanda TAK HADIR, keluar `window.confirm()` minta kepastian dulu sebelum benar-benar tanda tak hadir
+5. Submit - upsert ikut ID `{tahunSesi}_{unitId}_{perjumpaan}` (isi semula perjumpaan yang sama = kemas kini, bukan rekod berganda)
+
+**Papan Kehadiran** - macam Papan Kehadiran RMT (gaya pajang), tapi lajur = **perjumpaan (1-12) x setiap kategori unit** (bukan tarikh). Contoh struktur (kategori dinamik ikut apa yang admin dah setkan):
+```
+Bil | Nama Murid | Kelas | UB (1-12) + Jumlah | K (1-12) + Jumlah | S (1-12) + Jumlah
+```
+Murid boleh ada unit berlainan kategori serentak (contoh: 1 Unit Beruniform + 1 Kelab + 1 Sukan) - papan ni tunjuk kehadiran SEMUA track sekali dalam satu baris. Carian nama murid disediakan.
 
 **Struktur data:**
 ```
+kategoriUBKS/{id auto}
+  nama, kod (contoh 'UB'), turutan
+
 unitUBKS/{id auto}
-  tahunSesi (string, contoh "2026")
-  namaUnit
+  tahunSesi, namaUnit, kategoriUnit (kod)
   gambarUnit (url | null)
-  ahli: [{ idMurid, nama, tahunTingkatan }, ...]
-  updatedAt, updatedBy
+  ahli: [{ idMurid, nama, tahunTingkatan, adalahLF }, ...]
+
+kehadiranUBKS/{tahunSesi_unitId_perjumpaan}
+  tahunSesi, unitId, namaUnit, kategoriUnit, perjumpaan (1-12), tarikh
+  senaraiKehadiran: [{ idMurid, nama, hadir, adalahLF }, ...]
+  jumlahAhli, jumlahHadir, jumlahTakHadir
 ```
 
-**Kebenaran:** semua staff log masuk boleh baca; admin sahaja boleh cipta/kemas kini/padam unit (termasuk urus ahli & gambar).
+**Kebenaran:** `unitUBKS` & `kategoriUBKS` - baca umum, tulis seksyen `ubks` sahaja. `kehadiranUBKS` - mana-mana staff log masuk boleh isi (macam Kehadiran Murid).
+
 
 ## Admin Berperanan (Admin Penuh vs Admin Seksyen)
 

@@ -64,5 +64,6 @@ export const ADMIN_NAV_ITEM = {
     { label: 'Pentadbir', to: '/admin/pentadbir' },
     { label: 'Blok 3K', to: '/admin/blok3k' },
     { label: 'Lajur Murid', to: '/admin/lajur-murid' },
+    { label: 'Kategori UBKS', to: '/admin/kategori-ubks' },
   ],
 }

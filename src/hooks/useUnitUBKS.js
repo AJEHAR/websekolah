@@ -33,11 +33,12 @@ export function useUnitUBKSTahun(tahunSesi) {
   return { senarai, loading, muatSemula }
 }
 
-export async function tambahUnit(tahunSesi, namaUnit, uid) {
+export async function tambahUnit(tahunSesi, namaUnit, kategoriUnit, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await addDoc(collection(db, KOLEKSI), {
     tahunSesi: String(tahunSesi),
     namaUnit,
+    kategoriUnit,
     gambarUnit: null,
     ahli: [],
     createdAt: serverTimestamp(),

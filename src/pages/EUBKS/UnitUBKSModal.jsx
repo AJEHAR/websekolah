@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react'
-import { X, Upload, Trash2, Plus } from 'lucide-react'
+import { X, Upload, Trash2, Plus, Star } from 'lucide-react'
 import { useMuridList } from '../../hooks/useMurid.js'
+import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { kemaskiniUnit, padamUnit } from '../../hooks/useUnitUBKS.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 
 export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai }) {
   const { senarai: muridSenarai } = useMuridList()
+  const { senarai: kategoriSenarai } = useKategoriUBKS()
   const [namaUnit, setNamaUnit] = useState(unit?.namaUnit ?? '')
+  const [kategoriUnit, setKategoriUnit] = useState(unit?.kategoriUnit ?? '')
   const [ahli, setAhli] = useState(unit?.ahli ?? [])
   const [gambarUnit, setGambarUnit] = useState(unit?.gambarUnit ?? null)
   const [failGambar, setFailGambar] = useState(null)
@@ -46,13 +49,17 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
   function tambahKeUnit() {
     const baru = muridTahunIni
       .filter((m) => dipilihSementara.has(m.idMurid))
-      .map((m) => ({ idMurid: m.idMurid, nama: m.nama, tahunTingkatan: m.tahunTingkatan }))
+      .map((m) => ({ idMurid: m.idMurid, nama: m.nama, tahunTingkatan: m.tahunTingkatan, adalahLF: false }))
     setAhli((a) => [...a, ...baru])
     setDipilihSementara(new Set())
   }
 
   function buangAhli(idMurid) {
     setAhli((a) => a.filter((m) => m.idMurid !== idMurid))
+  }
+
+  function togglLF(idMurid) {
+    setAhli((a) => a.map((m) => (m.idMurid === idMurid ? { ...m, adalahLF: !m.adalahLF } : m)))
   }
 
   function pilihGambar(e) {
@@ -70,7 +77,7 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
         const hasil = await muatNaikKeDrive(failGambar, 'unitUBKS')
         gambarURL = hasil.url
       }
-      await kemaskiniUnit(unit.id, { namaUnit: namaUnit.trim(), ahli, gambarUnit: gambarURL }, user.uid)
+      await kemaskiniUnit(unit.id, { namaUnit: namaUnit.trim(), kategoriUnit, ahli, gambarUnit: gambarURL }, user.uid)
       onSelesai()
       onClose()
     } finally {
@@ -118,16 +125,33 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
           )}
         </div>
 
-        <div className="mb-5">
-          <label htmlFor="namaUnit" className="block text-sm font-medium text-ink mb-1">Nama Unit</label>
-          <input
-            id="namaUnit"
-            type="text"
-            disabled={!isAdmin}
-            value={namaUnit}
-            onChange={(e) => setNamaUnit(e.target.value)}
-            className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm disabled:opacity-60"
-          />
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <div>
+            <label htmlFor="namaUnit" className="block text-sm font-medium text-ink mb-1">Nama Unit</label>
+            <input
+              id="namaUnit"
+              type="text"
+              disabled={!isAdmin}
+              value={namaUnit}
+              onChange={(e) => setNamaUnit(e.target.value)}
+              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm disabled:opacity-60"
+            />
+          </div>
+          <div>
+            <label htmlFor="kategoriUnit" className="block text-sm font-medium text-ink mb-1">Kategori</label>
+            <select
+              id="kategoriUnit"
+              disabled={!isAdmin}
+              value={kategoriUnit}
+              onChange={(e) => setKategoriUnit(e.target.value)}
+              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm disabled:opacity-60"
+            >
+              <option value="">-- Pilih --</option>
+              {kategoriSenarai.map((k) => (
+                <option key={k.id} value={k.kod}>{k.nama}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {isAdmin && (
@@ -188,7 +212,14 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
         )}
 
         <div className="mb-6">
-          <p className="text-xs font-semibold text-ink mb-2">Ahli Unit ({ahli.length})</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-ink">Ahli Unit ({ahli.length})</p>
+            {isAdmin && (
+              <p className="text-[10px] text-inkmuted flex items-center gap-1">
+                <Star size={11} className="fill-current" style={{ color: '#F2C230' }} /> = Kefungsian Rendah (LF)
+              </p>
+            )}
+          </div>
           {Object.keys(ahliIkutTahun).length === 0 ? (
             <p className="text-xs text-inkmuted">Tiada ahli lagi.</p>
           ) : (
@@ -203,11 +234,28 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
                     <div className="border border-border rounded-card divide-y divide-border">
                       {senaraiAhli.map((m) => (
                         <div key={m.idMurid} className="flex items-center justify-between px-3 py-2 text-sm">
-                          <span className="text-ink">{m.nama}</span>
+                          <span className="text-ink flex items-center gap-1.5">
+                            {m.nama}
+                            {m.adalahLF && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#F2C230', color: '#1A1A1A' }}>
+                                LF
+                              </span>
+                            )}
+                          </span>
                           {isAdmin && (
-                            <button onClick={() => buangAhli(m.idMurid)} aria-label="Buang ahli" className="p-1 rounded-card hover:bg-base text-brand-red">
-                              <X size={14} />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => togglLF(m.idMurid)}
+                                aria-label={m.adalahLF ? 'Buang tag LF' : 'Tag sebagai LF'}
+                                className="p-1 rounded-card hover:bg-base"
+                                style={{ color: m.adalahLF ? '#F2C230' : '#B4B2A9' }}
+                              >
+                                <Star size={14} className={m.adalahLF ? 'fill-current' : ''} />
+                              </button>
+                              <button onClick={() => buangAhli(m.idMurid)} aria-label="Buang ahli" className="p-1 rounded-card hover:bg-base text-brand-red">
+                                <X size={14} />
+                              </button>
+                            </div>
                           )}
                         </div>
                       ))}
