@@ -137,5 +137,11 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
+
+    // Perancangan UBKS - mana-mana staff log masuk boleh isi (biasanya guru unit sendiri).
+    match /perancanganUBKS/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
   }
 }

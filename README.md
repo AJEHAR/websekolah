@@ -441,6 +441,28 @@ Admin tak lagi ya/tidak sahaja - ada medan `peranan` (array) pada setiap dokumen
 
 **Server (Firestore Rules):** `isSuperAdmin()` dan `isAdminSeksyen(seksyen)` - kuatkuasa di server, bukan setakat UI. Setiap koleksi rujuk fungsi yang sepadan (contoh `unitUBKS` guna `isAdminSeksyen('ubks')`).
 
+## Perancangan UBKS
+
+Route `/eubks/perancangan-ubks`. Sama asas dengan Kehadiran UBKS (12 perjumpaan, pilih unit, carian nama unit) tapi untuk RANCANG (bukan rekod kehadiran):
+
+1. Pilih Tahun sesi, cari & pilih unit
+2. **Kali pertama untuk unit tu** - pilih mod: "Sama untuk semua Tahun/Darjah" (satu jadual untuk seluruh unit) ATAU "Asingkan ikut Tahun/Darjah" (jadual berasingan setiap darjah, contoh Tahun 6 lain rancangan dari Tahun 4)
+3. Kalau mod "Asing" - pilih tahun/darjah dulu (tab untuk tukar antara darjah lain)
+4. Jadual keluar: **Bil Perjumpaan | Perancangan | Tarikh** (12 baris, 1-12)
+5. Tekan mana-mana baris - modal keluar: **Perancangan** (textarea - sokong bullet/numbering sebab teks panjang), **Tarikh**, dan checkbox **Sudah dilaksanakan**
+6. Baris yang ditanda "Sudah dilaksanakan" jadi **hijau** dalam jadual
+7. Carian (kandungan perancangan) + tapis (Semua/Selesai/Belum Selesai) disediakan atas jadual
+
+**Struktur data:**
+```
+perancanganUBKS/{unitId}                    <- mod 'sama'
+perancanganUBKS/{unitId}__{tahunDarjah}      <- mod 'asing' (satu dokumen setiap darjah)
+  unitId, namaUnit, tahunSesi, mode ('sama'|'asing'), tahunDarjah (null jika 'sama')
+  senaraiPerjumpaan: [{ perjumpaan, perancangan, tarikh, selesai }, ...] (12 entri)
+```
+
+**Nota untuk pembinaan akan datang:** Laporan UBKS (belum dibina) akan guna \`tarikh\` dan \`selesai\` dari perancangan ni sebagai asas laporan.
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**
