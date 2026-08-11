@@ -1,117 +1,167 @@
 import { useMemo, useState } from 'react'
-import { Utensils } from 'lucide-react'
-import { useKehadiranTarikh, useKehadiranJulat } from '../../hooks/useKehadiranMurid.js'
-import { todayISO, formatTarikhPaparan } from '../../lib/dateUtils.js'
-import SenaraiKiraan from '../MaklumatMurid/SenaraiKiraan.jsx'
+import { namaHari, bilanganHariDalamBulan } from '../../lib/dateUtils.js'
+import { useKehadiranJulat } from '../../hooks/useKehadiranMurid.js'
 
-function awalBulanISO(tarikh) {
-  return `${tarikh.slice(0, 7)}-01`
+const NAMA_BULAN = [
+  'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun',
+  'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember',
+]
+const SINGKATAN_HARI = { Ahad: 'A', Isnin: 'I', Selasa: 'S', Rabu: 'R', Khamis: 'K', Jumaat: 'J', Sabtu: 'S' }
+
+const TAHUN_SEMASA = new Date().getFullYear()
+const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
+
+// Lebar lajur tetap (px) - untuk kira offset "sticky" Bil/Nama/Jantina/Kelas
+const LEBAR = { bil: 36, nama: 150, jantina: 56, kelas: 100 }
+const KIRI = {
+  bil: 0,
+  nama: LEBAR.bil,
+  jantina: LEBAR.bil + LEBAR.nama,
+  kelas: LEBAR.bil + LEBAR.nama + LEBAR.jantina,
 }
 
-function akhirBulanISO(tarikh) {
-  const [tahun, bulan] = tarikh.slice(0, 7).split('-').map(Number)
-  const hariTerakhir = new Date(tahun, bulan, 0).getDate()
-  return `${tarikh.slice(0, 7)}-${String(hariTerakhir).padStart(2, '0')}`
+function pad2(n) {
+  return String(n).padStart(2, '0')
 }
 
 export default function PapanRMT() {
-  const [tarikh, setTarikh] = useState(todayISO())
-  const { senarai: kehadiranHariIni, loading: loadingHariIni } = useKehadiranTarikh(tarikh)
+  const [tahun, setTahun] = useState(TAHUN_SEMASA)
+  const [bulan, setBulan] = useState(new Date().getMonth() + 1)
 
-  const dari = awalBulanISO(tarikh)
-  const hingga = akhirBulanISO(tarikh)
-  const { senarai: kehadiranBulan, loading: loadingBulan } = useKehadiranJulat(dari, hingga)
+  const hariDalamBulan = bilanganHariDalamBulan(tahun, bulan)
+  const dari = `${tahun}-${pad2(bulan)}-01`
+  const hingga = `${tahun}-${pad2(bulan)}-${pad2(hariDalamBulan)}`
 
-  // Papan harian - guna terus snapshot 'adalahRMT' & 'hadir' yang disimpan
-  // masa Kehadiran Murid disubmit, BUKAN rujuk balik status semasa di koleksi 'murid'.
-  const senaraiRMTHariIni = useMemo(() => {
-    const senarai = []
-    kehadiranHariIni.forEach((rekod) => {
+  const { senarai: kehadiranBulan, loading } = useKehadiranJulat(dari, hingga)
+
+  const { pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari } = useMemo(() => {
+    const peta = {}
+    const hadirIkutHari = {}
+    const takHadirIkutHari = {}
+
+    kehadiranBulan.forEach((rekod) => {
+      const hari = Number(rekod.tarikh.slice(8, 10))
       rekod.senaraiMurid.forEach((m) => {
-        if (m.hadir && m.adalahRMT) senarai.push({ ...m, namaKelas: rekod.namaKelas })
+        if (!m.adalahRMT) return
+        if (!peta[m.idMurid]) {
+          peta[m.idMurid] = { idMurid: m.idMurid, nama: m.nama, jantina: m.jantina, namaKelas: rekod.namaKelas, tick: {} }
+        }
+        peta[m.idMurid].tick[hari] = m.hadir
+        if (m.hadir) hadirIkutHari[hari] = (hadirIkutHari[hari] ?? 0) + 1
+        else takHadirIkutHari[hari] = (takHadirIkutHari[hari] ?? 0) + 1
       })
     })
-    return senarai.sort((a, b) => a.namaKelas.localeCompare(b.namaKelas) || a.nama.localeCompare(b.nama))
-  }, [kehadiranHariIni])
 
-  const ikutKelas = useMemo(() => {
-    const map = {}
-    senaraiRMTHariIni.forEach((m) => {
-      if (!map[m.namaKelas]) map[m.namaKelas] = []
-      map[m.namaKelas].push(m)
-    })
-    return map
-  }, [senaraiRMTHariIni])
-
-  // Trend bulanan - buktikan snapshot boleh beza-bezakan RMT/Asrama walaupun
-  // status murid berubah dalam bulan yang sama (setiap hari guna snapshot hari tu).
-  const statistikBulanan = useMemo(() => {
-    const kiraan = {}
-    kehadiranBulan.forEach((rekod) => {
-      const jumlah = rekod.senaraiMurid.filter((m) => m.hadir && m.adalahRMT).length
-      kiraan[rekod.tarikh] = (kiraan[rekod.tarikh] ?? 0) + jumlah
-    })
-    return Object.entries(kiraan)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([t, jumlah]) => ({ label: `${Number(t.slice(8, 10))} hb`, jumlah }))
+    const senarai = Object.values(peta).sort(
+      (a, b) => a.namaKelas.localeCompare(b.namaKelas) || a.nama.localeCompare(b.nama)
+    )
+    return { pelajar: senarai, jumlahHadirIkutHari: hadirIkutHari, jumlahTakHadirIkutHari: takHadirIkutHari }
   }, [kehadiranBulan])
+
+  const senaraiHari = Array.from({ length: hariDalamBulan }, (_, i) => i + 1)
 
   return (
     <div>
-      <div className="mb-5 max-w-xs">
-        <label htmlFor="tarikhRMT" className="block text-xs font-medium text-ink mb-1">Tarikh</label>
-        <input
-          id="tarikhRMT"
-          type="date"
-          value={tarikh}
-          onChange={(e) => setTarikh(e.target.value)}
-          className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
-        />
+      <div className="flex gap-2 mb-5">
+        <select
+          value={bulan}
+          onChange={(e) => setBulan(Number(e.target.value))}
+          className="h-11 px-3 rounded-card border border-border bg-surface text-sm"
+        >
+          {NAMA_BULAN.map((b, i) => (
+            <option key={b} value={i + 1}>{b}</option>
+          ))}
+        </select>
+        <select
+          value={tahun}
+          onChange={(e) => setTahun(Number(e.target.value))}
+          className="h-11 px-3 rounded-card border border-border bg-surface text-sm"
+        >
+          {PILIHAN_TAHUN.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
       </div>
 
-      {loadingHariIni ? (
+      {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
+      ) : pelajar.length === 0 ? (
+        <p className="text-sm text-inkmuted">Tiada rekod RMT untuk {NAMA_BULAN[bulan - 1]} {tahun} lagi.</p>
       ) : (
-        <>
-          <div className="p-5 rounded-card mb-6 text-center" style={{ backgroundColor: '#FAEEDA' }}>
-            <Utensils size={22} className="mx-auto mb-1.5" style={{ color: '#633806' }} />
-            <p className="text-3xl font-bold" style={{ color: '#633806' }}>{senaraiRMTHariIni.length}</p>
-            <p className="text-xs mt-1" style={{ color: '#633806' }}>Murid RMT Hadir — {formatTarikhPaparan(tarikh)}</p>
-          </div>
-
-          {Object.keys(ikutKelas).length === 0 ? (
-            <p className="text-sm text-inkmuted mb-8">
-              Tiada murid RMT hadir untuk tarikh ni (atau kehadiran kelas belum diisi).
-            </p>
-          ) : (
-            <div className="space-y-4 mb-8">
-              {Object.entries(ikutKelas).map(([kelas, muridSenarai]) => (
-                <div key={kelas}>
-                  <h3 className="text-xs font-semibold text-inkmuted uppercase tracking-wide mb-2">
-                    {kelas} ({muridSenarai.length})
-                  </h3>
-                  <div className="border border-border rounded-card divide-y divide-border">
-                    {muridSenarai.map((m) => (
-                      <div key={m.idMurid} className="px-3 py-2 text-sm text-ink">{m.nama}</div>
-                    ))}
-                  </div>
-                </div>
+        <div className="overflow-auto border border-border rounded-card max-h-[75vh]">
+          <table className="text-xs border-collapse">
+            <thead className="sticky top-0 z-20 bg-base">
+              <tr>
+                <th className="sticky z-30 bg-base px-1 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.bil, width: LEBAR.bil }}>Bil</th>
+                <th className="sticky z-30 bg-base text-left px-2 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.nama, width: LEBAR.nama }}>Nama Murid</th>
+                <th className="sticky z-30 bg-base px-1 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.jantina, width: LEBAR.jantina }}>Jantina</th>
+                <th className="sticky z-30 bg-base px-1 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>Kelas</th>
+                {senaraiHari.map((h) => {
+                  const iso = `${tahun}-${pad2(bulan)}-${pad2(h)}`
+                  const hari = namaHari(iso)
+                  const hujungMinggu = hari === 'Sabtu' || hari === 'Ahad'
+                  return (
+                    <th
+                      key={h}
+                      className={`px-1.5 py-2 font-semibold text-center border-b border-border w-8 ${
+                        hujungMinggu ? 'bg-[#F1EFE8] text-inkmuted' : 'text-ink'
+                      }`}
+                    >
+                      <div>{h}</div>
+                      <div className="text-[9px] font-normal">{SINGKATAN_HARI[hari]}</div>
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {pelajar.map((p, i) => (
+                <tr key={p.idMurid}>
+                  <td className="sticky z-10 bg-surface text-center px-1 py-2 border-r border-border" style={{ left: KIRI.bil, width: LEBAR.bil }}>{i + 1}</td>
+                  <td className="sticky z-10 bg-surface px-2 py-2 border-r border-border whitespace-nowrap font-medium text-ink" style={{ left: KIRI.nama, width: LEBAR.nama }}>{p.nama}</td>
+                  <td className="sticky z-10 bg-surface text-center px-1 py-2 border-r border-border text-inkmuted" style={{ left: KIRI.jantina, width: LEBAR.jantina }}>{p.jantina === 'LELAKI' ? 'L' : p.jantina === 'PEREMPUAN' ? 'P' : '-'}</td>
+                  <td className="sticky z-10 bg-surface px-2 py-2 border-r border-border whitespace-nowrap text-inkmuted" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>{p.namaKelas}</td>
+                  {senaraiHari.map((h) => {
+                    const status = p.tick[h] // true = hadir, false = tak hadir (RMT tapi tak hadir), undefined = tiada data
+                    return (
+                      <td key={h} className="text-center px-1.5 py-2">
+                        {status === true && <span style={{ color: '#27500A' }} className="font-bold">/</span>}
+                        {status === false && <span className="text-brand-red font-bold">0</span>}
+                      </td>
+                    )
+                  })}
+                </tr>
               ))}
-            </div>
-          )}
-        </>
+            </tbody>
+            <tfoot className="sticky bottom-0 bg-base">
+              <tr>
+                <td colSpan={4} className="sticky left-0 z-10 bg-base px-2 py-2 font-semibold text-ink border-t border-r border-border" style={{ minWidth: LEBAR.bil + LEBAR.nama + LEBAR.jantina + LEBAR.kelas }}>
+                  Jumlah Tidak Hadir
+                </td>
+                {senaraiHari.map((h) => (
+                  <td key={h} className="text-center px-1.5 py-2 font-semibold text-brand-red border-t border-border">
+                    {jumlahTakHadirIkutHari[h] ?? ''}
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <td colSpan={4} className="sticky left-0 z-10 bg-base px-2 py-2 font-semibold text-ink border-t border-r border-border">
+                  Jumlah Hadir
+                </td>
+                {senaraiHari.map((h) => (
+                  <td key={h} className="text-center px-1.5 py-2 font-semibold text-ink border-t border-border">
+                    {jumlahHadirIkutHari[h] ?? ''}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       )}
 
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Trend RMT Bulan Ini</h3>
-        {loadingBulan ? (
-          <p className="text-sm text-inkmuted">Memuatkan…</p>
-        ) : statistikBulanan.length === 0 ? (
-          <p className="text-sm text-inkmuted">Tiada data kehadiran untuk bulan ni lagi.</p>
-        ) : (
-          <SenaraiKiraan data={statistikBulanan} />
-        )}
-      </section>
+      <p className="text-xs text-inkmuted mt-3">
+        / = hadir (RMT hari tu) · 0 = RMT tapi tak hadir · petak kosong = tiada data / bukan RMT hari tu (contoh: berubah ke Asrama)
+      </p>
     </div>
   )
 }

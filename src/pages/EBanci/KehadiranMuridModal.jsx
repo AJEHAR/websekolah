@@ -34,6 +34,7 @@ export default function KehadiranMuridModal({ kelas, rekod, tarikh, user, onClos
       const senaraiMurid = kelas.ahli.map((m) => ({
         idMurid: m.idMurid,
         nama: m.nama,
+        jantina: m.jantina,
         hadir: Boolean(kehadiran[m.idMurid]),
         // Snapshot status RMT PADA MASA INI - PRA tak dikira RMT langsung.
         adalahRMT: !adalahPra(m) && m.statusRMT === 'YA',

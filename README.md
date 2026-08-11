@@ -347,11 +347,11 @@ Senarai kelas & ahli diambil terus dari koleksi `murid` (medan `namaKelas`) - ti
 
 ## Papan Kehadiran RMT
 
-Route `/ebanci/papan-rmt`. Baca terus daripada snapshot `adalahRMT`/`hadir` yang disimpan dalam `kehadiranMurid` (BUKAN rujuk balik `murid.statusRMT` semasa) - ini yang buat papan ni tepat walaupun status murid berubah dalam bulan yang sama.
+Route `/ebanci/papan-rmt`. Jadual **buku pajang bulanan** (bukan papan harian) - pilih bulan/tahun, papar jadual penuh: baris = murid RMT (sekurang-kurangnya sehari dalam bulan tu), lajur = **Bil, Nama Murid, Jantina, Kelas** (kesemuanya *sticky* semasa scroll), kemudian satu lajur untuk setiap tarikh (1 hingga akhir bulan).
 
-**2 bahagian:**
-- **Papan harian** - pilih tarikh, papar jumlah besar + senarai murid RMT hadir hari tu, dikumpul ikut kelas
-- **Trend RMT Bulan Ini** - carta bar jumlah RMT setiap hari dalam bulan yang sama dengan tarikh dipilih (query julat `useKehadiranJulat()`) - boleh nampak turun-naik ikut hari
+**Simbol ikut format rasmi:** `/` = hadir (RMT hari tu), `0` = RMT tapi tak hadir, petak kosong = tiada data/bukan RMT hari tu (contoh: bertukar ke Asrama hari tu). Baris "Jumlah Tidak Hadir" dan "Jumlah Hadir" di bahagian bawah (*sticky*) kira jumlah setiap lajur tarikh.
+
+Baca terus daripada snapshot `adalahRMT`/`hadir`/`jantina` yang disimpan dalam `kehadiranMurid` masa Kehadiran Murid disubmit (BUKAN rujuk balik `murid.statusRMT` semasa) - ini yang buat papan ni tepat walaupun status murid berubah dalam bulan yang sama.
 
 ## Cara Tambah Page Baru
 

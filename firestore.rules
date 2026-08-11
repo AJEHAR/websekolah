@@ -97,5 +97,12 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
+
+    // Nilai "hari belajar dari bulan lepas" untuk Papan Kehadiran RMT -
+    // rekod bantuan ringkas, semua staff log masuk boleh isi/kemas kini.
+    match /hariBelajarRMT/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
   }
 }
