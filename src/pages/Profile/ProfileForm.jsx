@@ -12,6 +12,12 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
   const [menyimpan, setMenyimpan] = useState(false)
   const [ralat, setRalat] = useState(null)
 
+  // Buang tanda '-' secara automatik semasa taip - elak isu format tak konsisten
+  // (sesetengah orang taip dengan '-', sesetengah tanpa).
+  function ubahIc(nilai) {
+    setIc(nilai.replace(/-/g, ''))
+  }
+
   function pilihGambar(e) {
     const fail = e.target.files?.[0]
     if (!fail) return
@@ -21,15 +27,33 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
 
   async function hantar(e) {
     e.preventDefault()
-    setMenyimpan(true)
     setRalat(null)
+
+    if (!nama.trim()) {
+      setRalat('Sila isi nama.')
+      return
+    }
+    if (!ic.trim()) {
+      setRalat('Sila isi No. IC.')
+      return
+    }
+    if (!jawatan) {
+      setRalat('Sila pilih jawatan.')
+      return
+    }
+    if (!kategori) {
+      setRalat('Sila pilih kategori.')
+      return
+    }
+
+    setMenyimpan(true)
     try {
       let gambarURL = profile?.gambarURL ?? null
       if (failGambar) {
         const hasil = await muatNaikKeDrive(failGambar, 'profil')
         gambarURL = hasil.url
       }
-      await onSimpan({ nama, ic, jawatan, kategori, gambarURL })
+      await onSimpan({ nama: nama.trim(), ic: ic.trim(), jawatan, kategori, gambarURL })
     } catch (err) {
       setRalat('Gagal simpan profile. Cuba lagi.')
       console.error(err)
@@ -49,7 +73,7 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
           )}
         </div>
         <label className="text-sm font-medium text-brand-red cursor-pointer">
-          Muat naik gambar
+          Muat naik gambar <span className="text-inkmuted font-normal">(pilihan)</span>
           <input type="file" accept="image/*" onChange={pilihGambar} className="hidden" />
         </label>
       </div>
@@ -74,9 +98,9 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
           type="text"
           required
           value={ic}
-          onChange={(e) => setIc(e.target.value)}
+          onChange={(e) => ubahIc(e.target.value)}
           className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
-          placeholder="contoh: 900101-01-0000"
+          placeholder="contoh: 900101010000 (tanpa tanda -)"
         />
       </div>
 
@@ -84,6 +108,7 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
         <label htmlFor="jawatan" className="block text-sm font-medium text-ink mb-1">Jawatan</label>
         <select
           id="jawatan"
+          required
           value={jawatan}
           onChange={(e) => setJawatan(e.target.value)}
           className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
@@ -98,6 +123,7 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
         <label htmlFor="kategori" className="block text-sm font-medium text-ink mb-1">Kategori</label>
         <select
           id="kategori"
+          required
           value={kategori}
           onChange={(e) => setKategori(e.target.value)}
           className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
