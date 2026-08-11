@@ -45,11 +45,11 @@ export default function KelasKehadiranCard({ kelas, rekod, onIsi, onLihat, onPad
       )}
 
       <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border">
-        <button onClick={onIsi} className="flex-1 h-9 rounded-card bg-brand-red text-white text-xs font-semibold flex items-center justify-center gap-1">
-          {sudahIsi ? <><Pencil size={13} /> Edit</> : 'Isi Kehadiran'}
-        </button>
-        {sudahIsi && (
+        {sudahIsi ? (
           <>
+            <button onClick={onIsi} aria-label="Edit kehadiran" className="p-2 rounded-card hover:bg-base text-inkmuted">
+              <Pencil size={16} />
+            </button>
             <button onClick={onLihat} aria-label="Lihat butiran" className="p-2 rounded-card hover:bg-base text-inkmuted">
               <Eye size={16} />
             </button>
@@ -57,6 +57,10 @@ export default function KelasKehadiranCard({ kelas, rekod, onIsi, onLihat, onPad
               <Trash2 size={16} />
             </button>
           </>
+        ) : (
+          <button onClick={onIsi} className="flex-1 h-9 rounded-card bg-brand-red text-white text-xs font-semibold">
+            Isi Kehadiran
+          </button>
         )}
       </div>
     </div>

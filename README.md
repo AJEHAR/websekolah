@@ -1,4 +1,4 @@
-# Laman Web SK Pendidikan Khas Kuantan cba4082
+# Laman Web SK Pendidikan Khas Kuantan
 
 Projek asas (skeleton) laman web sekolah — React + Vite + Tailwind CSS, dihoskan di GitHub Pages.
 
@@ -272,21 +272,22 @@ Detail penuh (termasuk catatan sebenar untuk Cuti, tempat, dokumen) cuma terpapa
 Dua page baru, struktur sahaja (sub-page semua *placeholder* "akan dibina kemudian") - ikut corak sama macam Guru Bertugas (Layout + accordion drawer, tiada tab):
 
 ```
-/maklumat-murid                  -> redirect ke daftar-masuk
+/maklumat-murid                  -> redirect ke analisis
+/maklumat-murid/analisis         -> Analisis (statistik murid)
+/maklumat-murid/semakan          -> Semakan Murid (jadual penuh + import)
 /maklumat-murid/daftar-masuk     -> Daftar Masuk Murid
 /maklumat-murid/daftar-keluar    -> Daftar Keluar Murid
-/maklumat-murid/maklumat-asas    -> Maklumat Asas Murid
 
 /ebanci                          -> redirect ke kehadiran-murid
 /ebanci/kehadiran-murid          -> Kehadiran Murid (SIAP - lihat bahagian bawah)
-/ebanci/papan-rmt                -> Papan Kehadiran RMT (placeholder - akan dibina)
+/ebanci/papan-rmt                -> Papan Kehadiran RMT (SIAP - lihat bahagian bawah)
 ```
 
-**Nota:** Kedua-dua page ni **berkait** - Kehadiran Murid akan jadi sumber data untuk Papan Kehadiran RMT, dan berkemungkinan Maklumat Murid (terutama Maklumat Asas Murid) jadi rujukan senarai murid untuk Kehadiran Murid. Struktur data & hubungan sebenar akan dibincang dan dibina langkah demi langkah.
+**Nota:** Kehadiran Murid & Papan Kehadiran RMT dah siap sepenuhnya (lihat seksyen masing-masing di bawah). Daftar Masuk/Keluar Murid masih *placeholder*.
 
-## Maklumat Asas Murid (import XLSX)
+## Import Data Murid (XLSX) - struktur data & mekanik import
 
-Sub-page `/maklumat-murid/maklumat-asas` dah berfungsi penuh:
+Sub-page `/maklumat-murid/semakan` (butang Import di situ) dah berfungsi penuh:
 
 **Import:** Admin muat naik fail Excel "Senarai Keseluruhan Murid" (eksport TERUS dari MOEIS, tak perlu ubah apa-apa). Sistem **auto-kesan baris header** (cari baris yang ada "BIL." dan "ID MURID") - penting sebab fail rasmi ada beberapa baris tajuk sebelum header sebenar. Pratonton dulu (10 baris pertama + perbandingan) sebelum sahkan.
 
@@ -343,6 +344,14 @@ kehadiranMurid/{tarikh_namaKelas}
 Senarai kelas & ahli diambil terus dari koleksi `murid` (medan `namaKelas`) - tiada koleksi "kelas" berasingan. Kad kelas papar jumlah/hadir/tak hadir/peratus terus dari rekod tersimpan; ikon mata papar senarai penuh siapa hadir (dengan tag RMT) dan siapa tak hadir.
 
 **Kebenaran:** mana-mana staff log masuk boleh isi/edit/padam kehadiran mana-mana kelas (bukan admin sahaja, dan bukan terhad guru kelas tu sahaja).
+
+## Papan Kehadiran RMT
+
+Route `/ebanci/papan-rmt`. Baca terus daripada snapshot `adalahRMT`/`hadir` yang disimpan dalam `kehadiranMurid` (BUKAN rujuk balik `murid.statusRMT` semasa) - ini yang buat papan ni tepat walaupun status murid berubah dalam bulan yang sama.
+
+**2 bahagian:**
+- **Papan harian** - pilih tarikh, papar jumlah besar + senarai murid RMT hadir hari tu, dikumpul ikut kelas
+- **Trend RMT Bulan Ini** - carta bar jumlah RMT setiap hari dalam bulan yang sama dengan tarikh dipilih (query julat `useKehadiranJulat()`) - boleh nampak turun-naik ikut hari
 
 ## Cara Tambah Page Baru
 
