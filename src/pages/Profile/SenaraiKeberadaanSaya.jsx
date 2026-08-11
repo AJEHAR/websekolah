@@ -13,7 +13,7 @@ const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
 
 export default function SenaraiKeberadaanSaya() {
   const { user } = useOutletContext()
-  const { isAdmin } = useIsAdmin(user)
+  const { isSuperAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
   const { senarai, loading, muatSemula } = useKeberadaanSaya(user?.email)
   const [rekodEdit, setRekodEdit] = useState(null)
@@ -94,7 +94,7 @@ export default function SenaraiKeberadaanSaya() {
                 <KeberadaanCardRingkas
                   key={r.id}
                   rekod={r}
-                  bolehUrus={isAdmin || r.profilEmel === user.email}
+                  bolehUrus={isSuperAdmin || r.profilEmel === user.email}
                   onLihat={setRekodLihat}
                   onEdit={setRekodEdit}
                   onPadam={padam}

@@ -87,6 +87,8 @@ Kalau `.env` masih kosong, app **tak akan crash**. Home/Berita/Galeri/Hubungi bo
 5. Dapatkan **Firebase config** dari Project Settings → General → Your apps → Web app (`</>`)
 6. Simpan config tu dalam fail `.env` (JANGAN commit fail ni ke GitHub — kita akan setup `.gitignore` bila sampai langkah integrasi Firebase)
 
+**Nota penting - guna signInWithPopup, bukan signInWithRedirect:** projek ni host di GitHub Pages (bukan Firebase Hosting), dengan custom domain (`sekolah.syazr.com`) berbeza daripada `authDomain` Firebase (`*.firebaseapp.com`). Ini punca isu diketahui: `signInWithRedirect` **gagal senyap di SEMUA browser iOS** (Safari & Chrome iOS sekali - kedua-duanya guna enjin WebKit yang sama, kena sekatan storan pihak ketiga Safari terhadap domain auth Firebase yang berbeza). Penyelesaian rasmi Firebase (letak custom domain sebagai `authDomain`) perlukan Firebase Hosting untuk auto-handle laluan `__/auth` - tak boleh pakai terus dengan GitHub Pages. Jadi kod (`AuthContext.jsx`) sengaja guna `signInWithPopup` dengan sekatan elak tekan-dua-kali (`sedangLogMasuk`), bukan redirect.
+
 ## Page Profile (Pusat Data Staff)
 
 Profile adalah "pusat data" — sub-koleksi fungsi lain (Senarai Keberadaan, dan akan datang) disambung kepadanya.
@@ -364,6 +366,49 @@ Route `/guru-bertugas/banci`. Pilih tarikh -> 3 bahagian:
 Bila ditekan, **Papan Banci Kehadiran** keluar - jadual Kategori (MBK Prasekolah/Asrama/Harian) x Bilangan/Hadir/Tidak Hadir/Peratus, + baris Keseluruhan - format ikut papan kehadiran fizikal sekolah. Ada butang salin teks untuk papan ni juga.
 
 **Kategori (`kategoriBanci`)** di-snapshot masa Kehadiran Murid disubmit (sama prinsip macam `adalahRMT`) - PRASEKOLAH/ASRAMA/HARIAN, mutually exclusive. Lihat `KehadiranMuridModal.jsx`.
+
+## eUBKS Ko (Unit Beruniform, Kelab dan Sukan)
+
+Page baru: `/eubks`. Sub-page: Murid UBKS (SIAP), Kehadiran/Laporan/Perancangan UBKS (placeholder - akan dibina kemudian).
+
+**Murid UBKS** (`/eubks/murid-ubks`) flow:
+1. Pilih Tahun sesi (default tahun semasa) - keahlian unit di-skop ikut tahun sesi (murid boleh berbeza unit tahun ke tahun)
+2. Admin "Tambah Unit" - taip nama unit sendiri (contoh: Pengakap, Kebitaraan)
+3. Tekan kad unit -> modal urus unit terbuka
+4. Dalam modal: pilih Tahun (darjah, contoh Tahun 6) -> senarai murid tahun tu (yang belum jadi ahli) -> tanda beberapa -> "Tambah ke Unit"
+5. Ulang langkah 4 untuk tahun/darjah lain dalam unit yang sama
+6. Boleh muat naik gambar unit (pilihan, guna Google Drive macam gambar profile)
+
+**Struktur data:**
+```
+unitUBKS/{id auto}
+  tahunSesi (string, contoh "2026")
+  namaUnit
+  gambarUnit (url | null)
+  ahli: [{ idMurid, nama, tahunTingkatan }, ...]
+  updatedAt, updatedBy
+```
+
+**Kebenaran:** semua staff log masuk boleh baca; admin sahaja boleh cipta/kemas kini/padam unit (termasuk urus ahli & gambar).
+
+## Admin Berperanan (Admin Penuh vs Admin Seksyen)
+
+Admin tak lagi ya/tidak sahaja - ada medan `peranan` (array) pada setiap dokumen `admins/{emel}`:
+- `['super']` -> Admin Penuh - boleh urus SEMUA (termasuk lantik admin lain, kelulusan staff, override Keberadaan staff lain)
+- `['ubks']` / `['murid']` / `['guru-bertugas']` -> Admin Seksyen - HANYA boleh urus bahagian tu sahaja
+- Boleh gabung lebih dari satu, contoh `['murid', 'ubks']`
+- Rekod admin lama (sebelum ciri ni wujud, tiada medan `peranan`) dianggap `['super']` automatik (elak admin sedia ada "turun pangkat" tanpa sengaja)
+
+**Seksyen yang boleh didelegasi:** `guru-bertugas` (Kumpulan, Blok 3K), `murid` (import/lajur Semakan Murid), `ubks` (Unit UBKS).
+
+**SENGAJA kekal Admin Penuh sahaja** (tak boleh didelegasi) - sebab keselamatan (elak admin seksyen naikkan diri sendiri jadi admin penuh):
+- Urus admin/peranan (`admins` collection)
+- Kelulusan/urus profile staff (`profiles` collection - Staff & Menunggu Kelulusan dalam Panel Admin)
+- Override rekod Keberadaan staff lain (edit/padam kehadiran orang lain)
+
+**Client:** `useIsAdmin(user)` pulangkan `{ isAdmin, isSuperAdmin, peranan, adaSeksyen(seksyen), loading }`. `isAdmin` = ada SEBARANG peranan (untuk gate am macam masuk `/admin`); `adaSeksyen('ubks')` = admin penuh ATAU ada seksyen tu. Panel Admin > Pentadbir (`UrusAdmin.jsx`) admin penuh boleh checkbox seksyen untuk admin baru/sedia ada.
+
+**Server (Firestore Rules):** `isSuperAdmin()` dan `isAdminSeksyen(seksyen)` - kuatkuasa di server, bukan setakat UI. Setiap koleksi rujuk fungsi yang sepadan (contoh `unitUBKS` guna `isAdminSeksyen('ubks')`).
 
 ## Cara Tambah Page Baru
 

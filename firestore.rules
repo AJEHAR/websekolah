@@ -5,91 +5,107 @@ service cloud.firestore {
 
     // Admin ditentukan oleh kewujudan dokumen di koleksi 'admins' dengan
     // ID = emel admin. Contoh: admins/pengetua@moe-dl.edu.my
-    function isAdmin() {
+    function adaRekodAdmin() {
       return request.auth != null &&
         exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+
+    // Peranan admin - array, contoh ['super'] atau ['ubks', 'murid'].
+    // Rekod admin lama (tiada medan 'peranan') dianggap ['super'] (elak
+    // "downgrade" admin sedia ada bila ciri ni baru ditambah).
+    function peranan() {
+      return adaRekodAdmin()
+        ? get(/databases/$(database)/documents/admins/$(request.auth.token.email)).data.get('peranan', ['super'])
+        : [];
+    }
+
+    // Admin PENUH - boleh urus semua seksyen + urus admin lain + kelulusan staff.
+    function isSuperAdmin() {
+      return adaRekodAdmin() && 'super' in peranan();
+    }
+
+    // Sebarang jenis admin (super ATAU admin seksyen tertentu) - untuk baca/akses am.
+    function isAdmin() {
+      return adaRekodAdmin();
+    }
+
+    // Admin untuk SATU seksyen tertentu (contoh 'ubks', 'murid', 'guru-bertugas').
+    // Super admin automatik lulus semua seksyen.
+    function isAdminSeksyen(seksyen) {
+      return adaRekodAdmin() && (('super' in peranan()) || (seksyen in peranan()));
     }
 
     function isPemilik(emelDokumen) {
       return request.auth != null && request.auth.token.email == emelDokumen;
     }
 
+    // Urus admin/peranan - SUPER ADMIN SAHAJA (elak admin seksyen naikkan
+    // diri sendiri/orang lain jadi admin penuh - lubang keselamatan).
     match /admins/{emelAdmin} {
       allow read: if request.auth != null;
-      allow create: if isAdmin();
-      // Sekatan tambahan: admin tak boleh buang rekod admin diri sendiri
-      // (sekatan "mesti ada sekurang-kurangnya 1 admin" diuruskan di client)
-      allow delete: if isAdmin() && emelAdmin != request.auth.token.email;
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin() && emelAdmin != request.auth.token.email;
     }
 
     match /profiles/{docId} {
       // Semua staff yang log masuk boleh baca (termasuk No. IC)
       allow read: if request.auth != null;
 
-      // Self-register: staff cipta profile sendiri MESTI status='menunggu'
-      // (elak staff terus set diri sendiri 'diluluskan'). Admin boleh cipta apa-apa status.
-      allow create: if isAdmin() ||
+      // Self-register: staff cipta profile sendiri MESTI status='menunggu'.
+      // Kelulusan/urus profile staff lain - SUPER ADMIN SAHAJA (bukan admin seksyen).
+      allow create: if isSuperAdmin() ||
         (isPemilik(request.resource.data.emel) && request.resource.data.status == 'menunggu');
 
-      // Self-edit: staff boleh kemas kini profile sendiri TAPI TAK BOLEH ubah field 'status'
-      // (elak self-approve). Admin boleh ubah apa-apa termasuk status (kelulusan).
-      allow update: if isAdmin() ||
+      allow update: if isSuperAdmin() ||
         (isPemilik(resource.data.emel) && request.resource.data.status == resource.data.status);
 
-      allow delete: if isAdmin();
+      allow delete: if isSuperAdmin();
     }
 
     // Koleksi utama 'kehadiran' - rekod keberadaan semua staff.
-    // Guna koleksi utama (bukan sub-koleksi) supaya query "Hari Ini/Esok"
-    // merentasi semua staff senang dan cekap.
     match /kehadiran/{docId} {
-      // Semua staff log masuk boleh baca (perlu untuk Hari Ini/Esok/Log)
       allow read: if request.auth != null;
-
-      // Admin boleh cipta/edit rekod sesiapa sahaja.
-      // Staff biasa hanya boleh cipta/edit rekod dia sendiri (padan emel).
-      allow create: if isAdmin() || isPemilik(request.resource.data.profilEmel);
-      allow update: if isAdmin() || isPemilik(resource.data.profilEmel);
-      allow delete: if isAdmin() || isPemilik(resource.data.profilEmel);
+      // Override oleh admin (edit/padam rekod orang lain) - SUPER ADMIN SAHAJA.
+      allow create: if isSuperAdmin() || isPemilik(request.resource.data.profilEmel);
+      allow update: if isSuperAdmin() || isPemilik(resource.data.profilEmel);
+      allow delete: if isSuperAdmin() || isPemilik(resource.data.profilEmel);
     }
 
-    // Kumpulan Guru Bertugas & senarai Tugas kongsi - semua staff log masuk
-    // boleh baca (perlu tahu kumpulan/tugas sendiri), admin sahaja boleh urus.
+    // Kumpulan Guru Bertugas & senarai Tugas kongsi - seksyen 'guru-bertugas'.
     match /kumpulanBertugas/{docId} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow write: if isAdminSeksyen('guru-bertugas');
     }
 
     match /tugasBertugas/{docId} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow write: if isAdminSeksyen('guru-bertugas');
     }
 
-    // Blok Laporan 3K (Pentadbiran/Akademik/Sokongan/Kantin, dll) - admin urus.
+    // Blok Laporan 3K - seksyen 'guru-bertugas' (Laporan 3K hidup bawah Guru Bertugas).
     match /blokLaporan3K/{docId} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow write: if isAdminSeksyen('guru-bertugas');
     }
 
-    // Rekod Laporan 3K harian - mana-mana staff log masuk boleh isi/kemas kini
-    // (bukan admin sahaja, sebab sesiapa boleh jadi guru bertugas yang isi laporan).
+    // Rekod Laporan 3K harian - mana-mana staff log masuk boleh isi/kemas kini.
     match /laporan3K/{docId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
-    // Maklumat Murid - semua staff log masuk boleh baca (umum, macam Keberadaan).
-    // Import/edit/padam admin sahaja (data ni sangat sensitif - IC penjaga, kewangan, OKU).
+    // Maklumat Murid - seksyen 'murid'. Data sangat sensitif (IC penjaga,
+    // kewangan, OKU) - baca umum, tulis/import terhad seksyen 'murid' sahaja.
     match /murid/{docId} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow write: if isAdminSeksyen('murid');
     }
 
-    // Tetapan sistem (contoh: lajurMurid - kawal lajur nampak dalam Semakan Murid).
-    // Semua staff perlu baca (untuk tahu lajur mana nak papar), admin sahaja tulis.
+    // Tetapan sistem (contoh: lajurMurid) - seksyen 'murid'.
     match /tetapan/{docId} {
       allow read: if request.auth != null;
-      allow write: if isAdmin();
+      allow write: if isAdminSeksyen('murid');
     }
 
     // Kehadiran Murid - mana-mana staff log masuk boleh isi kehadiran mana-mana kelas.
@@ -98,11 +114,16 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Nilai "hari belajar dari bulan lepas" untuk Papan Kehadiran RMT -
-    // rekod bantuan ringkas, semua staff log masuk boleh isi/kemas kini.
+    // Nilai "hari belajar dari bulan lepas" untuk Papan Kehadiran RMT.
     match /hariBelajarRMT/{docId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
+    }
+
+    // Unit UBKS - seksyen 'ubks'.
+    match /unitUBKS/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdminSeksyen('ubks');
     }
   }
 }

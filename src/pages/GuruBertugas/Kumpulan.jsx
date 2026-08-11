@@ -10,7 +10,7 @@ import TugasBertugasSenarai from './TugasBertugasSenarai.jsx'
 
 export default function Kumpulan() {
   const { user } = useOutletContext()
-  const { isAdmin } = useIsAdmin(user)
+  const { adaSeksyen } = useIsAdmin(user)
   const { profiles } = useProfilesList()
   const profilesAktif = profiles.filter((p) => p.status !== 'menunggu')
   const { senarai, loading, muatSemula } = useKumpulanBertugas()
@@ -42,7 +42,7 @@ export default function Kumpulan() {
       <section>
         <div className="flex items-center justify-between mb-4 gap-3">
           <h2 className="text-sm font-semibold text-ink shrink-0">Kumpulan ({senarai.length})</h2>
-          {isAdmin && (
+          {adaSeksyen('guru-bertugas') && (
             <button
               onClick={() => { setKumpulanEdit(null); setTunjukBorang(true) }}
               className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-red px-3 py-2 rounded-card shrink-0"
@@ -59,7 +59,7 @@ export default function Kumpulan() {
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
             {senarai.map((k) => (
-              <KumpulanBertugasCard key={k.id} kumpulan={k} isAdmin={isAdmin} onEdit={edit} onPadam={padam} />
+              <KumpulanBertugasCard key={k.id} kumpulan={k} isAdmin={adaSeksyen('guru-bertugas')} onEdit={edit} onPadam={padam} />
             ))}
           </div>
         )}
@@ -67,7 +67,7 @@ export default function Kumpulan() {
 
       <section>
         <h2 className="text-sm font-semibold text-ink mb-4">Tugas</h2>
-        <TugasBertugasSenarai isAdmin={isAdmin} />
+        <TugasBertugasSenarai isAdmin={adaSeksyen('guru-bertugas')} />
       </section>
 
       <KumpulanBertugasModal

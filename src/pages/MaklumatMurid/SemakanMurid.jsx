@@ -9,7 +9,7 @@ import ImportXlsxModal from './ImportXlsxModal.jsx'
 
 export default function SemakanMurid() {
   const { user } = useOutletContext()
-  const { isAdmin } = useIsAdmin(user)
+  const { adaSeksyen } = useIsAdmin(user)
   const { senarai, loading, muatSemula } = useMuridList()
   const { tetapan } = useLajurMuridTetapan()
 
@@ -46,7 +46,7 @@ export default function SemakanMurid() {
     <div>
       <div className="flex items-center justify-between gap-3 mb-4">
         <p className="text-xs text-inkmuted">{senarai.length} murid</p>
-        {isAdmin && (
+        {adaSeksyen('murid') && (
           <button
             onClick={() => setTunjukImport(true)}
             className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-red px-3 py-2 rounded-card shrink-0"

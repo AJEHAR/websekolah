@@ -2,12 +2,28 @@ import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { simpanProfileAdmin, padamProfileAdmin } from '../../hooks/useAdminProfiles.js'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import SenaraiStaff from './SenaraiStaff.jsx'
 import AdminFormModal from './AdminFormModal.jsx'
 import FloatingTambahButton from '../Keberadaan/FloatingTambahButton.jsx'
 
 export default function StaffPage() {
   const { user } = useOutletContext()
+  const { isSuperAdmin } = useIsAdmin(user)
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="bg-surface border border-border rounded-card p-8 text-center">
+        <p className="text-sm font-medium text-ink mb-1">Akses Terhad</p>
+        <p className="text-xs text-inkmuted">Bahagian ini khas untuk Admin Penuh.</p>
+      </div>
+    )
+  }
+
+  return <Isi user={user} />
+}
+
+function Isi({ user }) {
   const { profiles, loading, muatSemula } = useProfilesList()
   const staffAktif = profiles.filter((p) => p.status !== 'menunggu')
 

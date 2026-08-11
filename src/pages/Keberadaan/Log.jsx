@@ -9,7 +9,7 @@ import BorangModal from './BorangModal.jsx'
 
 export default function Log() {
   const { user } = useOutletContext()
-  const { isAdmin } = useIsAdmin(user)
+  const { isSuperAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
   const profilesAktif = profiles.filter((p) => p.status !== 'menunggu')
 
@@ -27,7 +27,7 @@ export default function Log() {
   }
 
   function bolehUrus(rekod) {
-    return isAdmin || rekod.profilEmel === user.email
+    return isSuperAdmin || rekod.profilEmel === user.email
   }
 
   async function simpanEdit(data) {

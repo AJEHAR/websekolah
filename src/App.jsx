@@ -32,6 +32,11 @@ import Analisis from './pages/MaklumatMurid/Analisis.jsx'
 import EBanciLayout from './pages/EBanci/EBanciLayout.jsx'
 import KehadiranMurid from './pages/EBanci/KehadiranMurid.jsx'
 import PapanRMT from './pages/EBanci/PapanRMT.jsx'
+import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
+import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
+import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
+import LaporanUBKS from './pages/EUBKS/LaporanUBKS.jsx'
+import PerancanganUBKS from './pages/EUBKS/PerancanganUBKS.jsx'
 
 export default function App() {
   return (
@@ -95,6 +100,15 @@ export default function App() {
             <Route index element={<Navigate to="kehadiran-murid" replace />} />
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
             <Route path="papan-rmt" element={<PapanRMT />} />
+          </Route>
+
+          {/* eUBKS Ko - Murid UBKS (siap), Kehadiran/Laporan/Perancangan (placeholder) */}
+          <Route path="/eubks" element={<EUBKSLayout />}>
+            <Route index element={<Navigate to="murid-ubks" replace />} />
+            <Route path="murid-ubks" element={<MuridUBKS />} />
+            <Route path="kehadiran-ubks" element={<KehadiranUBKS />} />
+            <Route path="laporan-ubks" element={<LaporanUBKS />} />
+            <Route path="perancangan-ubks" element={<PerancanganUBKS />} />
           </Route>
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}

@@ -1,8 +1,21 @@
 import { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { SENARAI_MEDAN } from '../MaklumatMurid/muridFields.js'
 import { useLajurMuridTetapan, simpanLajurTetapan } from '../../hooks/useLajurMuridTetapan.js'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
+import AdminSeksyenGate from './AdminSeksyenGate.jsx'
 
 export default function LajurMuridPage() {
+  const { user } = useOutletContext()
+  const { adaSeksyen } = useIsAdmin(user)
+  return (
+    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="murid" namaSeksyen="Murid">
+      <Isi />
+    </AdminSeksyenGate>
+  )
+}
+
+function Isi() {
   const { tetapan, loading, muatSemula } = useLajurMuridTetapan()
   const [tempatan, setTempatan] = useState({})
   const [menyimpan, setMenyimpan] = useState(false)

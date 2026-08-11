@@ -41,6 +41,16 @@ export const NAV_ITEMS = [
       { label: 'Papan Kehadiran RMT', to: '/ebanci/papan-rmt' },
     ],
   },
+  {
+    label: 'eUBKS Ko',
+    to: '/eubks',
+    children: [
+      { label: 'Murid UBKS', to: '/eubks/murid-ubks' },
+      { label: 'Kehadiran UBKS', to: '/eubks/kehadiran-ubks' },
+      { label: 'Laporan UBKS', to: '/eubks/laporan-ubks' },
+      { label: 'Perancangan UBKS', to: '/eubks/perancangan-ubks' },
+    ],
+  },
   { label: 'Profil', to: '/profil' },
 ]
 

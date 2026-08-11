@@ -28,13 +28,19 @@ export function useAdminsList() {
   return { admins, loading, muatSemula }
 }
 
-export async function tambahAdmin(emel, tambahOleh) {
+export async function tambahAdmin(emel, peranan, tambahOleh) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await setDoc(doc(db, 'admins', emel), {
     emel,
+    peranan,
     tambahOleh,
     tambahPada: serverTimestamp(),
   })
+}
+
+export async function kemaskiniPeranan(emel, peranan) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  await setDoc(doc(db, 'admins', emel), { peranan }, { merge: true })
 }
 
 export async function buangAdmin(emel) {

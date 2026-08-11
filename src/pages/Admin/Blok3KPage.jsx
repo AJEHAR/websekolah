@@ -1,8 +1,21 @@
 import { useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { useBlokLaporan3K, tambahBlok, kemaskiniBlok, padamBlok } from '../../hooks/useBlokLaporan3K.js'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
+import AdminSeksyenGate from './AdminSeksyenGate.jsx'
 
 export default function Blok3KPage() {
+  const { user } = useOutletContext()
+  const { adaSeksyen } = useIsAdmin(user)
+  return (
+    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="guru-bertugas" namaSeksyen="Guru Bertugas">
+      <Isi />
+    </AdminSeksyenGate>
+  )
+}
+
+function Isi() {
   const { senarai, loading, muatSemula } = useBlokLaporan3K()
   const [namaBaru, setNamaBaru] = useState('')
   const [adaDisiplinBaru, setAdaDisiplinBaru] = useState(false)

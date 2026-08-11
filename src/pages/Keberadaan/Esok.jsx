@@ -12,7 +12,7 @@ import DetailModal from './DetailModal.jsx'
 
 export default function Esok() {
   const { user } = useOutletContext()
-  const { isAdmin } = useIsAdmin(user)
+  const { isSuperAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
   const profilesAktif = profiles.filter((p) => p.status !== 'menunggu')
 
@@ -56,7 +56,7 @@ export default function Esok() {
               tajuk={kumpulan}
               senarai={senarai.filter((r) => kumpulanKategori(r.kategori) === kumpulan)}
               currentUserEmel={user.email}
-              isAdmin={isAdmin}
+              isAdmin={isSuperAdmin}
               onLihat={setRekodLihat}
               onEdit={edit}
               onPadam={padam}
