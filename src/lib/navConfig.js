@@ -27,10 +27,10 @@ export const NAV_ITEMS = [
     label: 'Maklumat Murid',
     to: '/maklumat-murid',
     children: [
+      { label: 'Analisis', to: '/maklumat-murid/analisis' },
+      { label: 'Semakan Murid', to: '/maklumat-murid/semakan' },
       { label: 'Daftar Masuk Murid', to: '/maklumat-murid/daftar-masuk' },
       { label: 'Daftar Keluar Murid', to: '/maklumat-murid/daftar-keluar' },
-      { label: 'Maklumat Asas Murid', to: '/maklumat-murid/maklumat-asas' },
-      { label: 'Analisis', to: '/maklumat-murid/analisis' },
     ],
   },
   {
@@ -53,5 +53,6 @@ export const ADMIN_NAV_ITEM = {
     { label: 'Menunggu Kelulusan', to: '/admin/menunggu' },
     { label: 'Pentadbir', to: '/admin/pentadbir' },
     { label: 'Blok 3K', to: '/admin/blok3k' },
+    { label: 'Lajur Murid', to: '/admin/lajur-murid' },
   ],
 }

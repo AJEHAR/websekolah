@@ -3,10 +3,10 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import AksesGate from '../../components/AksesGate.jsx'
 
 const TAJUK_SUBPAGE = {
+  '/maklumat-murid/analisis': 'Analisis',
+  '/maklumat-murid/semakan': 'Semakan Murid',
   '/maklumat-murid/daftar-masuk': 'Daftar Masuk Murid',
   '/maklumat-murid/daftar-keluar': 'Daftar Keluar Murid',
-  '/maklumat-murid/maklumat-asas': 'Maklumat Asas Murid',
-  '/maklumat-murid/analisis': 'Analisis',
 }
 
 export default function MaklumatMuridLayout() {

@@ -317,6 +317,14 @@ Sub-page `/maklumat-murid/analisis` - semua statistik dikira client-side (`stati
 
 "Prasekolah" dikesan dari medan `tahunTingkatan` (fungsi `adalahPra()`).
 
+## Semakan Murid (ganti Maklumat Asas Murid)
+
+Route `/maklumat-murid/semakan` - jadual PENUH (semua lajur nampak, macam buka fail Excel terus) supaya senang nampak data mana yang "TIADA DATA" (disorot merah). Import XLSX pun letak sini sekarang (dulu di Maklumat Asas Murid).
+
+**Kelengkapan Data Ikut Kelas** - analisis dibina TERUS dalam page ni: setiap kelas dikira bilangan medan kosong, disusun kelas paling tak lengkap dulu. Kelas 0 medan kosong papar "Lengkap" (hijau); ada medan kosong papar amaran (merah) + bilangan murid tak lengkap.
+
+**Panel Admin > Lajur Murid** (`/admin/lajur-murid`) - admin boleh nyahtanda lajur yang tak perlu papar dalam jadual Semakan Murid (contoh: sorok lajur kewangan/IC penjaga kalau nak jadual lebih ringkas). Tetapan simpan dalam `tetapan/lajurMurid`, terpakai untuk SEMUA staff (bukan setiap orang tetapan sendiri).
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

@@ -7,6 +7,7 @@ const TAJUK_SUBPAGE = {
   '/admin/menunggu': 'Menunggu Kelulusan',
   '/admin/pentadbir': 'Pentadbir',
   '/admin/blok3k': 'Blok 3K',
+  '/admin/lajur-murid': 'Lajur Murid',
 }
 
 export default function AdminLayout() {

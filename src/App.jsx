@@ -18,6 +18,7 @@ import StaffPage from './pages/Admin/StaffPage.jsx'
 import MenungguPage from './pages/Admin/MenungguPage.jsx'
 import PentadbirPage from './pages/Admin/PentadbirPage.jsx'
 import Blok3KPage from './pages/Admin/Blok3KPage.jsx'
+import LajurMuridPage from './pages/Admin/LajurMuridPage.jsx'
 import GuruBertugasLayout from './pages/GuruBertugas/GuruBertugasLayout.jsx'
 import Kumpulan from './pages/GuruBertugas/Kumpulan.jsx'
 import Laporan3K from './pages/GuruBertugas/Laporan3K.jsx'
@@ -26,7 +27,7 @@ import LaporanHarian from './pages/GuruBertugas/LaporanHarian.jsx'
 import MaklumatMuridLayout from './pages/MaklumatMurid/MaklumatMuridLayout.jsx'
 import DaftarMasuk from './pages/MaklumatMurid/DaftarMasuk.jsx'
 import DaftarKeluar from './pages/MaklumatMurid/DaftarKeluar.jsx'
-import MaklumatAsas from './pages/MaklumatMurid/MaklumatAsas.jsx'
+import SemakanMurid from './pages/MaklumatMurid/SemakanMurid.jsx'
 import Analisis from './pages/MaklumatMurid/Analisis.jsx'
 import EBanciLayout from './pages/EBanci/EBanciLayout.jsx'
 import KehadiranMurid from './pages/EBanci/KehadiranMurid.jsx'
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="menunggu" element={<MenungguPage />} />
             <Route path="pentadbir" element={<PentadbirPage />} />
             <Route path="blok3k" element={<Blok3KPage />} />
+            <Route path="lajur-murid" element={<LajurMuridPage />} />
           </Route>
 
           {/* Guru Bertugas - tab pills (Kumpulan/Laporan 3K/Laporan Banci/Laporan Harian) */}
@@ -81,11 +83,11 @@ export default function App() {
 
           {/* Maklumat Murid - Daftar Masuk/Keluar, Maklumat Asas */}
           <Route path="/maklumat-murid" element={<MaklumatMuridLayout />}>
-            <Route index element={<Navigate to="daftar-masuk" replace />} />
+            <Route index element={<Navigate to="analisis" replace />} />
+            <Route path="analisis" element={<Analisis />} />
+            <Route path="semakan" element={<SemakanMurid />} />
             <Route path="daftar-masuk" element={<DaftarMasuk />} />
             <Route path="daftar-keluar" element={<DaftarKeluar />} />
-            <Route path="maklumat-asas" element={<MaklumatAsas />} />
-            <Route path="analisis" element={<Analisis />} />
           </Route>
 
           {/* eBanci - Kehadiran Murid, Papan Kehadiran RMT */}

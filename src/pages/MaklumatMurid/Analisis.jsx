@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Users, Baby, GraduationCap } from 'lucide-react'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { adalahPra, kiraIkutMedan, kiraIkutKelas } from './statistikMurid.js'
 import SenaraiKiraan from './SenaraiKiraan.jsx'
@@ -34,17 +35,20 @@ export default function Analisis() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-3 gap-3">
-        <div className="p-4 rounded-card border border-border bg-surface text-center">
-          <p className="text-2xl font-bold text-ink">{stat.jumlah}</p>
-          <p className="text-xs text-inkmuted mt-1">Jumlah Murid</p>
+        <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#E6F1FB' }}>
+          <Users size={20} className="mx-auto mb-1.5" style={{ color: '#0C447C' }} />
+          <p className="text-2xl font-bold" style={{ color: '#0C447C' }}>{stat.jumlah}</p>
+          <p className="text-xs mt-1" style={{ color: '#0C447C' }}>Jumlah Murid</p>
         </div>
-        <div className="p-4 rounded-card border border-border bg-surface text-center">
-          <p className="text-2xl font-bold text-ink">{stat.jumlahPra}</p>
-          <p className="text-xs text-inkmuted mt-1">Prasekolah</p>
+        <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#FBEAF0' }}>
+          <Baby size={20} className="mx-auto mb-1.5" style={{ color: '#72243E' }} />
+          <p className="text-2xl font-bold" style={{ color: '#72243E' }}>{stat.jumlahPra}</p>
+          <p className="text-xs mt-1" style={{ color: '#72243E' }}>Prasekolah</p>
         </div>
-        <div className="p-4 rounded-card border border-border bg-surface text-center">
-          <p className="text-2xl font-bold text-ink">{stat.jumlahBukanPra}</p>
-          <p className="text-xs text-inkmuted mt-1">Bukan Prasekolah</p>
+        <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#EAF3DE' }}>
+          <GraduationCap size={20} className="mx-auto mb-1.5" style={{ color: '#27500A' }} />
+          <p className="text-2xl font-bold" style={{ color: '#27500A' }}>{stat.jumlahBukanPra}</p>
+          <p className="text-xs mt-1" style={{ color: '#27500A' }}>Bukan Prasekolah</p>
         </div>
       </div>
 
