@@ -20,7 +20,7 @@ export default function Navbar() {
             {/* Group kiri: hamburger (mobile) + logo - sentiasa kekal kiri */}
             <div className="flex items-center gap-1 min-w-0">
               <button
-                onClick={() => setDrawerOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setDrawerOpen(true) }}
                 aria-label="Buka menu"
                 className="lg:hidden flex items-center justify-center h-11 w-11 rounded-card hover:bg-white/10 shrink-0 -ml-2"
               >

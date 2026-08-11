@@ -29,18 +29,21 @@ export default function SideDrawer({ open, onClose, links, user, onSignIn, onSig
 
   return (
     <>
-      {/* Overlay gelap di belakang - tap untuk tutup */}
-      <div
-        onClick={onClose}
-        aria-hidden="true"
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
-          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-      />
+      {/* Overlay gelap di belakang - tap untuk tutup. Conditional render
+          (bukan opacity+pointer-events) - lebih selamat merentasi Safari/WebKit,
+          elak isu "drawer buka lalu terus tertutup" yang berlaku di iPad. */}
+      {open && (
+        <div
+          onClick={onClose}
+          aria-hidden="true"
+          className="fixed inset-0 bg-black/50 z-40"
+        />
+      )}
 
       {/* Panel drawer - slide dari kiri */}
       <aside
         aria-hidden={!open}
+        onClick={(e) => e.stopPropagation()}
         className={`fixed top-0 left-0 h-full w-72 max-w-[80vw] bg-surface z-50 shadow-soft flex flex-col transition-transform duration-300 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
