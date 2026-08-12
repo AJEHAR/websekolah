@@ -1,20 +1,25 @@
+import { useState } from 'react'
 import { Plus, Users } from 'lucide-react'
 
 export default function UnitPerancanganCard({ unit, kategoriLabel, adaPerancangan, jumlahSelesai, jumlahKeseluruhan, onBuka }) {
   const gambar = unit.gambarUnit
+  const [gambarGagal, setGambarGagal] = useState(false)
+  const tunjukGambar = gambar && !gambarGagal
 
   return (
     <button
       onClick={onBuka}
       className="relative aspect-square rounded-card overflow-hidden text-left group"
-      style={{
-        backgroundImage: gambar ? `url(${gambar})` : undefined,
-        backgroundColor: gambar ? undefined : '#1A1A1A',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      style={{ backgroundColor: '#1A1A1A' }}
     >
-      {!gambar && (
+      {tunjukGambar ? (
+        <img
+          src={gambar}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => setGambarGagal(true)}
+        />
+      ) : (
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
           <Users size={56} className="text-white" />
         </div>

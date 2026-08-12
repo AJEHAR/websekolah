@@ -443,25 +443,25 @@ Admin tak lagi ya/tidak sahaja - ada medan `peranan` (array) pada setiap dokumen
 
 ## Perancangan UBKS
 
-Route `/eubks/perancangan-ubks`. Sama asas dengan Kehadiran UBKS (12 perjumpaan, pilih unit, carian nama unit) tapi untuk RANCANG (bukan rekod kehadiran):
+Route `/eubks/perancangan-ubks`. Reka bentuk sengaja **dipermudahkan** - satu unit = satu jadual perancangan sahaja (TIADA mod "asing/sama ikut tahun" lagi - kalau perlu asingkan ikut tahun/darjah, tulis terus dalam ruangan Perancangan, contoh "Tahun 6: ... / Tahun 5: ...").
 
-1. Pilih Tahun sesi, cari & pilih unit
-2. **Kali pertama untuk unit tu** - pilih mod: "Sama untuk semua Tahun/Darjah" (satu jadual untuk seluruh unit) ATAU "Asingkan ikut Tahun/Darjah" (jadual berasingan setiap darjah, contoh Tahun 6 lain rancangan dari Tahun 4)
-3. Kalau mod "Asing" - pilih tahun/darjah dulu (tab untuk tukar antara darjah lain)
-4. Jadual keluar: **Bil Perjumpaan | Perancangan | Tarikh** (12 baris, 1-12)
-5. Tekan mana-mana baris - modal keluar: **Perancangan** (textarea - sokong bullet/numbering sebab teks panjang), **Tarikh**, dan checkbox **Sudah dilaksanakan**
-6. Baris yang ditanda "Sudah dilaksanakan" jadi **hijau** dalam jadual
-7. Carian (kandungan perancangan) + tapis (Semua/Selesai/Belum Selesai) disediakan atas jadual
+1. Pilih Tahun sesi, cari & tekan unit (kad 1:1 dengan gambar/logo unit sebagai latar)
+2. Kad tunjuk status terus: "Belum Ada" (merah) atau "X/12 Selesai" (biru/hijau kalau semua siap)
+3. Tekan kad -> jadual 12 baris terus keluar (tiada langkah tambahan)
+4. Setiap baris ada 3 ikon: **Mata** (lihat + tanda Done), **Pensel** (edit kandungan/tarikh dirancang), **Padam** (kosongkan semula petak tu)
+5. Tekan Mata -> lihat kandungan penuh -> kalau belum selesai, butang "Tandakan Selesai (Done)" -> **wajib isi tarikh selesai** sebelum sah
+6. Baris selesai jadi **hijau**; lajur "Tarikh Selesai" dalam jadual papar tarikh Done tu (bukan tarikh dirancang)
+7. Carian (kandungan) + tapis status (Semua/Selesai/Belum) disediakan
 
-**Struktur data:**
+**Struktur data (dipermudahkan):**
 ```
-perancanganUBKS/{unitId}                    <- mod 'sama'
-perancanganUBKS/{unitId}__{tahunDarjah}      <- mod 'asing' (satu dokumen setiap darjah)
-  unitId, namaUnit, tahunSesi, mode ('sama'|'asing'), tahunDarjah (null jika 'sama')
-  senaraiPerjumpaan: [{ perjumpaan, perancangan, tarikh, selesai }, ...] (12 entri)
+perancanganUBKS/{unitId}          <- SATU dokumen sahaja setiap unit
+  unitId, namaUnit, tahunSesi
+  senaraiPerjumpaan: [{ perjumpaan, perancangan, tarikh, selesai, tarikhSelesai }, ...] (12 entri)
 ```
 
-**Nota untuk pembinaan akan datang:** Laporan UBKS (belum dibina) akan guna \`tarikh\` dan \`selesai\` dari perancangan ni sebagai asas laporan.
+**Nota untuk pembinaan akan datang:** Laporan UBKS (belum dibina) akan guna `tarikhSelesai` dan `selesai` dari perancangan ni sebagai asas laporan.
+
 
 ## Cara Tambah Page Baru
 

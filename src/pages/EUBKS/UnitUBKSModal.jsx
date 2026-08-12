@@ -67,19 +67,29 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
     if (!fail) return
     setFailGambar(fail)
     setGambarUnit(URL.createObjectURL(fail))
+    setGambarGagal(false)
   }
+
+  const [gambarGagal, setGambarGagal] = useState(false)
 
   async function simpan() {
     setMenyimpan(true)
     try {
       let gambarURL = unit.gambarUnit ?? null
       if (failGambar) {
+        setStatusSimpan('Memuat naik gambar…')
         const hasil = await muatNaikKeDrive(failGambar, 'unitUBKS')
         gambarURL = hasil.url
       }
+      setStatusSimpan('Menyimpan…')
       await kemaskiniUnit(unit.id, { namaUnit: namaUnit.trim(), kategoriUnit, ahli, gambarUnit: gambarURL }, user.uid)
+      setStatusSimpan('Berjaya disimpan!')
       onSelesai()
-      onClose()
+      setTimeout(() => onClose(), 600)
+    } catch (err) {
+      setStatusSimpan(null)
+      window.alert('Gagal simpan. Sila cuba lagi.')
+      console.error(err)
     } finally {
       setMenyimpan(false)
     }
@@ -104,15 +114,17 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
       <div className="bg-surface rounded-t-2xl sm:rounded-card w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold text-ink">Urus Unit</h2>
-          <button onClick={onClose} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
+          <button onClick={onClose} disabled={menyimpan} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted disabled:opacity-40">
             <X size={18} />
           </button>
         </div>
 
         <div className="flex flex-col items-center gap-3 mb-5">
           <div className="h-24 w-24 rounded-card bg-base border border-border overflow-hidden flex items-center justify-center">
-            {gambarUnit ? (
-              <img src={gambarUnit} alt="" className="h-full w-full object-cover" />
+            {gambarUnit && !gambarGagal ? (
+              <img src={gambarUnit} alt="" className="h-full w-full object-cover" onError={() => setGambarGagal(true)} />
+            ) : gambarUnit && gambarGagal ? (
+              <span className="text-[10px] text-inkmuted text-center px-1">Gambar belum sedia, cuba muat semula sekejap lagi</span>
             ) : (
               <span className="text-xs text-inkmuted">Tiada gambar</span>
             )}
@@ -273,7 +285,7 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
               disabled={menyimpan}
               className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60"
             >
-              {menyimpan ? 'Menyimpan…' : 'Simpan Perubahan'}
+              {menyimpan ? statusSimpan : 'Simpan Perubahan'}
             </button>
             <button onClick={padam} aria-label="Padam unit" className="h-12 px-4 rounded-card border border-border text-brand-red">
               <Trash2 size={18} />

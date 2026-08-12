@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Pencil, Users } from 'lucide-react'
 
 export default function UnitKehadiranCard({ unit, rekod, kategoriLabel, onBuka }) {
   const sudahIsi = Boolean(rekod)
+  const [gambarGagal, setGambarGagal] = useState(false)
 
   return (
     <div
@@ -14,8 +16,8 @@ export default function UnitKehadiranCard({ unit, rekod, kategoriLabel, onBuka }
             className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
             style={{ backgroundColor: sudahIsi ? '#E6F1FB' : '#F1EFE8' }}
           >
-            {unit.gambarUnit ? (
-              <img src={unit.gambarUnit} alt="" className="h-full w-full object-cover" />
+            {unit.gambarUnit && !gambarGagal ? (
+              <img src={unit.gambarUnit} alt="" className="h-full w-full object-cover" onError={() => setGambarGagal(true)} />
             ) : (
               <Users size={16} style={{ color: sudahIsi ? '#0C447C' : '#888780' }} />
             )}

@@ -6,6 +6,19 @@ import { useUnitUBKSTahun, tambahUnit } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import UnitUBKSModal from './UnitUBKSModal.jsx'
 
+function AvatarUnit({ gambarUnit }) {
+  const [gagal, setGagal] = useState(false)
+  return (
+    <div className="h-12 w-12 rounded-card bg-base border border-border overflow-hidden flex items-center justify-center shrink-0">
+      {gambarUnit && !gagal ? (
+        <img src={gambarUnit} alt="" className="h-full w-full object-cover" onError={() => setGagal(true)} />
+      ) : (
+        <Users size={18} className="text-inkmuted" />
+      )}
+    </div>
+  )
+}
+
 const TAHUN_SEMASA = new Date().getFullYear()
 const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
 
@@ -131,13 +144,7 @@ export default function MuridUBKS() {
               onClick={() => setUnitDipilih(u)}
               className="text-left p-4 rounded-card border border-border bg-surface hover:border-brand-red transition-colors flex items-center gap-3"
             >
-              <div className="h-12 w-12 rounded-card bg-base border border-border overflow-hidden flex items-center justify-center shrink-0">
-                {u.gambarUnit ? (
-                  <img src={u.gambarUnit} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <Users size={18} className="text-inkmuted" />
-                )}
-              </div>
+              <AvatarUnit gambarUnit={u.gambarUnit} />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-ink truncate">{u.namaUnit}</p>
                 <p className="text-xs text-inkmuted truncate">{labelKategori(u.kategoriUnit)} · {(u.ahli ?? []).length} ahli</p>

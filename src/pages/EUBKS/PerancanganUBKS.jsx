@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Search, Eye, Pencil, Trash2, ChevronLeft, Settings2 } from 'lucide-react'
+import { Search, Eye, Pencil, Trash2, ChevronLeft } from 'lucide-react'
 import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import {
   muatkanPerancangan,
-  senaraiDokUntukUnit,
   simpanPerancangan,
   senaraiKosong,
   useSenaraiPerancanganTahun,
@@ -33,12 +32,12 @@ export default function PerancanganUBKS() {
   }
 
   function progresUnit(unitId) {
-    const dokUnit = perancanganTahun.filter((d) => d.unitId === unitId)
-    const semuaEntri = dokUnit.flatMap((d) => d.senaraiPerjumpaan ?? [])
+    const dok = perancanganTahun.find((d) => d.unitId === unitId)
+    const senarai = dok?.senaraiPerjumpaan ?? []
     return {
-      adaPerancangan: dokUnit.length > 0,
-      jumlahSelesai: semuaEntri.filter((e) => e.selesai).length,
-      jumlahKeseluruhan: semuaEntri.length,
+      adaPerancangan: Boolean(dok),
+      jumlahSelesai: senarai.filter((e) => e.selesai).length,
+      jumlahKeseluruhan: senarai.length,
     }
   }
 
@@ -111,10 +110,6 @@ export default function PerancanganUBKS() {
 }
 
 function JadualPerancangan({ unit, tahunSesi, user }) {
-  const [dokSediaAda, setDokSediaAda] = useState([])
-  const [mode, setMode] = useState(null)
-  const [ikutTahun, setIkutTahun] = useState(false)
-  const [tahunDarjah, setTahunDarjah] = useState('')
   const [rekod, setRekod] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tapisStatus, setTapisStatus] = useState('semua')
@@ -122,133 +117,29 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
   const [barisEdit, setBarisEdit] = useState(null)
   const [barisLihat, setBarisLihat] = useState(null)
 
-  const senaraiTahunDalamUnit = useMemo(() => {
-    const set = new Set()
-    ;(unit.ahli ?? []).forEach((m) => {
-      if (m.tahunTingkatan) set.add(m.tahunTingkatan)
-    })
-    return [...set].sort()
-  }, [unit])
-
   useEffect(() => {
     async function muat() {
       setLoading(true)
-      const semua = await senaraiDokUntukUnit(unit.id)
-      setDokSediaAda(semua)
-      if (semua.length > 0) {
-        setMode(semua[0].mode)
-        setIkutTahun(semua[0].mode === 'asing')
-      } else {
-        setMode(null)
-        setIkutTahun(false)
-      }
-      setTahunDarjah('')
+      const d = await muatkanPerancangan(unit.id)
+      setRekod(d ?? { senaraiPerjumpaan: senaraiKosong() })
       setLoading(false)
     }
     muat()
   }, [unit.id])
 
-  useEffect(() => {
-    async function muatRekod() {
-      if (!mode) {
-        setRekod(null)
-        return
-      }
-      if (mode === 'asing' && !tahunDarjah) {
-        setRekod(null)
-        return
-      }
-      const d = await muatkanPerancangan(unit.id, mode, tahunDarjah)
-      setRekod(d ?? { senaraiPerjumpaan: senaraiKosong() })
-    }
-    muatRekod()
-  }, [mode, tahunDarjah, unit.id])
-
-  function mulakan() {
-    setMode(ikutTahun ? 'asing' : 'sama')
-  }
-
   async function tukarBaris(index, dataBaru) {
     const senaraiBaru = [...rekod.senaraiPerjumpaan]
     senaraiBaru[index] = { ...senaraiBaru[index], ...dataBaru }
-    await simpanPerancangan(unit.id, unit.namaUnit, tahunSesi, mode, tahunDarjah, senaraiBaru, user.uid)
+    await simpanPerancangan(unit.id, unit.namaUnit, tahunSesi, senaraiBaru, user.uid)
     setRekod((r) => ({ ...r, senaraiPerjumpaan: senaraiBaru }))
-    const semua = await senaraiDokUntukUnit(unit.id)
-    setDokSediaAda(semua)
   }
 
   async function padamBaris(perjumpaan) {
     if (!window.confirm(`Padam kandungan perancangan Perjumpaan ${perjumpaan}? Ini akan kosongkan semula petak ni.`)) return
-    const index = perjumpaan - 1
-    await tukarBaris(index, { perancangan: '', tarikh: '', selesai: false, tarikhSelesai: null })
+    await tukarBaris(perjumpaan - 1, { perancangan: '', tarikh: '', selesai: false, tarikhSelesai: null })
   }
 
-  function tukarMod() {
-    if (!window.confirm('Tukar mod perancangan? Data sedia ada TAK dipadam, cuma anda perlu pilih mod semula (dan pilih tahun/darjah semula kalau perlu).')) return
-    setMode(null)
-    setTahunDarjah('')
-  }
-
-  if (loading) return <p className="text-sm text-inkmuted">Memuatkan…</p>
-
-  // Langkah 1: belum ada perancangan langsung - pilih mod dengan suis
-  if (!mode) {
-    return (
-      <div className="p-5 rounded-card border border-border bg-surface">
-        <p className="text-sm font-semibold text-ink mb-1">{unit.namaUnit}</p>
-        <p className="text-xs text-inkmuted mb-4">
-          {dokSediaAda.length > 0
-            ? 'Anda ada perancangan sedia ada. Pilih mod untuk teruskan (data lama tak dipadam):'
-            : 'Belum ada perancangan lagi. Sebelum mula, tetapkan satu perkara:'}
-        </p>
-
-        <div className="flex items-center justify-between p-3 rounded-card bg-base mb-4">
-          <div>
-            <p className="text-sm font-medium text-ink">Asingkan ikut Tahun/Darjah?</p>
-            <p className="text-xs text-inkmuted">{ikutTahun ? 'Setiap darjah ada perancangan sendiri' : 'Satu perancangan untuk seluruh unit'}</p>
-          </div>
-          <button
-            onClick={() => setIkutTahun((s) => !s)}
-            role="switch"
-            aria-checked={ikutTahun}
-            className="relative h-7 w-12 rounded-full transition-colors shrink-0"
-            style={{ backgroundColor: ikutTahun ? '#C8102E' : '#E5E5E5' }}
-          >
-            <span
-              className="absolute top-1 h-5 w-5 rounded-full bg-white transition-transform shadow"
-              style={{ transform: ikutTahun ? 'translateX(22px)' : 'translateX(4px)' }}
-            />
-          </button>
-        </div>
-
-        <button onClick={mulakan} className="w-full h-12 rounded-card bg-brand-red text-white text-sm font-semibold">
-          Mula Perancangan
-        </button>
-      </div>
-    )
-  }
-
-  if (mode === 'asing' && !tahunDarjah) {
-    return (
-      <div className="p-5 rounded-card border border-border bg-surface">
-        <p className="text-sm font-semibold text-ink mb-1">{unit.namaUnit}</p>
-        <p className="text-sm font-medium text-ink mb-3">Pilih Tahun/Darjah:</p>
-        <div className="flex flex-wrap gap-2">
-          {senaraiTahunDalamUnit.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTahunDarjah(t)}
-              className="h-10 px-4 rounded-card border border-border bg-base text-sm font-medium text-ink hover:border-brand-red"
-            >
-              {t} {dokSediaAda.some((d) => d.tahunDarjah === t) && '✓'}
-            </button>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (!rekod) return <p className="text-sm text-inkmuted">Memuatkan…</p>
+  if (loading || !rekod) return <p className="text-sm text-inkmuted">Memuatkan…</p>
 
   const senaraiDitapis = rekod.senaraiPerjumpaan.filter((b) => {
     if (tapisStatus === 'selesai' && !b.selesai) return false
@@ -259,30 +150,7 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-ink">
-            {unit.namaUnit} {mode === 'asing' && `— ${tahunDarjah}`}
-          </p>
-          <button onClick={tukarMod} className="flex items-center gap-1 text-xs font-medium text-brand-red">
-            <Settings2 size={12} /> Tukar Mod
-          </button>
-        </div>
-        {mode === 'asing' && (
-          <div className="flex gap-1 flex-wrap">
-            {senaraiTahunDalamUnit.map((t) => (
-              <button
-                key={t}
-                onClick={() => setTahunDarjah(t)}
-                className="h-8 px-3 rounded-full text-xs font-medium"
-                style={{ backgroundColor: t === tahunDarjah ? '#1A1A1A' : '#F1EFE8', color: t === tahunDarjah ? '#fff' : '#5F5E5A' }}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <p className="text-sm font-semibold text-ink mb-3">{unit.namaUnit}</p>
 
       <div className="flex gap-2 mb-4 flex-wrap">
         <input
