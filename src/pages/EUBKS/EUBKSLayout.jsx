@@ -34,22 +34,20 @@ export default function EUBKSLayout() {
 
   return (
     <AksesGate user={user}>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
-        {adalahHub ? (
+      {adalahHub ? (
+        <Outlet context={{ user }} />
+      ) : (
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
+          <Link to="/eubks" className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4 w-fit">
+            <ChevronLeft size={14} /> Home UBKS
+          </Link>
+          <h1 className="text-xl sm:text-2xl font-bold text-ink">eUBKS Ko</h1>
+          <p className="text-xs text-inkmuted mt-1 mb-5">
+            {TAJUK_SUBPAGE[location.pathname] ?? ''}
+          </p>
           <Outlet context={{ user }} />
-        ) : (
-          <>
-            <Link to="/eubks" className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4 w-fit">
-              <ChevronLeft size={14} /> Home UBKS
-            </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-ink">eUBKS Ko</h1>
-            <p className="text-xs text-inkmuted mt-1 mb-5">
-              {TAJUK_SUBPAGE[location.pathname] ?? ''}
-            </p>
-            <Outlet context={{ user }} />
-          </>
-        )}
-      </div>
+        </div>
+      )}
     </AksesGate>
   )
 }
