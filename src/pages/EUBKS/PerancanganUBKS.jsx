@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Search, Eye, Pencil, Trash2, ChevronLeft } from 'lucide-react'
+import { Search, Eye, Pencil, Trash2, ChevronLeft, Settings2 } from 'lucide-react'
 import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import {
@@ -183,6 +183,12 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
     await tukarBaris(index, { perancangan: '', tarikh: '', selesai: false, tarikhSelesai: null })
   }
 
+  function tukarMod() {
+    if (!window.confirm('Tukar mod perancangan? Data sedia ada TAK dipadam, cuma anda perlu pilih mod semula (dan pilih tahun/darjah semula kalau perlu).')) return
+    setMode(null)
+    setTahunDarjah('')
+  }
+
   if (loading) return <p className="text-sm text-inkmuted">Memuatkan…</p>
 
   // Langkah 1: belum ada perancangan langsung - pilih mod dengan suis
@@ -190,7 +196,11 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
     return (
       <div className="p-5 rounded-card border border-border bg-surface">
         <p className="text-sm font-semibold text-ink mb-1">{unit.namaUnit}</p>
-        <p className="text-xs text-inkmuted mb-4">Belum ada perancangan lagi. Sebelum mula, tetapkan satu perkara:</p>
+        <p className="text-xs text-inkmuted mb-4">
+          {dokSediaAda.length > 0
+            ? 'Anda ada perancangan sedia ada. Pilih mod untuk teruskan (data lama tak dipadam):'
+            : 'Belum ada perancangan lagi. Sebelum mula, tetapkan satu perkara:'}
+        </p>
 
         <div className="flex items-center justify-between p-3 rounded-card bg-base mb-4">
           <div>
@@ -250,9 +260,14 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <p className="text-sm font-semibold text-ink">
-          {unit.namaUnit} {mode === 'asing' && `— ${tahunDarjah}`}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-ink">
+            {unit.namaUnit} {mode === 'asing' && `— ${tahunDarjah}`}
+          </p>
+          <button onClick={tukarMod} className="flex items-center gap-1 text-xs font-medium text-brand-red">
+            <Settings2 size={12} /> Tukar Mod
+          </button>
+        </div>
         {mode === 'asing' && (
           <div className="flex gap-1 flex-wrap">
             {senaraiTahunDalamUnit.map((t) => (
@@ -294,7 +309,7 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
             <tr>
               <th className="text-left px-3 py-2 font-semibold text-ink w-20">Bil Perjumpaan</th>
               <th className="text-left px-3 py-2 font-semibold text-ink">Perancangan</th>
-              <th className="text-left px-3 py-2 font-semibold text-ink w-24">Tarikh</th>
+              <th className="text-left px-3 py-2 font-semibold text-ink w-24">Tarikh Selesai</th>
               <th className="text-center px-3 py-2 font-semibold text-ink w-24">Tindakan</th>
             </tr>
           </thead>
@@ -305,7 +320,7 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
                 <td className="px-3 py-2 text-ink align-top">
                   <span className="line-clamp-2">{b.perancangan || <span className="text-inkmuted">Belum diisi</span>}</span>
                 </td>
-                <td className="px-3 py-2 text-inkmuted align-top whitespace-nowrap">{b.tarikh || '-'}</td>
+                <td className="px-3 py-2 text-inkmuted align-top whitespace-nowrap">{b.tarikhSelesai || '-'}</td>
                 <td className="px-3 py-2 align-top">
                   <div className="flex items-center justify-center gap-1">
                     <button onClick={() => setBarisLihat(b)} aria-label="Lihat" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
