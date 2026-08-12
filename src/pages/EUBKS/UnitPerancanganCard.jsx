@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus, Users } from 'lucide-react'
 
-export default function UnitPerancanganCard({ unit, kategoriLabel, adaPerancangan, jumlahSelesai, jumlahKeseluruhan, onBuka }) {
+export default function UnitPerancanganCard({ unit, adaPerancangan, jumlahSelesai, jumlahKeseluruhan, onBuka }) {
   const gambar = unit.gambarUnit
   const [gambarGagal, setGambarGagal] = useState(false)
   const tunjukGambar = gambar && !gambarGagal
@@ -27,11 +27,6 @@ export default function UnitPerancanganCard({ unit, kategoriLabel, adaPerancanga
 
       {/* Gradient scrim - pastikan teks sentiasa jelas dibaca atas apa-apa gambar */}
       <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.78) 100%)' }} />
-
-      {/* Badge kategori - atas kiri */}
-      <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-1 rounded-full bg-white/90 text-ink">
-        {kategoriLabel}
-      </span>
 
       {/* Badge status - atas kanan */}
       {adaPerancangan ? (

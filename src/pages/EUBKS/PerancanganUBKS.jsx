@@ -27,10 +27,6 @@ export default function PerancanganUBKS() {
 
   const unitDitapis = unitSenarai.filter((u) => u.namaUnit?.toLowerCase().includes(carian.toLowerCase()))
 
-  function labelKategori(kod) {
-    return kategoriSenarai.find((k) => k.kod === kod)?.nama ?? kod
-  }
-
   function progresUnit(unitId) {
     const dok = perancanganTahun.find((d) => d.unitId === unitId)
     const senarai = dok?.senaraiPerjumpaan ?? []
@@ -88,25 +84,49 @@ export default function PerancanganUBKS() {
       ) : unitDitapis.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada unit dijumpai.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {unitDitapis.map((u) => {
-            const progres = progresUnit(u.id)
-            return (
-              <UnitPerancanganCard
-                key={u.id}
-                unit={u}
-                kategoriLabel={labelKategori(u.kategoriUnit)}
-                adaPerancangan={progres.adaPerancangan}
-                jumlahSelesai={progres.jumlahSelesai}
-                jumlahKeseluruhan={progres.jumlahKeseluruhan}
-                onBuka={() => setUnitDipilih(u)}
-              />
-            )
-          })}
+        <div className="space-y-6">
+          {senaraiKategoriSusun(unitDitapis, kategoriSenarai).map(({ kategori, unitSenaraiKategori }) => (
+            <section key={kategori.kod}>
+              <h2 className="text-sm font-semibold text-ink mb-3">
+                {kategori.nama} <span className="text-inkmuted font-normal">({unitSenaraiKategori.length})</span>
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {unitSenaraiKategori.map((u) => {
+                  const progres = progresUnit(u.id)
+                  return (
+                    <UnitPerancanganCard
+                      key={u.id}
+                      unit={u}
+                      adaPerancangan={progres.adaPerancangan}
+                      jumlahSelesai={progres.jumlahSelesai}
+                      jumlahKeseluruhan={progres.jumlahKeseluruhan}
+                      onBuka={() => setUnitDipilih(u)}
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       )}
     </div>
   )
+}
+
+// Kumpul unit ikut kategori (susun ikut turutan kategori yang ditetapkan admin),
+// dengan seksyen "Lain-lain" di akhir untuk unit tanpa kategori sepadan.
+function senaraiKategoriSusun(unitSenarai, kategoriSenarai) {
+  const hasil = []
+  kategoriSenarai.forEach((kategori) => {
+    const unitSenaraiKategori = unitSenarai.filter((u) => u.kategoriUnit === kategori.kod)
+    if (unitSenaraiKategori.length > 0) hasil.push({ kategori, unitSenaraiKategori })
+  })
+  const kodDiketahui = new Set(kategoriSenarai.map((k) => k.kod))
+  const unitLain = unitSenarai.filter((u) => !kodDiketahui.has(u.kategoriUnit))
+  if (unitLain.length > 0) {
+    hasil.push({ kategori: { kod: 'LAIN', nama: 'Lain-lain' }, unitSenaraiKategori: unitLain })
+  }
+  return hasil
 }
 
 function JadualPerancangan({ unit, tahunSesi, user }) {
