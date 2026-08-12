@@ -17,6 +17,8 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
   const [carian, setCarian] = useState('')
   const [dipilihSementara, setDipilihSementara] = useState(new Set())
   const [menyimpan, setMenyimpan] = useState(false)
+  const [statusSimpan, setStatusSimpan] = useState(null)
+  const [gambarGagal, setGambarGagal] = useState(false)
 
   const senaraiTahun = useMemo(() => {
     const set = new Set()
@@ -69,8 +71,6 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
     setGambarUnit(URL.createObjectURL(fail))
     setGambarGagal(false)
   }
-
-  const [gambarGagal, setGambarGagal] = useState(false)
 
   async function simpan() {
     setMenyimpan(true)
