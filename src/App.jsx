@@ -42,7 +42,7 @@ import PerancanganUBKS from './pages/EUBKS/PerancanganUBKS.jsx'
 
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-base">
+    <div className="min-h-dvh flex flex-col bg-base">
       <Navbar />
       <div className="flex-1">
         <Routes>
