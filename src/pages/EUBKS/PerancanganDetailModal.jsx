@@ -37,13 +37,6 @@ export default function PerancanganDetailModal({ baris, onClose, onTandaSelesai,
           </p>
         </div>
 
-        {baris.tarikh && (
-          <div className="mb-5">
-            <h3 className="text-xs font-semibold text-inkmuted uppercase tracking-wide mb-1.5">Tarikh Dirancang</h3>
-            <p className="text-sm text-ink">{baris.tarikh}</p>
-          </div>
-        )}
-
         <div className="mb-6 p-3 rounded-card border border-border">
           {baris.selesai ? (
             <div className="flex items-center justify-between gap-2">

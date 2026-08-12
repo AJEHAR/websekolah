@@ -475,6 +475,23 @@ perancanganUBKS/{unitId}          <- SATU dokumen sahaja setiap unit
 **Nota untuk pembinaan akan datang:** Laporan UBKS (belum dibina) akan guna `tarikhSelesai` dan `selesai` dari perancangan ni sebagai asas laporan.
 
 
+## eUBKS Ko - Hub / Page Utama
+
+`/eubks` (index) sekarang page HUB tersendiri (`EUBKSHub.jsx`) - bukan redirect terus ke Murid UBKS macam sub-page lain. Tajuk "eUBKS Ko" di atas, 4 kad akses pantas di bawah (2x2 di telefon, 4 sebaris di desktop). Latar sekarang gradient sementara (hitam ke merah maroon) - boleh tukar ke gambar sebenar bila-bila.
+
+**Boleh tambah akses pantas dengan mudah** - senarai kad hub datang dari satu fail konfigurasi, `eubksAksesPantas.js`:
+```js
+export const EUBKS_AKSES_PANTAS = [
+  { label: 'Murid UBKS', to: '/eubks/murid-ubks', Ikon: Users },
+  ...
+]
+```
+Nak tambah sub-page baru dalam hub - tambah satu entri di sini (lepas daftar route dia macam biasa dalam `App.jsx`), tak perlu ubah `EUBKSHub.jsx` langsung.
+
+**Pautan "Home UBKS":** setiap sub-page (Murid/Kehadiran/Laporan/Perancangan UBKS) papar pautan kecil "← Home UBKS" di atas untuk kembali ke hub (dikendalikan dalam `EUBKSLayout.jsx` - disorok automatik bila di hub sendiri, supaya tak berlingkar).
+
+**Nota:** butang "eUBKS Ko" dalam drawer/nav desktop masih cuma toggle *accordion* (buka/tutup senarai sub-page), BUKAN pautan terus ke hub - hub buat masa ni dicapai melalui URL terus atau pautan "Home UBKS" dari dalam sub-page. Kalau nak label "eUBKS Ko" dalam nav sendiri pun boleh tekan terus ke hub, itu ubah struktur nav kongsi (akan jejas semua seksyen lain sekali) - beritahu kalau nak saya buat.
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

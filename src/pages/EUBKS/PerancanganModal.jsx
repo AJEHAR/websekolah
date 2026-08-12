@@ -3,7 +3,6 @@ import { X } from 'lucide-react'
 
 export default function PerancanganModal({ baris, onClose, onSimpan }) {
   const [perancangan, setPerancangan] = useState(baris?.perancangan ?? '')
-  const [tarikh, setTarikh] = useState(baris?.tarikh ?? '')
   const [menyimpan, setMenyimpan] = useState(false)
 
   if (!baris) return null
@@ -12,7 +11,7 @@ export default function PerancanganModal({ baris, onClose, onSimpan }) {
     e.preventDefault()
     setMenyimpan(true)
     try {
-      await onSimpan({ perancangan: perancangan.trim(), tarikh })
+      await onSimpan({ perancangan: perancangan.trim() })
     } finally {
       setMenyimpan(false)
     }
@@ -33,21 +32,11 @@ export default function PerancanganModal({ baris, onClose, onSimpan }) {
             <label htmlFor="perancanganText" className="block text-sm font-medium text-ink mb-1">Perancangan</label>
             <textarea
               id="perancanganText"
-              rows={9}
+              rows={10}
               value={perancangan}
               onChange={(e) => setPerancangan(e.target.value)}
               className="w-full px-3 py-2 rounded-card border border-border bg-surface text-sm resize-none"
               placeholder={'Boleh guna bullet/numbering. Kalau perlu asingkan ikut tahun/darjah, tulis terus contoh:\n\nTahun 6:\n1. Aktiviti A\n\nTahun 5:\n1. Aktiviti B'}
-            />
-          </div>
-          <div>
-            <label htmlFor="tarikhPerancangan" className="block text-sm font-medium text-ink mb-1">Tarikh Dirancang</label>
-            <input
-              id="tarikhPerancangan"
-              type="date"
-              value={tarikh}
-              onChange={(e) => setTarikh(e.target.value)}
-              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
             />
           </div>
 

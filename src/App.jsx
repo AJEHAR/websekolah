@@ -34,6 +34,7 @@ import EBanciLayout from './pages/EBanci/EBanciLayout.jsx'
 import KehadiranMurid from './pages/EBanci/KehadiranMurid.jsx'
 import PapanRMT from './pages/EBanci/PapanRMT.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
+import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
 import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
 import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
 import LaporanUBKS from './pages/EUBKS/LaporanUBKS.jsx'
@@ -104,9 +105,9 @@ export default function App() {
             <Route path="papan-rmt" element={<PapanRMT />} />
           </Route>
 
-          {/* eUBKS Ko - Murid UBKS (siap), Kehadiran/Laporan/Perancangan (placeholder) */}
+          {/* eUBKS Ko - hub dengan akses pantas, + 4 sub-page */}
           <Route path="/eubks" element={<EUBKSLayout />}>
-            <Route index element={<Navigate to="murid-ubks" replace />} />
+            <Route index element={<EUBKSHub />} />
             <Route path="murid-ubks" element={<MuridUBKS />} />
             <Route path="kehadiran-ubks" element={<KehadiranUBKS />} />
             <Route path="laporan-ubks" element={<LaporanUBKS />} />
