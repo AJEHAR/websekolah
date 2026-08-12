@@ -11,11 +11,24 @@ const PERJUMPAAN_SENARAI = Array.from({ length: 12 }, (_, i) => i + 1)
 const LEBAR = { bil: 32, nama: 150, kelas: 90, sel: 26, jumlah: 44 }
 const KIRI = { bil: 0, nama: LEBAR.bil, kelas: LEBAR.bil + LEBAR.nama }
 
+// Hanya 3 kategori standard ni dipaparkan di Papan (bukan kategori custom lain
+// yang admin mungkin tambah, contoh "Kebitaraan" atau lain-lain).
+const KOD_DIBENARKAN = ['UB', 'K', 'S']
+const WARNA_KATEGORI = {
+  UB: { header: '#E6F1FB', headerTeks: '#0C447C', sel: '#F5FAFF' },
+  K: { header: '#EAF3DE', headerTeks: '#27500A', sel: '#F7FBF2' },
+  S: { header: '#FAECE7', headerTeks: '#712B13', sel: '#FDF6F3' },
+}
+function warnaUntuk(kod) {
+  return WARNA_KATEGORI[kod] ?? { header: '#F1EFE8', headerTeks: '#444441', sel: '#FAFAF8' }
+}
+
 export default function PapanUBKS() {
   const [tahunSesi, setTahunSesi] = useState(TAHUN_SEMASA)
   const { senarai: unitSenarai, loading: loadingUnit } = useUnitUBKSTahun(tahunSesi)
   const { senarai: kehadiranSenarai, loading: loadingKehadiran } = useKehadiranUBKSTahun(tahunSesi)
-  const { senarai: kategoriSenarai } = useKategoriUBKS()
+  const { senarai: kategoriSemua } = useKategoriUBKS()
+  const kategoriSenarai = kategoriSemua.filter((k) => KOD_DIBENARKAN.includes(k.kod?.toUpperCase()))
   const [carian, setCarian] = useState('')
 
   const pelajar = useMemo(() => {
@@ -97,7 +110,9 @@ export default function PapanUBKS() {
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
       ) : kategoriSenarai.length === 0 ? (
-        <p className="text-sm text-inkmuted">Tiada kategori unit lagi - admin perlu tetapkan dalam Panel Admin &gt; Kategori UBKS.</p>
+        <p className="text-sm text-inkmuted">
+          Tiada kategori UB/K/S dijumpai - papan ni cuma papar kategori Unit Beruniform (UB), Kelab (K), Sukan (S). Sahkan kod kategori dalam Panel Admin &gt; Kategori UBKS.
+        </p>
       ) : pelajarDitapis.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada murid dalam unit UBKS untuk tahun {tahunSesi} lagi.</p>
       ) : (
@@ -109,7 +124,12 @@ export default function PapanUBKS() {
                 <th rowSpan={2} className="sticky z-30 bg-base text-left px-2 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.nama, width: LEBAR.nama }}>Nama Murid</th>
                 <th rowSpan={2} className="sticky z-30 bg-base px-1 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>Kelas</th>
                 {kategoriSenarai.map((k) => (
-                  <th key={k.kod} colSpan={13} className="px-1 py-1.5 font-semibold text-ink border-b border-l border-border text-center">
+                  <th
+                    key={k.kod}
+                    colSpan={13}
+                    className="px-1 py-1.5 font-semibold border-b border-l border-border text-center"
+                    style={{ backgroundColor: warnaUntuk(k.kod).header, color: warnaUntuk(k.kod).headerTeks }}
+                  >
                     {k.nama} ({k.kod})
                   </th>
                 ))}
@@ -118,9 +138,20 @@ export default function PapanUBKS() {
                 {kategoriSenarai.map((k) => (
                   <Fragment key={k.kod}>
                     {PERJUMPAAN_SENARAI.map((pj) => (
-                      <th key={`${k.kod}-${pj}`} className="px-1 py-1.5 font-medium text-inkmuted border-b border-border text-center" style={{ width: LEBAR.sel }}>{pj}</th>
+                      <th
+                        key={`${k.kod}-${pj}`}
+                        className="px-1 py-1.5 font-medium border-b border-border text-center"
+                        style={{ width: LEBAR.sel, backgroundColor: warnaUntuk(k.kod).sel, color: warnaUntuk(k.kod).headerTeks }}
+                      >
+                        {pj}
+                      </th>
                     ))}
-                    <th className="px-1 py-1.5 font-semibold text-ink border-b border-l border-border text-center" style={{ width: LEBAR.jumlah }}>Jum.</th>
+                    <th
+                      className="px-1 py-1.5 font-semibold border-b border-l border-border text-center"
+                      style={{ width: LEBAR.jumlah, backgroundColor: warnaUntuk(k.kod).header, color: warnaUntuk(k.kod).headerTeks }}
+                    >
+                      Jum.
+                    </th>
                   </Fragment>
                 ))}
               </tr>
@@ -133,18 +164,19 @@ export default function PapanUBKS() {
                   <td className="sticky z-10 bg-surface px-1 py-2 border-r border-border whitespace-nowrap text-inkmuted text-center" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>{p.tahunTingkatan}</td>
                   {kategoriSenarai.map((k) => {
                     const data = p.ikutKategori[k.kod]
+                    const warna = warnaUntuk(k.kod)
                     return (
                       <Fragment key={k.kod}>
                         {PERJUMPAAN_SENARAI.map((pj) => {
                           const status = data.unitId ? data.perjumpaanStatus[pj] : null
                           return (
-                            <td key={`${k.kod}-${pj}`} className="text-center px-1 py-2">
+                            <td key={`${k.kod}-${pj}`} className="text-center px-1 py-2" style={{ backgroundColor: warna.sel }}>
                               {status === true && <span style={{ color: '#27500A' }} className="font-bold">/</span>}
                               {status === false && <span className="text-brand-red font-bold">0</span>}
                             </td>
                           )
                         })}
-                        <td className="text-center px-1 py-2 font-semibold text-ink border-l border-border">
+                        <td className="text-center px-1 py-2 font-semibold border-l border-border" style={{ backgroundColor: warna.header, color: warna.headerTeks }}>
                           {data.unitId ? data.jumlahHadir : '-'}
                         </td>
                       </Fragment>
