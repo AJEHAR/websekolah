@@ -172,33 +172,33 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
       </div>
 
       <div className="border border-border rounded-card overflow-hidden">
-        <table className="text-xs w-full">
+        <table className="text-xs w-full table-fixed">
           <thead className="bg-base">
             <tr>
-              <th className="text-left px-3 py-2 font-semibold text-ink w-20">Bil Perjumpaan</th>
-              <th className="text-left px-3 py-2 font-semibold text-ink">Perancangan</th>
-              <th className="text-left px-3 py-2 font-semibold text-ink w-24">Tarikh Selesai</th>
-              <th className="text-center px-3 py-2 font-semibold text-ink w-24">Tindakan</th>
+              <th className="text-left px-2 py-2 font-semibold text-ink w-10">Bil</th>
+              <th className="text-left px-2 py-2 font-semibold text-ink">Perancangan</th>
+              <th className="hidden sm:table-cell text-left px-2 py-2 font-semibold text-ink w-24">Tarikh Selesai</th>
+              <th className="text-center px-1 py-2 font-semibold text-ink w-[72px]">Tindakan</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {senaraiDitapis.map((b) => (
               <tr key={b.perjumpaan} style={b.selesai ? { backgroundColor: '#EAF3DE' } : undefined}>
-                <td className="px-3 py-2 font-semibold text-ink align-top">{b.perjumpaan}</td>
-                <td className="px-3 py-2 text-ink align-top">
-                  <span className="line-clamp-2">{b.perancangan || <span className="text-inkmuted">Belum diisi</span>}</span>
+                <td className="px-2 py-2 font-semibold text-ink">{b.perjumpaan}</td>
+                <td className="px-2 py-2 text-ink truncate">
+                  {b.perancangan || <span className="text-inkmuted">Belum diisi</span>}
                 </td>
-                <td className="px-3 py-2 text-inkmuted align-top whitespace-nowrap">{b.tarikhSelesai || '-'}</td>
-                <td className="px-3 py-2 align-top">
-                  <div className="flex items-center justify-center gap-1">
-                    <button onClick={() => setBarisLihat(b)} aria-label="Lihat" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
-                      <Eye size={14} />
+                <td className="hidden sm:table-cell px-2 py-2 text-inkmuted whitespace-nowrap">{b.tarikhSelesai || '-'}</td>
+                <td className="px-1 py-2">
+                  <div className="flex items-center justify-center gap-0.5">
+                    <button onClick={() => setBarisLihat(b)} aria-label="Lihat" className="p-1 rounded-card hover:bg-base text-inkmuted">
+                      <Eye size={13} />
                     </button>
-                    <button onClick={() => setBarisEdit(b)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
-                      <Pencil size={14} />
+                    <button onClick={() => setBarisEdit(b)} aria-label="Edit" className="p-1 rounded-card hover:bg-base text-inkmuted">
+                      <Pencil size={13} />
                     </button>
-                    <button onClick={() => padamBaris(b.perjumpaan)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red">
-                      <Trash2 size={14} />
+                    <button onClick={() => padamBaris(b.perjumpaan)} aria-label="Padam" className="p-1 rounded-card hover:bg-base text-brand-red">
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </td>
