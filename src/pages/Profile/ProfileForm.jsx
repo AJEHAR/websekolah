@@ -55,7 +55,7 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
       }
       await onSimpan({ nama: nama.trim(), ic: ic.trim(), jawatan, kategori, gambarURL })
     } catch (err) {
-      setRalat('Gagal simpan profile. Cuba lagi.')
+      setRalat(err.message || 'Gagal simpan profile. Cuba lagi.')
       console.error(err)
     } finally {
       setMenyimpan(false)

@@ -88,7 +88,7 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
       setTimeout(() => onClose(), 600)
     } catch (err) {
       setStatusSimpan(null)
-      window.alert('Gagal simpan. Sila cuba lagi.')
+      window.alert(err.message || 'Gagal simpan. Sila cuba lagi.')
       console.error(err)
     } finally {
       setMenyimpan(false)

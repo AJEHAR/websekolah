@@ -180,6 +180,18 @@ Fail akan disimpan dalam Google Drive akaun yang deploy Apps Script ni, di bawah
 
 **Kalau `.env` kosong:** upload gambar/dokumen akan gagal dengan mesej "Google Drive upload belum disetup" (bukan crash) - selaras dengan cara app ni "downgrade" bila Firebase pun belum disetup.
 
+
+### Kebolehpercayaan Upload (mampatan, had masa, ralat jelas)
+
+`driveUpload.js` (dipakai oleh SEMUA upload gambar - Profile, Unit UBKS, dll) ada 3 lapisan perlindungan:
+
+1. **Mampatan automatik** - gambar dimampat/disaiz-semula (Canvas API, maksimum 1600px lebar, kualiti JPEG 82%) SEBELUM dimuat naik. Ni penting sebab gambar kamera telefon (4-8MB+) boleh sebabkan muat naik tersangkut/timeout, terutama sambungan perlahan.
+2. **Had masa 45 saat** (`AbortController`) - elak permintaan tersangkut SELAMA-LAMANYA (punca asal "tiada respons" di desktop) - kalau lebih 45 saat, terus keluar ralat jelas.
+3. **Mesej ralat spesifik** - "Muat naik ambil masa terlalu lama", "Gagal sambung ke pelayan", dll - bukan generik "gagal, cuba lagi" - senang diagnos kalau ada isu lagi.
+
+Had saiz fail asal: 20MB (sebelum mampatan).
+
+
 ## Panel Admin
 
 Dipecah jadi sub-page (nested route) dengan tab pills — sama corak macam Keberadaan:
