@@ -1,4 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { ChevronLeft } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 
@@ -15,6 +16,7 @@ export default function AdminLayout() {
   const { user, loading: loadingAuth, signInWithGoogle } = useAuth()
   const { isAdmin, loading: loadingAdmin } = useIsAdmin(user)
   const location = useLocation()
+  const adalahHub = location.pathname === '/admin'
 
   if (loadingAuth || (user && loadingAdmin)) {
     return (
@@ -52,8 +54,15 @@ export default function AdminLayout() {
     )
   }
 
+  if (adalahHub) {
+    return <Outlet context={{ user }} />
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
+      <Link to="/admin" className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4 w-fit">
+        <ChevronLeft size={14} /> Home Panel Admin
+      </Link>
       <h1 className="text-xl sm:text-2xl font-bold text-ink">Panel Admin</h1>
       <p className="text-xs text-inkmuted mt-1 mb-5">
         {TAJUK_SUBPAGE[location.pathname] ?? ''}

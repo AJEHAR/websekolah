@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import Home from './pages/Home.jsx'
 import Galeri from './pages/Galeri.jsx'
@@ -6,6 +6,7 @@ import Hubungi from './pages/Hubungi.jsx'
 import Profile from './pages/Profile/Profile.jsx'
 import SenaraiKeberadaanSaya from './pages/Profile/SenaraiKeberadaanSaya.jsx'
 import KeberadaanLayout from './pages/Keberadaan/KeberadaanLayout.jsx'
+import KeberadaanHub from './pages/Keberadaan/KeberadaanHub.jsx'
 import Daftar from './pages/Keberadaan/Daftar.jsx'
 import HariIni from './pages/Keberadaan/HariIni.jsx'
 import Esok from './pages/Keberadaan/Esok.jsx'
@@ -14,6 +15,7 @@ import BeritaLayout from './pages/Berita/BeritaLayout.jsx'
 import BeritaList from './pages/Berita/BeritaList.jsx'
 import BeritaDetail from './pages/Berita/BeritaDetail.jsx'
 import AdminLayout from './pages/Admin/AdminLayout.jsx'
+import AdminHub from './pages/Admin/AdminHub.jsx'
 import StaffPage from './pages/Admin/StaffPage.jsx'
 import MenungguPage from './pages/Admin/MenungguPage.jsx'
 import PentadbirPage from './pages/Admin/PentadbirPage.jsx'
@@ -21,16 +23,20 @@ import Blok3KPage from './pages/Admin/Blok3KPage.jsx'
 import LajurMuridPage from './pages/Admin/LajurMuridPage.jsx'
 import KategoriUBKSPage from './pages/Admin/KategoriUBKSPage.jsx'
 import GuruBertugasLayout from './pages/GuruBertugas/GuruBertugasLayout.jsx'
+import GuruBertugasHub from './pages/GuruBertugas/GuruBertugasHub.jsx'
 import Kumpulan from './pages/GuruBertugas/Kumpulan.jsx'
 import Laporan3K from './pages/GuruBertugas/Laporan3K.jsx'
 import LaporanBanci from './pages/GuruBertugas/LaporanBanci.jsx'
 import LaporanHarian from './pages/GuruBertugas/LaporanHarian.jsx'
+import LaporanPerhimpunan from './pages/GuruBertugas/LaporanPerhimpunan.jsx'
 import MaklumatMuridLayout from './pages/MaklumatMurid/MaklumatMuridLayout.jsx'
+import MaklumatMuridHub from './pages/MaklumatMurid/MaklumatMuridHub.jsx'
 import DaftarMasuk from './pages/MaklumatMurid/DaftarMasuk.jsx'
 import DaftarKeluar from './pages/MaklumatMurid/DaftarKeluar.jsx'
 import SemakanMurid from './pages/MaklumatMurid/SemakanMurid.jsx'
 import Analisis from './pages/MaklumatMurid/Analisis.jsx'
 import EBanciLayout from './pages/EBanci/EBanciLayout.jsx'
+import EBanciHub from './pages/EBanci/EBanciHub.jsx'
 import KehadiranMurid from './pages/EBanci/KehadiranMurid.jsx'
 import PapanRMT from './pages/EBanci/PapanRMT.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
@@ -61,7 +67,7 @@ export default function App() {
 
           {/* Keberadaan - tab pills (Hari Ini/Esok/Log/Saya) dalam satu layout */}
           <Route path="/keberadaan" element={<KeberadaanLayout />}>
-            <Route index element={<Navigate to="daftar" replace />} />
+            <Route index element={<KeberadaanHub />} />
             <Route path="daftar" element={<Daftar />} />
             <Route path="hari-ini" element={<HariIni />} />
             <Route path="esok" element={<Esok />} />
@@ -71,7 +77,7 @@ export default function App() {
 
           {/* Panel Admin - tab pills (Staff/Menunggu Kelulusan/Pentadbir) */}
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="staff" replace />} />
+            <Route index element={<AdminHub />} />
             <Route path="staff" element={<StaffPage />} />
             <Route path="menunggu" element={<MenungguPage />} />
             <Route path="pentadbir" element={<PentadbirPage />} />
@@ -82,16 +88,17 @@ export default function App() {
 
           {/* Guru Bertugas - tab pills (Kumpulan/Laporan 3K/Laporan Banci/Laporan Harian) */}
           <Route path="/guru-bertugas" element={<GuruBertugasLayout />}>
-            <Route index element={<Navigate to="kumpulan" replace />} />
+            <Route index element={<GuruBertugasHub />} />
             <Route path="kumpulan" element={<Kumpulan />} />
             <Route path="3k" element={<Laporan3K />} />
             <Route path="banci" element={<LaporanBanci />} />
             <Route path="harian" element={<LaporanHarian />} />
+            <Route path="perhimpunan" element={<LaporanPerhimpunan />} />
           </Route>
 
           {/* Maklumat Murid - Daftar Masuk/Keluar, Maklumat Asas */}
           <Route path="/maklumat-murid" element={<MaklumatMuridLayout />}>
-            <Route index element={<Navigate to="analisis" replace />} />
+            <Route index element={<MaklumatMuridHub />} />
             <Route path="analisis" element={<Analisis />} />
             <Route path="semakan" element={<SemakanMurid />} />
             <Route path="daftar-masuk" element={<DaftarMasuk />} />
@@ -100,7 +107,7 @@ export default function App() {
 
           {/* eBanci - Kehadiran Murid, Papan Kehadiran RMT */}
           <Route path="/ebanci" element={<EBanciLayout />}>
-            <Route index element={<Navigate to="kehadiran-murid" replace />} />
+            <Route index element={<EBanciHub />} />
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
             <Route path="papan-rmt" element={<PapanRMT />} />
           </Route>

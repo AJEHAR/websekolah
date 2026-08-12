@@ -492,6 +492,37 @@ Nak tambah sub-page baru dalam hub - tambah satu entri di sini (lepas daftar rou
 
 **Nota:** butang "eUBKS Ko" dalam drawer/nav desktop masih cuma toggle *accordion* (buka/tutup senarai sub-page), BUKAN pautan terus ke hub - hub buat masa ni dicapai melalui URL terus atau pautan "Home UBKS" dari dalam sub-page. Kalau nak label "eUBKS Ko" dalam nav sendiri pun boleh tekan terus ke hub, itu ubah struktur nav kongsi (akan jejas semua seksyen lain sekali) - beritahu kalau nak saya buat.
 
+## Hub Page Setiap Seksyen (gaya sama macam eUBKS Ko)
+
+Semua 6 seksyen berbilang sub-page (Keberadaan, Guru Bertugas, Maklumat Murid, eBanci, Panel Admin, eUBKS Ko) sekarang ada page HUB tersendiri di route index (bukan redirect terus ke sub-page pertama) - hero penuh lebar skrin (`calc(100dvh-4rem)`), tajuk + kad akses pantas, warna gradient berbeza setiap seksyen:
+
+| Seksyen | Warna |
+|---|---|
+| Keberadaan | Biru |
+| Guru Bertugas | Ungu |
+| Maklumat Murid | Hijau |
+| eBanci | Kuning/Emas |
+| Panel Admin | Kelabu gelap |
+| eUBKS Ko | Merah maroon |
+
+**Komponen kongsi:** `src/components/HubHero.jsx` - satu komponen dipakai semua 6 hub (title, subtitle, gradient, warna ikon, senarai akses pantas sebagai props). Setiap seksyen ada fail `<seksyen>AksesPantas.js` sendiri (contoh `keberadaanAksesPantas.js`) - senarai `{ label, to, Ikon }`, tambah sub-page baru = tambah satu entri di sini.
+
+**Setiap Layout.jsx** (KeberadaanLayout, GuruBertugasLayout, dll) sekarang detect `adalahHub` (pathname === laluan index seksyen tu) - kalau di hub, Outlet render FULL-BLEED (tiada pembalut `max-w-6xl px-4`); kalau di sub-page, pembalut biasa + pautan "← Home [Seksyen]" untuk kembali ke hub.
+
+**Nota nav:** label seksyen dalam drawer/nav desktop (contoh "Keberadaan") kini **terus navigasi** ke hub bila ditekan (bukan setakat toggle accordion) - lihat `SideDrawer.jsx`/`Navbar.jsx`. Chevron berasingan untuk buka/tutup senarai sub-page.
+
+## Laporan Perhimpunan (dalam Guru Bertugas)
+
+Route `/guru-bertugas/perhimpunan`. Senarai laporan + Tambah/Lihat/Edit/Padam.
+
+**Medan borang:**
+- Minggu Ke- (nombor), Tarikh
+- **Hari** - dikesan automatik dari Tarikh (Bahasa Melayu, guna `namaHari()` sedia ada dari `dateUtils.js`) - medan baca sahaja, bukan diisi manual
+- Laporan Sivik (wajib), Hal-Hal Lain (pilihan), Ucapan Pentadbir (pilihan) - semua *textarea*
+- Nama Pentadbir & Dilaporkan Oleh - dropdown dari senarai staff (`useProfilesList`); Dilaporkan Oleh *default* ke pengguna semasa
+
+**Kebenaran:** mana-mana staff log masuk boleh isi/edit/padam (sama macam Laporan 3K - bukan admin sahaja, sebab guru bertugas minggu tu yang biasa isi).
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

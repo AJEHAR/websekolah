@@ -95,6 +95,12 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // Laporan Perhimpunan - mana-mana staff log masuk boleh isi/kemas kini.
+    match /laporanPerhimpunan/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
     // Maklumat Murid - seksyen 'murid'. Data sangat sensitif (IC penjaga,
     // kewangan, OKU) - baca umum, tulis/import terhad seksyen 'murid' sahaja.
     match /murid/{docId} {
