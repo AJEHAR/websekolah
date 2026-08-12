@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, Eye, Pencil, Trash2, ChevronLeft } from 'lucide-react'
 import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
+import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import {
   muatkanPerancangan,
   senaraiDokUntukUnit,
   simpanPerancangan,
   senaraiKosong,
+  useSenaraiPerancanganTahun,
 } from '../../hooks/usePerancanganUBKS.js'
+import UnitPerancanganCard from './UnitPerancanganCard.jsx'
 import PerancanganModal from './PerancanganModal.jsx'
+import PerancanganDetailModal from './PerancanganDetailModal.jsx'
 
 const TAHUN_SEMASA = new Date().getFullYear()
 const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
@@ -17,10 +21,40 @@ export default function PerancanganUBKS() {
   const { user } = useOutletContext()
   const [tahunSesi, setTahunSesi] = useState(TAHUN_SEMASA)
   const { senarai: unitSenarai, loading } = useUnitUBKSTahun(tahunSesi)
+  const { senarai: kategoriSenarai } = useKategoriUBKS()
+  const { senarai: perancanganTahun, loading: loadingPerancangan, muatSemula: muatSemulaPerancangan } = useSenaraiPerancanganTahun(tahunSesi)
   const [carian, setCarian] = useState('')
   const [unitDipilih, setUnitDipilih] = useState(null)
 
   const unitDitapis = unitSenarai.filter((u) => u.namaUnit?.toLowerCase().includes(carian.toLowerCase()))
+
+  function labelKategori(kod) {
+    return kategoriSenarai.find((k) => k.kod === kod)?.nama ?? kod
+  }
+
+  function progresUnit(unitId) {
+    const dokUnit = perancanganTahun.filter((d) => d.unitId === unitId)
+    const semuaEntri = dokUnit.flatMap((d) => d.senaraiPerjumpaan ?? [])
+    return {
+      adaPerancangan: dokUnit.length > 0,
+      jumlahSelesai: semuaEntri.filter((e) => e.selesai).length,
+      jumlahKeseluruhan: semuaEntri.length,
+    }
+  }
+
+  if (unitDipilih) {
+    return (
+      <div>
+        <button
+          onClick={() => { setUnitDipilih(null); muatSemulaPerancangan() }}
+          className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4"
+        >
+          <ChevronLeft size={14} /> Kembali ke senarai unit
+        </button>
+        <JadualPerancangan unit={unitDipilih} tahunSesi={tahunSesi} user={user} />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -30,7 +64,7 @@ export default function PerancanganUBKS() {
           <select
             id="tahunSesi"
             value={tahunSesi}
-            onChange={(e) => { setTahunSesi(Number(e.target.value)); setUnitDipilih(null) }}
+            onChange={(e) => setTahunSesi(Number(e.target.value))}
             className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
           >
             {PILIHAN_TAHUN.map((t) => (
@@ -50,28 +84,28 @@ export default function PerancanganUBKS() {
         </div>
       </div>
 
-      {loading ? (
+      {loading || loadingPerancangan ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
+      ) : unitDitapis.length === 0 ? (
+        <p className="text-sm text-inkmuted">Tiada unit dijumpai.</p>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {unitDitapis.map((u) => {
-            const aktif = unitDipilih?.id === u.id
+            const progres = progresUnit(u.id)
             return (
-              <button
+              <UnitPerancanganCard
                 key={u.id}
-                onClick={() => setUnitDipilih(u)}
-                className="text-left p-3 rounded-card bg-surface text-sm"
-                style={{ border: `${aktif ? 2 : 1}px solid ${aktif ? '#C8102E' : '#E5E5E5'}` }}
-              >
-                <p className="font-medium text-ink">{u.namaUnit}</p>
-                <p className="text-xs text-inkmuted">{(u.ahli ?? []).length} ahli</p>
-              </button>
+                unit={u}
+                kategoriLabel={labelKategori(u.kategoriUnit)}
+                adaPerancangan={progres.adaPerancangan}
+                jumlahSelesai={progres.jumlahSelesai}
+                jumlahKeseluruhan={progres.jumlahKeseluruhan}
+                onBuka={() => setUnitDipilih(u)}
+              />
             )
           })}
         </div>
       )}
-
-      {unitDipilih && <JadualPerancangan unit={unitDipilih} tahunSesi={tahunSesi} user={user} />}
     </div>
   )
 }
@@ -79,12 +113,14 @@ export default function PerancanganUBKS() {
 function JadualPerancangan({ unit, tahunSesi, user }) {
   const [dokSediaAda, setDokSediaAda] = useState([])
   const [mode, setMode] = useState(null)
+  const [ikutTahun, setIkutTahun] = useState(false)
   const [tahunDarjah, setTahunDarjah] = useState('')
   const [rekod, setRekod] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tapisStatus, setTapisStatus] = useState('semua')
   const [carianPerancangan, setCarianPerancangan] = useState('')
   const [barisEdit, setBarisEdit] = useState(null)
+  const [barisLihat, setBarisLihat] = useState(null)
 
   const senaraiTahunDalamUnit = useMemo(() => {
     const set = new Set()
@@ -101,11 +137,12 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
       setDokSediaAda(semua)
       if (semua.length > 0) {
         setMode(semua[0].mode)
-        setTahunDarjah(semua[0].mode === 'asing' ? '' : '')
+        setIkutTahun(semua[0].mode === 'asing')
       } else {
         setMode(null)
-        setTahunDarjah('')
+        setIkutTahun(false)
       }
+      setTahunDarjah('')
       setLoading(false)
     }
     muat()
@@ -127,6 +164,10 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
     muatRekod()
   }, [mode, tahunDarjah, unit.id])
 
+  function mulakan() {
+    setMode(ikutTahun ? 'asing' : 'sama')
+  }
+
   async function tukarBaris(index, dataBaru) {
     const senaraiBaru = [...rekod.senaraiPerjumpaan]
     senaraiBaru[index] = { ...senaraiBaru[index], ...dataBaru }
@@ -134,37 +175,60 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
     setRekod((r) => ({ ...r, senaraiPerjumpaan: senaraiBaru }))
     const semua = await senaraiDokUntukUnit(unit.id)
     setDokSediaAda(semua)
-    setBarisEdit(null)
+  }
+
+  async function padamBaris(perjumpaan) {
+    if (!window.confirm(`Padam kandungan perancangan Perjumpaan ${perjumpaan}? Ini akan kosongkan semula petak ni.`)) return
+    const index = perjumpaan - 1
+    await tukarBaris(index, { perancangan: '', tarikh: '', selesai: false, tarikhSelesai: null })
   }
 
   if (loading) return <p className="text-sm text-inkmuted">Memuatkan…</p>
 
+  // Langkah 1: belum ada perancangan langsung - pilih mod dengan suis
   if (!mode) {
     return (
-      <div className="p-4 rounded-card border border-border bg-base">
-        <p className="text-sm font-medium text-ink mb-3">Perancangan untuk "{unit.namaUnit}" belum wujud. Pilih mod:</p>
-        <div className="flex gap-3 flex-wrap">
-          <button onClick={() => setMode('sama')} className="flex-1 min-w-[160px] h-11 rounded-card border border-border bg-surface text-sm font-medium text-ink hover:border-brand-red">
-            Sama untuk semua Tahun/Darjah
-          </button>
-          <button onClick={() => setMode('asing')} className="flex-1 min-w-[160px] h-11 rounded-card border border-border bg-surface text-sm font-medium text-ink hover:border-brand-red">
-            Asingkan ikut Tahun/Darjah
+      <div className="p-5 rounded-card border border-border bg-surface">
+        <p className="text-sm font-semibold text-ink mb-1">{unit.namaUnit}</p>
+        <p className="text-xs text-inkmuted mb-4">Belum ada perancangan lagi. Sebelum mula, tetapkan satu perkara:</p>
+
+        <div className="flex items-center justify-between p-3 rounded-card bg-base mb-4">
+          <div>
+            <p className="text-sm font-medium text-ink">Asingkan ikut Tahun/Darjah?</p>
+            <p className="text-xs text-inkmuted">{ikutTahun ? 'Setiap darjah ada perancangan sendiri' : 'Satu perancangan untuk seluruh unit'}</p>
+          </div>
+          <button
+            onClick={() => setIkutTahun((s) => !s)}
+            role="switch"
+            aria-checked={ikutTahun}
+            className="relative h-7 w-12 rounded-full transition-colors shrink-0"
+            style={{ backgroundColor: ikutTahun ? '#C8102E' : '#E5E5E5' }}
+          >
+            <span
+              className="absolute top-1 h-5 w-5 rounded-full bg-white transition-transform shadow"
+              style={{ transform: ikutTahun ? 'translateX(22px)' : 'translateX(4px)' }}
+            />
           </button>
         </div>
+
+        <button onClick={mulakan} className="w-full h-12 rounded-card bg-brand-red text-white text-sm font-semibold">
+          Mula Perancangan
+        </button>
       </div>
     )
   }
 
   if (mode === 'asing' && !tahunDarjah) {
     return (
-      <div className="p-4 rounded-card border border-border bg-base">
-        <p className="text-sm font-medium text-ink mb-3">Pilih Tahun/Darjah untuk perancangan:</p>
+      <div className="p-5 rounded-card border border-border bg-surface">
+        <p className="text-sm font-semibold text-ink mb-1">{unit.namaUnit}</p>
+        <p className="text-sm font-medium text-ink mb-3">Pilih Tahun/Darjah:</p>
         <div className="flex flex-wrap gap-2">
           {senaraiTahunDalamUnit.map((t) => (
             <button
               key={t}
               onClick={() => setTahunDarjah(t)}
-              className="h-10 px-4 rounded-card border border-border bg-surface text-sm font-medium text-ink hover:border-brand-red"
+              className="h-10 px-4 rounded-card border border-border bg-base text-sm font-medium text-ink hover:border-brand-red"
             >
               {t} {dokSediaAda.some((d) => d.tahunDarjah === t) && '✓'}
             </button>
@@ -228,24 +292,33 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
         <table className="text-xs w-full">
           <thead className="bg-base">
             <tr>
-              <th className="text-left px-3 py-2 font-semibold text-ink w-24">Bil Perjumpaan</th>
+              <th className="text-left px-3 py-2 font-semibold text-ink w-20">Bil Perjumpaan</th>
               <th className="text-left px-3 py-2 font-semibold text-ink">Perancangan</th>
-              <th className="text-left px-3 py-2 font-semibold text-ink w-28">Tarikh</th>
+              <th className="text-left px-3 py-2 font-semibold text-ink w-24">Tarikh</th>
+              <th className="text-center px-3 py-2 font-semibold text-ink w-24">Tindakan</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {senaraiDitapis.map((b) => (
-              <tr
-                key={b.perjumpaan}
-                onClick={() => setBarisEdit(b)}
-                className="cursor-pointer hover:opacity-80"
-                style={b.selesai ? { backgroundColor: '#EAF3DE' } : undefined}
-              >
+              <tr key={b.perjumpaan} style={b.selesai ? { backgroundColor: '#EAF3DE' } : undefined}>
                 <td className="px-3 py-2 font-semibold text-ink align-top">{b.perjumpaan}</td>
-                <td className="px-3 py-2 text-ink whitespace-pre-wrap align-top">
-                  {b.perancangan || <span className="text-inkmuted">Belum diisi</span>}
+                <td className="px-3 py-2 text-ink align-top">
+                  <span className="line-clamp-2">{b.perancangan || <span className="text-inkmuted">Belum diisi</span>}</span>
                 </td>
                 <td className="px-3 py-2 text-inkmuted align-top whitespace-nowrap">{b.tarikh || '-'}</td>
+                <td className="px-3 py-2 align-top">
+                  <div className="flex items-center justify-center gap-1">
+                    <button onClick={() => setBarisLihat(b)} aria-label="Lihat" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
+                      <Eye size={14} />
+                    </button>
+                    <button onClick={() => setBarisEdit(b)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => padamBaris(b.perjumpaan)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -255,7 +328,20 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
       <PerancanganModal
         baris={barisEdit}
         onClose={() => setBarisEdit(null)}
-        onSimpan={(dataBaru) => tukarBaris(barisEdit.perjumpaan - 1, dataBaru)}
+        onSimpan={async (dataBaru) => { await tukarBaris(barisEdit.perjumpaan - 1, dataBaru); setBarisEdit(null) }}
+      />
+
+      <PerancanganDetailModal
+        baris={barisLihat}
+        onClose={() => setBarisLihat(null)}
+        onTandaSelesai={async (tarikhSelesai) => {
+          await tukarBaris(barisLihat.perjumpaan - 1, { selesai: true, tarikhSelesai })
+          setBarisLihat((b) => ({ ...b, selesai: true, tarikhSelesai }))
+        }}
+        onBatalSelesai={async () => {
+          await tukarBaris(barisLihat.perjumpaan - 1, { selesai: false, tarikhSelesai: null })
+          setBarisLihat((b) => ({ ...b, selesai: false, tarikhSelesai: null }))
+        }}
       />
     </div>
   )

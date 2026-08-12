@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from 'react'
 import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
@@ -10,7 +11,13 @@ export function idPerancangan(unitId, mode, tahunDarjah) {
 }
 
 export function senaraiKosong() {
-  return Array.from({ length: 12 }, (_, i) => ({ perjumpaan: i + 1, perancangan: '', tarikh: '', selesai: false }))
+  return Array.from({ length: 12 }, (_, i) => ({
+    perjumpaan: i + 1,
+    perancangan: '',
+    tarikh: '',
+    selesai: false,
+    tarikhSelesai: null,
+  }))
 }
 
 export async function muatkanPerancangan(unitId, mode, tahunDarjah) {
@@ -27,6 +34,35 @@ export async function senaraiDokUntukUnit(unitId) {
   const q = query(collection(db, KOLEKSI), where('unitId', '==', unitId))
   const snap = await getDocs(q)
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+// Semua dokumen perancangan untuk satu tahun sesi - untuk kad unit tunjuk
+// status/progres (ada perancangan atau tidak, berapa peratus selesai).
+export function useSenaraiPerancanganTahun(tahunSesi) {
+  const [senarai, setSenarai] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const muatSemula = useCallback(async () => {
+    if (!isFirebaseConfigured || !tahunSesi) {
+      setSenarai([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    try {
+      const q = query(collection(db, KOLEKSI), where('tahunSesi', '==', String(tahunSesi)))
+      const snap = await getDocs(q)
+      setSenarai(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+    } finally {
+      setLoading(false)
+    }
+  }, [tahunSesi])
+
+  useEffect(() => {
+    muatSemula()
+  }, [muatSemula])
+
+  return { senarai, loading, muatSemula }
 }
 
 export async function simpanPerancangan(unitId, namaUnit, tahunSesi, mode, tahunDarjah, senaraiPerjumpaan, uid) {
