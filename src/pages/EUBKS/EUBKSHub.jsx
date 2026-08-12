@@ -4,7 +4,7 @@ import { EUBKS_AKSES_PANTAS } from './eubksAksesPantas.js'
 export default function EUBKSHub() {
   return (
     <div
-      className="w-full min-h-[65vh] sm:min-h-[75vh] flex flex-col items-center justify-center text-center px-6 py-16"
+      className="w-full min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center px-6 py-16"
       style={{ background: 'linear-gradient(160deg, #1A1A1A 0%, #4A0E16 55%, #C8102E 130%)' }}
     >
       <h1 className="text-3xl sm:text-5xl font-bold text-white">eUBKS Ko</h1>

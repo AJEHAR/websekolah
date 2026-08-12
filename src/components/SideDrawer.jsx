@@ -89,15 +89,26 @@ export default function SideDrawer({ open, onClose, links, user, onSignIn, onSig
 
             return (
               <div key={link.label}>
-                <button
-                  onClick={() => toggl(link.label)}
-                  aria-expanded={terbuka}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-card text-sm font-medium text-ink hover:bg-base"
-                >
-                  <Ikon size={18} />
-                  <span className="flex-1 text-left">{link.label}</span>
-                  <ChevronDown size={16} className={`transition-transform ${terbuka ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="flex items-center rounded-card hover:bg-base">
+                  <NavLink
+                    to={link.to}
+                    end
+                    onClick={onClose}
+                    className="flex-1 flex items-center gap-3 px-4 py-3 text-sm font-medium text-ink min-w-0"
+                    style={({ isActive }) => (isActive ? { backgroundColor: '#F2C230', borderRadius: '0.5rem' } : undefined)}
+                  >
+                    <Ikon size={18} />
+                    <span className="truncate">{link.label}</span>
+                  </NavLink>
+                  <button
+                    onClick={() => toggl(link.label)}
+                    aria-expanded={terbuka}
+                    aria-label={terbuka ? `Tutup senarai ${link.label}` : `Buka senarai ${link.label}`}
+                    className="px-3 py-3 shrink-0"
+                  >
+                    <ChevronDown size={16} className={`transition-transform ${terbuka ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
 
                 {terbuka && (
                   <div className="ml-6 mt-1 mb-1 flex flex-col gap-0.5 border-l border-border pl-3">

@@ -40,10 +40,15 @@ export default function Navbar() {
               {links.map((link) =>
                 link.children ? (
                   <div key={link.to} className="relative group">
-                    <button className="px-4 py-2 rounded-card text-sm font-medium text-white/85 hover:bg-white/10 flex items-center gap-1">
+                    <NavLink
+                      to={link.to}
+                      end
+                      className="px-4 py-2 rounded-card text-sm font-medium text-white/85 hover:bg-white/10 flex items-center gap-1"
+                      style={({ isActive }) => (isActive ? { backgroundColor: '#F2C230', color: '#1A1A1A' } : undefined)}
+                    >
                       {link.label}
                       <ChevronDown size={14} />
-                    </button>
+                    </NavLink>
                     <div className="absolute left-0 top-full pt-1 hidden group-hover:block group-focus-within:block z-50">
                       <div className="bg-surface border border-border rounded-card shadow-soft py-1.5 min-w-[200px]">
                         {link.children.map((anak) => (
