@@ -15,3 +15,7 @@ export const JAWATAN_OPTIONS = [
 ]
 
 export const KATEGORI_OPTIONS = ['Guru', 'PPM', 'AKP']
+
+// Sub-kategori PPM sahaja - untuk Laporan Harian (senarai PPM Bertugas
+// perlu PPM Kelas sahaja, bukan PPM Asrama).
+export const JENIS_PPM_OPTIONS = ['PPM Kelas', 'PPM Asrama']

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
-import { JAWATAN_OPTIONS, KATEGORI_OPTIONS } from '../Profile/constants.js'
+import { JAWATAN_OPTIONS, KATEGORI_OPTIONS, JENIS_PPM_OPTIONS } from '../Profile/constants.js'
 
 export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
   const [emel, setEmel] = useState(profile?.emel ?? '')
@@ -8,6 +8,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
   const [ic, setIc] = useState(profile?.ic ?? '')
   const [jawatan, setJawatan] = useState(profile?.jawatan ?? JAWATAN_OPTIONS[0])
   const [kategori, setKategori] = useState(profile?.kategori ?? KATEGORI_OPTIONS[0])
+  const [jenisPPM, setJenisPPM] = useState(profile?.jenisPPM ?? '')
   const [gambarPreview, setGambarPreview] = useState(profile?.gambarURL ?? null)
   const [failGambar, setFailGambar] = useState(null)
   const [menyimpan, setMenyimpan] = useState(false)
@@ -50,6 +51,10 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
       setRalat('Sila pilih kategori.')
       return
     }
+    if (kategori === 'PPM' && !jenisPPM) {
+      setRalat('Sila pilih jenis PPM (Kelas/Asrama).')
+      return
+    }
 
     setMenyimpan(true)
     try {
@@ -58,7 +63,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
         const hasil = await muatNaikKeDrive(failGambar, 'profil')
         gambarURL = hasil.url
       }
-      await onSimpan(emel.trim(), { nama: nama.trim(), ic: ic.trim(), jawatan, kategori, gambarURL })
+      await onSimpan(emel.trim(), { nama: nama.trim(), ic: ic.trim(), jawatan, kategori, jenisPPM: kategori === 'PPM' ? jenisPPM : null, gambarURL })
     } catch (err) {
       setRalat(err.message || 'Gagal simpan profile. Cuba lagi.')
       console.error(err)
@@ -151,7 +156,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
           id="kategori"
           required
           value={kategori}
-          onChange={(e) => setKategori(e.target.value)}
+          onChange={(e) => { setKategori(e.target.value); if (e.target.value !== 'PPM') setJenisPPM('') }}
           className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
         >
           {KATEGORI_OPTIONS.map((k) => (
@@ -159,6 +164,24 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
           ))}
         </select>
       </div>
+
+      {kategori === 'PPM' && (
+        <div>
+          <label htmlFor="jenisPPM" className="block text-sm font-medium text-ink mb-1">Jenis PPM</label>
+          <select
+            id="jenisPPM"
+            required
+            value={jenisPPM}
+            onChange={(e) => setJenisPPM(e.target.value)}
+            className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
+          >
+            <option value="">-- Pilih --</option>
+            {JENIS_PPM_OPTIONS.map((j) => (
+              <option key={j} value={j}>{j}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {ralat && <p className="text-sm text-brand-red">{ralat}</p>}
 

@@ -541,6 +541,24 @@ latarHub/{seksyen}          <- ID: keberadaan | guru-bertugas | maklumat-murid |
 
 **Kebenaran:** baca umum (semua staff), tulis **Super Admin sahaja** (jejas paparan semua seksyen sekali, bukan satu domain fungsian).
 
+## Laporan Harian (dalam Guru Bertugas)
+
+Route `/guru-bertugas/harian`. Borang PALING kompleks dalam sistem ni - buka sebagai page penuh (bukan modal) sebab banyak seksyen. Senarai laporan + Tambah/Lihat/Edit/Padam.
+
+**Prasyarat - Profile PPM Kelas/Asrama:** borang Profile (self & admin) sekarang ada medan `jenisPPM` ('PPM Kelas' | 'PPM Asrama'), *required* bila Kategori='PPM'. Cuma PPM Kelas yang layak masuk senarai "PPM Bertugas" dalam Laporan Harian. Staff PPM sedia ada (sebelum ciri ni) akan papar amaran "Jenis PPM belum diisi" dalam Panel Admin > Staff sampai admin kemas kini.
+
+**Auto-kira & auto-isi (bukan taip manual):**
+- **Kehadiran Guru** - dikira dari koleksi `kehadiran` (Keberadaan) untuk tarikh dipilih. Guru dengan rekod Rasmi/Cuti AKTIF pada tarikh tu dikira "tak hadir" (KWB dikecualikan sebab bukan tak hadir sepanjang hari).
+- **Kehadiran Murid** - dikira dari `kehadiranMurid` (Kehadiran Murid) untuk tarikh yang sama, jumlah semua kelas yang dah submit. Kalau ada kelas belum isi, amaran dipaparkan (macam Jana Banci).
+- **Senarai Guru Bertugas** - pilih Kumpulan (dari Kumpulan Guru Bertugas sedia ada) -> sistem auto isi ahli, buang yang tak hadir (Rasmi/Cuti) tarikh tu. Boleh edit lepas tu (buang nama), butang "Segarkan" untuk kira semula.
+- **Senarai PPM Bertugas** - auto-tick semua PPM Kelas aktif yang tak ada rekod tak hadir tarikh tu (checklist, boleh untick manual). Auto-isi CUMA sekali untuk laporan BARU (bukan bila edit rekod sedia ada, elak timpa pilihan asal).
+
+**Repeatable list:** Rumusan Guru Mangkir (nama dari dropdown Guru + sebab) dan Rumusan Murid Sakit/Pulang Awal (nama dari dropdown Murid + sebab + tindakan) - butang "+ Tambah" untuk baris baru, boleh padam baris.
+
+**Kokurikulum Minggu Ini** - suis on/off (default OFF), bila ON keluar *textarea* pilihan untuk butiran.
+
+**Kebenaran:** mana-mana staff log masuk boleh isi/edit/padam.
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

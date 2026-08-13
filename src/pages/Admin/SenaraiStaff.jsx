@@ -39,7 +39,14 @@ export default function SenaraiStaff({ profiles, loading, onEdit, onPadam }) {
 
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-ink truncate">{p.nama || '(Belum lengkap)'}</p>
-                <p className="text-xs text-inkmuted truncate">{p.jawatan} · {p.kategori}</p>
+                <p className="text-xs text-inkmuted truncate">
+                  {p.jawatan} · {p.kategori}
+                  {p.kategori === 'PPM' && (
+                    p.jenisPPM
+                      ? ` · ${p.jenisPPM}`
+                      : ' · ⚠️ Jenis PPM belum diisi'
+                  )}
+                </p>
                 <p className="text-xs text-inkmuted truncate">{p.emel}</p>
               </div>
 
