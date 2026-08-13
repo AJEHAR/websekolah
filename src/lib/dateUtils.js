@@ -62,19 +62,50 @@ export function bilanganHariDalamBulan(tahun, bulan) {
 // (DD/M/YYYY - format biasa orang taip/Excel eksport). Pulangkan null kalau
 // tak dapat diuraikan (elak simpan tarikh/hari yang salah secara senyap).
 export function uraiTarikhFleksibel(teks) {
+  return uraiTarikhIkutFormat(teks, 'DMY')
+}
+
+// Sama macam uraiTarikhFleksibel() tapi format boleh ditetapkan - 'DMY'
+// (hari/bulan/tahun, lazim Malaysia) atau 'MDY' (bulan/hari/tahun, lazim
+// Excel eksport bahasa Inggeris-AS). Guna kesanFormatTarikh() dulu untuk
+// tentukan yang mana patut dipakai untuk satu fail.
+export function uraiTarikhIkutFormat(teks, format = 'DMY') {
   const t = String(teks ?? '').trim()
   if (!t) return null
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t
 
   const padan = t.match(/^(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})$/)
-  if (padan) {
-    const [, hari, bulan, tahun] = padan
-    const h = Number(hari)
-    const b = Number(bulan)
-    if (b < 1 || b > 12 || h < 1 || h > 31) return null
-    return `${tahun}-${String(b).padStart(2, '0')}-${String(h).padStart(2, '0')}`
-  }
+  if (!padan) return null
 
-  return null
+  const a = Number(padan[1])
+  const b = Number(padan[2])
+  const tahun = padan[3]
+  const [hari, bulan] = format === 'MDY' ? [b, a] : [a, b]
+
+  if (bulan < 1 || bulan > 12 || hari < 1 || hari > 31) return null
+  return `${tahun}-${String(bulan).padStart(2, '0')}-${String(hari).padStart(2, '0')}`
+}
+
+// Kesan format tarikh (DMY atau MDY) yang dipakai SEPANJANG satu fail CSV,
+// dengan tengok komponen mana yang >12 (mesti hari, bukan bulan) merentasi
+// SEMUA baris. Elak teka-teki per-baris (yang boleh tersalah untuk tarikh
+// ambiguous macam '2/3/2026') dengan guna bukti dari keseluruhan fail.
+export function kesanFormatTarikh(senaraiTeksTarikh) {
+  let bukanMDY = false // komponen pertama >12 -> position 1 MESTI hari -> DMY
+  let bukanDMY = false // komponen kedua >12 -> position 2 MESTI hari -> MDY
+
+  senaraiTeksTarikh.forEach((teks) => {
+    const t = String(teks ?? '').trim()
+    const padan = t.match(/^(\d{1,2})[/\-](\d{1,2})[/\-]\d{4}$/)
+    if (!padan) return
+    const a = Number(padan[1])
+    const b = Number(padan[2])
+    if (a > 12) bukanMDY = true
+    if (b > 12) bukanDMY = true
+  })
+
+  if (bukanMDY && !bukanDMY) return 'DMY'
+  if (bukanDMY && !bukanMDY) return 'MDY'
+  return 'DMY' // ambiguous sepenuhnya (semua komponen <=12) - default format Malaysia
 }

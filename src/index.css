@@ -25,3 +25,25 @@ input:focus-visible {
     transition: none !important;
   }
 }
+
+/* Cetak - sorok SEMUA, tunjuk cuma .print-area sahaja bila cetak/save PDF.
+   Dipakai oleh setiap komponen CetakLaporan*. Elak perlu tambah print:hidden
+   kat setiap layout/page satu-satu - satu peraturan global cukup. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .print-page-break {
+    page-break-after: always;
+  }
+}

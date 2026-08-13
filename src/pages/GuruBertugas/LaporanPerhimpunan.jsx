@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Eye, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Eye, Pencil, Trash2, Printer } from 'lucide-react'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
+import { useCetak } from '../../hooks/useCetak.js'
 import {
   useLaporanPerhimpunan,
   tambahLaporanPerhimpunan,
@@ -10,16 +11,21 @@ import {
 } from '../../hooks/useLaporanPerhimpunan.js'
 import LaporanPerhimpunanModal from './LaporanPerhimpunanModal.jsx'
 import LaporanPerhimpunanDetailModal from './LaporanPerhimpunanDetailModal.jsx'
+import CetakLaporanPerhimpunan from './CetakLaporanPerhimpunan.jsx'
 
 export default function LaporanPerhimpunan() {
   const { user } = useOutletContext()
   const { senarai, loading, muatSemula } = useLaporanPerhimpunan()
   const { profiles } = useProfilesList()
   const profilesAktif = profiles.filter((p) => p.status !== 'menunggu')
+  const [dataCetak, setDataCetak] = useCetak()
 
   const [tunjukBorang, setTunjukBorang] = useState(false)
   const [laporanEdit, setLaporanEdit] = useState(null)
   const [laporanLihat, setLaporanLihat] = useState(null)
+  const [tunjukCetakJulat, setTunjukCetakJulat] = useState(false)
+  const [dariTarikh, setDariTarikh] = useState('')
+  const [hinggaTarikh, setHinggaTarikh] = useState('')
 
   function bukaTambah() {
     setLaporanEdit(null)
@@ -48,17 +54,60 @@ export default function LaporanPerhimpunan() {
     muatSemula()
   }
 
+  function cetakSatu(laporan) {
+    setDataCetak([laporan])
+  }
+
+  function cetakJulat() {
+    const ditapis = senarai.filter((l) => {
+      if (dariTarikh && l.tarikh < dariTarikh) return false
+      if (hinggaTarikh && l.tarikh > hinggaTarikh) return false
+      return true
+    })
+    if (ditapis.length === 0) {
+      window.alert('Tiada laporan dalam julat tarikh tu.')
+      return
+    }
+    // susun ikut tarikh menaik untuk cetakan (kronologi)
+    const tersusun = [...ditapis].sort((a, b) => a.tarikh.localeCompare(b.tarikh))
+    setDataCetak(tersusun)
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <p className="text-xs text-inkmuted">{senarai.length} laporan</p>
-        <button
-          onClick={bukaTambah}
-          className="flex items-center gap-1.5 h-11 px-4 rounded-card bg-brand-red text-white text-xs font-semibold"
-        >
-          <Plus size={14} /> Laporan Baru
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTunjukCetakJulat((s) => !s)}
+            className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
+          >
+            <Printer size={14} /> Cetak Julat
+          </button>
+          <button
+            onClick={bukaTambah}
+            className="flex items-center gap-1.5 h-11 px-4 rounded-card bg-brand-red text-white text-xs font-semibold"
+          >
+            <Plus size={14} /> Laporan Baru
+          </button>
+        </div>
       </div>
+
+      {tunjukCetakJulat && (
+        <div className="p-3 rounded-card border border-border bg-surface mb-4 flex flex-wrap items-end gap-2">
+          <div>
+            <label htmlFor="dariTarikhPerhimpunan" className="block text-xs font-medium text-ink mb-1">Dari Tarikh</label>
+            <input id="dariTarikhPerhimpunan" type="date" value={dariTarikh} onChange={(e) => setDariTarikh(e.target.value)} className="h-10 px-2 rounded-card border border-border bg-base text-xs" />
+          </div>
+          <div>
+            <label htmlFor="hinggaTarikhPerhimpunan" className="block text-xs font-medium text-ink mb-1">Hingga Tarikh</label>
+            <input id="hinggaTarikhPerhimpunan" type="date" value={hinggaTarikh} onChange={(e) => setHinggaTarikh(e.target.value)} className="h-10 px-2 rounded-card border border-border bg-base text-xs" />
+          </div>
+          <button onClick={cetakJulat} className="h-10 px-4 rounded-card bg-brand-red text-white text-xs font-semibold">
+            Cetak
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
@@ -75,6 +124,9 @@ export default function LaporanPerhimpunan() {
               <div className="flex items-center gap-1 shrink-0">
                 <button onClick={() => setLaporanLihat(l)} aria-label="Lihat" className="p-2 rounded-card hover:bg-base text-inkmuted">
                   <Eye size={16} />
+                </button>
+                <button onClick={() => cetakSatu(l)} aria-label="Cetak" className="p-2 rounded-card hover:bg-base text-inkmuted">
+                  <Printer size={16} />
                 </button>
                 <button onClick={() => bukaEdit(l)} aria-label="Edit" className="p-2 rounded-card hover:bg-base text-inkmuted">
                   <Pencil size={16} />
@@ -98,6 +150,8 @@ export default function LaporanPerhimpunan() {
       />
 
       <LaporanPerhimpunanDetailModal laporan={laporanLihat} onClose={() => setLaporanLihat(null)} />
+
+      {dataCetak && <CetakLaporanPerhimpunan senarai={dataCetak} />}
     </div>
   )
 }

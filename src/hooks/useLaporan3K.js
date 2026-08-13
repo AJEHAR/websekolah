@@ -51,3 +51,15 @@ export async function padamLaporan3K(tarikh, blokId) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await deleteDoc(doc(db, KOLEKSI, idRekod(tarikh, blokId)))
 }
+
+// Ambil semua rekod dalam julat tarikh (untuk Cetak Julat) - satu query guna
+// where('tarikh', '>=', ...) dan tapis '<=' di client (Firestore tak sokong
+// range 2 medan berbeza dalam satu query tanpa index composite).
+export async function ambilLaporan3KJulat(dariTarikh, hinggaTarikh) {
+  if (!isFirebaseConfigured) return []
+  const q = query(collection(db, KOLEKSI), where('tarikh', '>=', dariTarikh))
+  const snap = await getDocs(q)
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((r) => r.tarikh <= hinggaTarikh)
+}

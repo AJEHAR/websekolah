@@ -5,7 +5,7 @@ import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { tambahLaporanPerhimpunan } from '../../hooks/useLaporanPerhimpunan.js'
 import { uraiCSV, muatTurunCSV } from '../../lib/csvUtils.js'
-import { namaHari, uraiTarikhFleksibel } from '../../lib/dateUtils.js'
+import { namaHari, uraiTarikhIkutFormat, kesanFormatTarikh } from '../../lib/dateUtils.js'
 
 const HEADER = ['Minggu', 'Tarikh', 'Laporan Sivik', 'Hal-Hal Lain', 'Ucapan Pentadbir', 'Nama Pentadbir', 'Dilaporkan Oleh']
 const CONTOH_BARIS = [
@@ -47,6 +47,8 @@ function Isi({ user }) {
     return p ? { emel: p.emel, nama: p.nama } : null
   }
 
+  const [formatTarikh, setFormatTarikh] = useState('DMY')
+
   async function pilihFail(e) {
     const fail = e.target.files?.[0]
     if (!fail) return
@@ -56,12 +58,15 @@ function Isi({ user }) {
       const teks = await fail.text()
       const baris = uraiCSV(teks)
 
+      const formatDikesan = kesanFormatTarikh(baris.map((b) => b['Tarikh']))
+      setFormatTarikh(formatDikesan)
+
       const senarai = baris
         .filter((b) => b['Minggu'] && b['Tarikh'])
         .map((b) => {
           const pentadbir = cariEmelIkutNama(b['Nama Pentadbir'] || '')
           const pelapor = cariEmelIkutNama(b['Dilaporkan Oleh'] || '')
-          const tarikhISO = uraiTarikhFleksibel(b['Tarikh'])
+          const tarikhISO = uraiTarikhIkutFormat(b['Tarikh'], formatDikesan)
           return {
             minggu: Number(b['Minggu']),
             tarikh: tarikhISO ?? b['Tarikh'],
@@ -76,6 +81,7 @@ function Isi({ user }) {
             _pentadbirDijumpai: Boolean(pentadbir),
             _pelaporDijumpai: Boolean(pelapor),
             _tarikhSah: Boolean(tarikhISO),
+            _tarikhAsal: b['Tarikh'],
           }
         })
 
@@ -94,7 +100,7 @@ function Isi({ user }) {
       const sah = senaraiPratonton.filter((r) => r._tarikhSah)
       let bilangan = 0
       for (const rekod of sah) {
-        const { _pentadbirDijumpai, _pelaporDijumpai, _tarikhSah, ...data } = rekod
+        const { _pentadbirDijumpai, _pelaporDijumpai, _tarikhSah, _tarikhAsal, ...data } = rekod
         await tambahLaporanPerhimpunan(data, user.uid)
         bilangan += 1
         setProgres({ selesai: bilangan, jumlah: sah.length })
@@ -106,6 +112,21 @@ function Isi({ user }) {
     } finally {
       setMengimport(false)
     }
+  }
+
+  function uraiSemulaDenganFormat(formatBaru) {
+    setFormatTarikh(formatBaru)
+    setSenaraiPratonton((s) =>
+      s.map((r) => {
+        const tarikhISO = uraiTarikhIkutFormat(r._tarikhAsal, formatBaru)
+        return {
+          ...r,
+          tarikh: tarikhISO ?? r._tarikhAsal,
+          hari: tarikhISO ? namaHari(tarikhISO) : '',
+          _tarikhSah: Boolean(tarikhISO),
+        }
+      })
+    )
   }
 
   return (
@@ -132,7 +153,20 @@ function Isi({ user }) {
 
       {senaraiPratonton && (
         <div className="mt-5">
-          <p className="text-sm font-medium text-ink mb-2">{senaraiPratonton.length} rekod dijumpai dalam fail:</p>
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <p className="text-sm font-medium text-ink">{senaraiPratonton.length} rekod dijumpai dalam fail:</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-inkmuted">Format tarikh dikesan:</span>
+              <select
+                value={formatTarikh}
+                onChange={(e) => uraiSemulaDenganFormat(e.target.value)}
+                className="h-8 px-2 rounded-card border border-border bg-surface text-xs"
+              >
+                <option value="DMY">Hari/Bulan/Tahun (12/1/2026 = 12 Jan)</option>
+                <option value="MDY">Bulan/Hari/Tahun (1/12/2026 = 12 Jan)</option>
+              </select>
+            </div>
+          </div>
 
           <div className="border border-border rounded-card overflow-x-auto max-h-72 mb-4">
             <table className="text-xs w-full">

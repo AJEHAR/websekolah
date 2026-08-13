@@ -592,6 +592,26 @@ Route `/admin/reset-data`. Untuk fasa ujian - padam pukal data tanpa perlu masuk
 
 **PENTING:** kalau padam koleksi `admins` sampai kosong, TIADA siapa boleh masuk Panel Admin lagi (perlu tambah semula admin terus dalam Firebase Console, koleksi `admins`, ID = emel).
 
+## Sistem Cetak Laporan (fasa 1: Perhimpunan, Harian, 3K)
+
+Guna dialog Cetak/Save PDF **browser sendiri** (Ctrl+P) - tiada pustaka luar. Teknik CSS klasik "cetak elemen ni sahaja":
+
+**Cara ia berfungsi:**
+1. `index.css` ada peraturan `@media print` global - sorok SEMUA (`body * { visibility: hidden }`), tunjuk cuma `.print-area` (dan kandungan dia). Ni bermakna nav/drawer/senarai automatik tersorok bila cetak, TANPA perlu ubah setiap layout satu-satu.
+2. `components/cetak/PrintArea.jsx` - pembalut kongsi (`hidden print:block print-area`) - tersorok di skrin biasa, muncul cuma bila cetak.
+3. `components/cetak/KepalaSuratCetak.jsx` - kepala surat rasmi (logo `/logo.png` + nama & alamat sekolah) - dipakai SEMUA laporan, konsisten.
+4. `components/cetak/RuangTandatangan.jsx` - blok tandatangan kongsi, terima senarai label (contoh `['Pentadbir', 'Pelapor']`).
+5. `hooks/useCetak.js` - hook kongsi: `const [dataCetak, setDataCetak] = useCetak()`. Set data -> tunggu DOM update -> `window.print()` automatik -> bersih semula lepas dialog cetak ditutup (`afterprint` event).
+
+**Setiap laporan** (Laporan Perhimpunan, Laporan Harian, Laporan 3K) ada:
+- Komponen `Cetak<NamaLaporan>.jsx` sendiri (contoh `CetakLaporanPerhimpunan.jsx`) - terima `senarai` (array), setiap rekod jadi SATU muka surat (`print-page-break` antara satu sama lain, kecuali muka terakhir)
+- Butang **Printer** (ikon) pada setiap baris senarai - cetak SATU laporan sahaja
+- Butang **"Cetak Julat"** di atas senarai - buka pemilih Dari/Hingga Tarikh, cetak SEMUA laporan dalam julat tu sekali gus (tersusun kronologi)
+
+**Laporan 3K sedikit lain** (struktur ikut tarikh, bukan satu dokumen) - `ambilLaporan3KJulat()` (dalam `useLaporan3K.js`) ambil rekod merentasi julat tarikh, dikumpul ikut tarikh sebelum cetak; setiap tarikh jadi satu muka surat dengan semua blok sekali.
+
+**Nak tambah laporan lain untuk cetak kemudian** (contoh Kehadiran UBKS): cipta `Cetak<Nama>.jsx` guna `KepalaSuratCetak` + `RuangTandatangan` + `PrintArea`, tambah butang Printer + `useCetak()` pada page sedia ada - komponen kongsi dah wujud, tak perlu bina dari kosong.
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**
