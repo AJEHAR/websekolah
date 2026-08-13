@@ -1,11 +1,10 @@
 import KepalaSuratCetak from '../../components/cetak/KepalaSuratCetak.jsx'
-import RuangTandatangan from '../../components/cetak/RuangTandatangan.jsx'
 import PrintArea from '../../components/cetak/PrintArea.jsx'
 
 function Seksyen({ tajuk, teks }) {
   return (
-    <div className="mb-3">
-      <p className="text-xs font-bold uppercase mb-1">{tajuk}</p>
+    <div className="mb-5">
+      <p className="text-sm font-bold uppercase mb-1.5">{tajuk}:</p>
       <p className="text-sm whitespace-pre-wrap">{teks || '-'}</p>
     </div>
   )
@@ -18,16 +17,20 @@ export default function CetakLaporanPerhimpunan({ senarai }) {
         <div key={l.id} className={`p-10 text-black text-sm ${i < senarai.length - 1 ? 'print-page-break' : ''}`}>
           <KepalaSuratCetak tajukLaporan="Laporan Perhimpunan Mingguan" />
 
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <p><strong>Minggu:</strong> {l.minggu}</p>
-            <p><strong>Tarikh:</strong> {l.tarikh} ({l.hari})</p>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <p><strong>MINGGU:</strong> {l.minggu}</p>
+            <p><strong>HARI:</strong> {l.hari?.toUpperCase()}</p>
+            <p><strong>TARIKH:</strong> {l.tarikh}</p>
           </div>
+          <p className="mb-5"><strong>DILAPORKAN OLEH</strong> : {l.dilaporkanOleh}</p>
 
-          <Seksyen tajuk="Laporan Sivik" teks={l.laporanSivik} />
+          <Seksyen tajuk="Pendidikan Sivik" teks={l.laporanSivik} />
           <Seksyen tajuk="Hal-Hal Lain" teks={l.halLain} />
-          <Seksyen tajuk="Ucapan Pentadbir" teks={l.ucapanPentadbir} />
 
-          <RuangTandatangan senarai={[l.namaPentadbir || 'Pentadbir', l.dilaporkanOleh || 'Pelapor']} />
+          <div className="mb-5">
+            <p className="text-sm font-bold uppercase mb-1.5">Ucapan Pentadbir: {l.namaPentadbir}</p>
+            <p className="text-sm whitespace-pre-wrap">{l.ucapanPentadbir || '-'}</p>
+          </div>
         </div>
       ))}
     </PrintArea>
