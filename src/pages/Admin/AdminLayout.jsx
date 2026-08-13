@@ -12,6 +12,7 @@ const TAJUK_SUBPAGE = {
   '/admin/kategori-ubks': 'Kategori UBKS',
   '/admin/latar-hub': 'Latar Belakang Hub',
   '/admin/import-perhimpunan': 'Import Laporan Perhimpunan',
+  '/admin/reset-data': 'Reset Data Ujian',
 }
 
 export default function AdminLayout() {

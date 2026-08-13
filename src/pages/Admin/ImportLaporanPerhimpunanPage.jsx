@@ -5,7 +5,7 @@ import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { tambahLaporanPerhimpunan } from '../../hooks/useLaporanPerhimpunan.js'
 import { uraiCSV, muatTurunCSV } from '../../lib/csvUtils.js'
-import { namaHari } from '../../lib/dateUtils.js'
+import { namaHari, uraiTarikhFleksibel } from '../../lib/dateUtils.js'
 
 const HEADER = ['Minggu', 'Tarikh', 'Laporan Sivik', 'Hal-Hal Lain', 'Ucapan Pentadbir', 'Nama Pentadbir', 'Dilaporkan Oleh']
 const CONTOH_BARIS = [
@@ -61,10 +61,11 @@ function Isi({ user }) {
         .map((b) => {
           const pentadbir = cariEmelIkutNama(b['Nama Pentadbir'] || '')
           const pelapor = cariEmelIkutNama(b['Dilaporkan Oleh'] || '')
+          const tarikhISO = uraiTarikhFleksibel(b['Tarikh'])
           return {
             minggu: Number(b['Minggu']),
-            tarikh: b['Tarikh'],
-            hari: namaHari(b['Tarikh']),
+            tarikh: tarikhISO ?? b['Tarikh'],
+            hari: tarikhISO ? namaHari(tarikhISO) : '',
             laporanSivik: b['Laporan Sivik'] || '',
             halLain: b['Hal-Hal Lain'] || '',
             ucapanPentadbir: b['Ucapan Pentadbir'] || '',
@@ -74,6 +75,7 @@ function Isi({ user }) {
             dilaporkanOleh: pelapor?.nama || (b['Dilaporkan Oleh'] || ''),
             _pentadbirDijumpai: Boolean(pentadbir),
             _pelaporDijumpai: Boolean(pelapor),
+            _tarikhSah: Boolean(tarikhISO),
           }
         })
 
@@ -89,14 +91,15 @@ function Isi({ user }) {
     setMengimport(true)
     setRalat(null)
     try {
+      const sah = senaraiPratonton.filter((r) => r._tarikhSah)
       let bilangan = 0
-      for (const rekod of senaraiPratonton) {
-        const { _pentadbirDijumpai, _pelaporDijumpai, ...data } = rekod
+      for (const rekod of sah) {
+        const { _pentadbirDijumpai, _pelaporDijumpai, _tarikhSah, ...data } = rekod
         await tambahLaporanPerhimpunan(data, user.uid)
         bilangan += 1
-        setProgres({ selesai: bilangan, jumlah: senaraiPratonton.length })
+        setProgres({ selesai: bilangan, jumlah: sah.length })
       }
-      setSelesai(bilangan)
+      setSelesai({ bilangan, dilangkau: senaraiPratonton.length - sah.length })
       setSenaraiPratonton(null)
     } catch (err) {
       setRalat(err.message || 'Gagal import. Cuba lagi.')
@@ -143,9 +146,11 @@ function Isi({ user }) {
               </thead>
               <tbody className="divide-y divide-border">
                 {senaraiPratonton.map((r, i) => (
-                  <tr key={i}>
+                  <tr key={i} style={!r._tarikhSah ? { backgroundColor: '#FBEAF0' } : undefined}>
                     <td className="px-3 py-2 text-inkmuted">{r.minggu}</td>
-                    <td className="px-3 py-2 text-inkmuted">{r.tarikh} ({r.hari})</td>
+                    <td className={`px-3 py-2 ${r._tarikhSah ? 'text-inkmuted' : 'text-brand-red font-semibold'}`}>
+                      {r._tarikhSah ? `${r.tarikh} (${r.hari})` : `${r.tarikh} - format tarikh tak dikenali`}
+                    </td>
                     <td className={`px-3 py-2 ${r._pentadbirDijumpai ? 'text-ink' : 'text-brand-red'}`}>
                       {r.namaPentadbir}{!r._pentadbirDijumpai && ' (tiada dalam Staff)'}
                     </td>
@@ -159,7 +164,7 @@ function Isi({ user }) {
           </div>
 
           <p className="text-xs text-inkmuted mb-4">
-            Nama berwarna merah = tak jumpa padanan sebenar dalam senarai Staff (nama tetap disimpan sebagai teks, cuma tiada pautan ke profile).
+            Nama berwarna merah = tak jumpa padanan sebenar dalam senarai Staff (nama tetap disimpan sebagai teks). Baris berlatar merah = tarikh tak dikenali, akan <strong>dilangkau</strong> (tak diimport) - format tarikh diterima: YYYY-MM-DD atau DD/M/YYYY.
           </p>
 
           {mengimport ? (
@@ -167,7 +172,7 @@ function Isi({ user }) {
           ) : (
             <div className="flex gap-3">
               <button onClick={sahkanImport} className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold">
-                Sahkan Import {senaraiPratonton.length} Rekod
+                Sahkan Import {senaraiPratonton.filter((r) => r._tarikhSah).length} Rekod
               </button>
               <button onClick={() => setSenaraiPratonton(null)} className="h-12 px-5 rounded-card border border-border text-sm font-medium text-ink">
                 Batal
@@ -178,7 +183,12 @@ function Isi({ user }) {
       )}
 
       {selesai !== null && (
-        <p className="text-sm font-medium text-green-700 mt-5">{selesai} rekod berjaya diimport.</p>
+        <div className="mt-5">
+          <p className="text-sm font-medium mb-1" style={{ color: '#27500A' }}>{selesai.bilangan} rekod berjaya diimport.</p>
+          {selesai.dilangkau > 0 && (
+            <p className="text-sm text-brand-red">{selesai.dilangkau} baris dilangkau sebab tarikh tak sah - betulkan dalam CSV dan cuba muat naik semula untuk baris tu sahaja.</p>
+          )}
+        </div>
       )}
     </div>
   )

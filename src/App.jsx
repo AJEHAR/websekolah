@@ -24,6 +24,7 @@ import LajurMuridPage from './pages/Admin/LajurMuridPage.jsx'
 import KategoriUBKSPage from './pages/Admin/KategoriUBKSPage.jsx'
 import LatarHubPage from './pages/Admin/LatarHubPage.jsx'
 import ImportLaporanPerhimpunanPage from './pages/Admin/ImportLaporanPerhimpunanPage.jsx'
+import ResetDataPage from './pages/Admin/ResetDataPage.jsx'
 import GuruBertugasLayout from './pages/GuruBertugas/GuruBertugasLayout.jsx'
 import GuruBertugasHub from './pages/GuruBertugas/GuruBertugasHub.jsx'
 import Kumpulan from './pages/GuruBertugas/Kumpulan.jsx'
@@ -108,6 +109,7 @@ export default function App() {
             <Route path="kategori-ubks" element={<KategoriUBKSPage />} />
             <Route path="latar-hub" element={<LatarHubPage />} />
             <Route path="import-perhimpunan" element={<ImportLaporanPerhimpunanPage />} />
+            <Route path="reset-data" element={<ResetDataPage />} />
           </Route>
 
           {/* Guru Bertugas - tab pills (Kumpulan/Laporan 3K/Laporan Banci/Laporan Harian) */}

@@ -580,6 +580,18 @@ Route `/guru-bertugas/harian`. Borang PALING kompleks dalam sistem ni - buka seb
 - Sistem cuba padankan "Nama Pentadbir"/"Dilaporkan Oleh" dengan staff sebenar (nama sepadan tepat) - kalau tak jumpa, nama tetap disimpan sebagai teks (papar merah dalam pratonton, makluman sahaja)
 - Parser CSV sendiri (`src/lib/csvUtils.js`) - sokong medan bertanda petik dengan koma di dalamnya, tiada pustaka luar diperlukan
 
+## Reset Data Ujian (Panel Admin, Admin Penuh sahaja)
+
+Route `/admin/reset-data`. Untuk fasa ujian - padam pukal data tanpa perlu masuk Firebase Console. **SENGAJA tak diletak dalam kad akses pantas Hub Admin** (kurang menonjol demi keselamatan) - cuma boleh dicapai dari drawer/URL terus.
+
+**2 kategori:**
+- **Data Ujian/Transaksi** - kehadiran, kumpulanBertugas, tugasBertugas, laporan3K, laporanHarian, laporanPerhimpunan, murid, kehadiranMurid, hariBelajarRMT, unitUBKS, kehadiranUBKS, perancanganUBKS
+- **Data Konfigurasi (BAHAYA)** - blokLaporan3K, kategoriUBKS, tetapan, latarHub, profiles, **admins** (amaran keras - padam ni boleh kunci semua orang keluar dari Panel Admin serta-merta)
+
+**Lapisan keselamatan:** tandakan koleksi -> taip frasa sahkan tepat (`PADAM` untuk Data Ujian sahaja, `PADAM SEMUA` kalau ada Data Konfigurasi dipilih sekali) -> baru butang padam aktif. Padam guna kelompok Firestore (`writeBatch`, 400 dokumen sekelompok) - `src/lib/resetData.js`.
+
+**PENTING:** kalau padam koleksi `admins` sampai kosong, TIADA siapa boleh masuk Panel Admin lagi (perlu tambah semula admin terus dalam Firebase Console, koleksi `admins`, ID = emel).
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

@@ -56,3 +56,25 @@ export function namaHari(tarikhISO) {
 export function bilanganHariDalamBulan(tahun, bulan) {
   return new Date(tahun, bulan, 0).getDate()
 }
+
+// Uraikan tarikh dari pelbagai format biasa (untuk import CSV, dll) jadi ISO
+// YYYY-MM-DD. Sokong: '2026-01-12' (ISO), '12/1/2026' atau '12-1-2026'
+// (DD/M/YYYY - format biasa orang taip/Excel eksport). Pulangkan null kalau
+// tak dapat diuraikan (elak simpan tarikh/hari yang salah secara senyap).
+export function uraiTarikhFleksibel(teks) {
+  const t = String(teks ?? '').trim()
+  if (!t) return null
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t
+
+  const padan = t.match(/^(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})$/)
+  if (padan) {
+    const [, hari, bulan, tahun] = padan
+    const h = Number(hari)
+    const b = Number(bulan)
+    if (b < 1 || b > 12 || h < 1 || h > 31) return null
+    return `${tahun}-${String(b).padStart(2, '0')}-${String(h).padStart(2, '0')}`
+  }
+
+  return null
+}
