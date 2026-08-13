@@ -4,21 +4,12 @@ import PrintArea from '../../components/cetak/PrintArea.jsx'
 
 const PERJUMPAAN_SENARAI = Array.from({ length: 12 }, (_, i) => i + 1)
 
-const WARNA_KATEGORI = {
-  UB: { header: '#E6F1FB', sel: '#F5FAFF' },
-  K: { header: '#EAF3DE', sel: '#F7FBF2' },
-  S: { header: '#FAECE7', sel: '#FDF6F3' },
-}
-function warnaUntuk(kod) {
-  return WARNA_KATEGORI[kod] ?? { header: '#F1EFE8', sel: '#FAFAF8' }
-}
-
 // pelajar: hasil useMemo dari PapanUBKS.jsx (sudah dipivot)
 export default function CetakPapanUBKS({ tahunSesi, kategoriSenarai, pelajar }) {
   return (
     <PrintArea>
       <div className="cetak-landskap p-8 text-black">
-        <KepalaSuratCetak tajukLaporan={`Papan Kehadiran UBKS — Sesi ${tahunSesi}`} />
+        <KepalaSuratCetak tajukLaporan={`Kehadiran UBKS — Sesi ${tahunSesi}`} />
 
         <table className="w-full border-collapse text-[9px]">
           <thead>
@@ -27,7 +18,7 @@ export default function CetakPapanUBKS({ tahunSesi, kategoriSenarai, pelajar }) 
               <th rowSpan={2} className="border border-black px-1 py-1 text-left w-28">Nama Murid</th>
               <th rowSpan={2} className="border border-black px-1 py-1 w-14">Tahun</th>
               {kategoriSenarai.map((k) => (
-                <th key={k.kod} colSpan={13} className="border border-black px-1 py-1 text-center" style={{ backgroundColor: warnaUntuk(k.kod).header }}>
+                <th key={k.kod} colSpan={13} className="border border-black px-1 py-1 text-center">
                   {k.nama} ({k.kod})
                 </th>
               ))}
@@ -36,9 +27,9 @@ export default function CetakPapanUBKS({ tahunSesi, kategoriSenarai, pelajar }) 
               {kategoriSenarai.map((k) => (
                 <Fragment key={k.kod}>
                   {PERJUMPAAN_SENARAI.map((pj) => (
-                    <th key={`${k.kod}-${pj}`} className="border border-black px-0.5 py-1 w-4" style={{ backgroundColor: warnaUntuk(k.kod).sel }}>{pj}</th>
+                    <th key={`${k.kod}-${pj}`} className="border border-black px-0.5 py-1 w-4">{pj}</th>
                   ))}
-                  <th className="border border-black px-1 py-1 w-7" style={{ backgroundColor: warnaUntuk(k.kod).header }}>Jum.</th>
+                  <th className="border border-black px-1 py-1 w-7">Jum.</th>
                 </Fragment>
               ))}
             </tr>
@@ -51,19 +42,18 @@ export default function CetakPapanUBKS({ tahunSesi, kategoriSenarai, pelajar }) 
                 <td className="border border-black px-1 py-0.5 text-center whitespace-nowrap">{p.tahunTingkatan}</td>
                 {kategoriSenarai.map((k) => {
                   const data = p.ikutKategori[k.kod]
-                  const warna = warnaUntuk(k.kod)
                   return (
                     <Fragment key={k.kod}>
                       {PERJUMPAAN_SENARAI.map((pj) => {
                         const status = data.unitId ? data.perjumpaanStatus[pj] : null
                         return (
-                          <td key={`${k.kod}-${pj}`} className="border border-black text-center px-0.5 py-0.5" style={{ backgroundColor: warna.sel }}>
+                          <td key={`${k.kod}-${pj}`} className="border border-black text-center px-0.5 py-0.5">
                             {status === true && '/'}
                             {status === false && '0'}
                           </td>
                         )
                       })}
-                      <td className="border border-black text-center px-1 py-0.5 font-bold" style={{ backgroundColor: warna.header }}>
+                      <td className="border border-black text-center px-1 py-0.5 font-bold">
                         {data.unitId ? data.jumlahHadir : '-'}
                       </td>
                     </Fragment>

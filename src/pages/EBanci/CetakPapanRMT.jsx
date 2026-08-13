@@ -20,14 +20,13 @@ export default function CetakPapanRMT({ kumpulan }) {
         const senaraiHari = Array.from({ length: k.hariDalamBulan }, (_, idx) => idx + 1)
         return (
           <div key={`${k.tahun}-${k.bulan}`} className={`cetak-landskap p-8 text-black ${i < kumpulan.length - 1 ? 'print-page-break' : ''}`}>
-            <KepalaSuratCetak tajukLaporan={`Papan Kehadiran RMT — ${NAMA_BULAN[k.bulan - 1]} ${k.tahun}`} />
+            <KepalaSuratCetak tajukLaporan={`Kehadiran RMT — ${NAMA_BULAN[k.bulan - 1]} ${k.tahun}`} />
 
             <table className="w-full border-collapse text-[9px]">
               <thead>
                 <tr>
                   <th className="border border-black px-1 py-1 w-6">Bil</th>
-                  <th className="border border-black px-1 py-1 text-left w-32">Nama Murid</th>
-                  <th className="border border-black px-1 py-1 w-8">JT</th>
+                  <th className="border border-black px-1 py-1 text-left w-36">Nama Murid</th>
                   <th className="border border-black px-1 py-1 w-20">Kelas</th>
                   {senaraiHari.map((h) => {
                     const iso = `${k.tahun}-${pad2(k.bulan)}-${pad2(h)}`
@@ -47,7 +46,6 @@ export default function CetakPapanRMT({ kumpulan }) {
                   <tr key={p.idMurid}>
                     <td className="border border-black px-1 py-0.5 text-center">{idx + 1}</td>
                     <td className="border border-black px-1 py-0.5 whitespace-nowrap">{p.nama}</td>
-                    <td className="border border-black px-1 py-0.5 text-center">{p.jantina === 'LELAKI' ? 'L' : p.jantina === 'PEREMPUAN' ? 'P' : '-'}</td>
                     <td className="border border-black px-1 py-0.5 whitespace-nowrap">{p.namaKelas}</td>
                     {senaraiHari.map((h) => {
                       const status = p.tick[h]
@@ -60,21 +58,23 @@ export default function CetakPapanRMT({ kumpulan }) {
                     })}
                   </tr>
                 ))}
-              </tbody>
-              <tfoot>
+                {/* Baris jumlah SEBAGAI SEBAHAGIAN tbody (bukan tfoot) - elak
+                    ulang secara automatik di setiap muka surat kalau jadual
+                    ni sendiri terpaksa pecah merentasi >1 muka surat cetak.
+                    Cuma keluar SEKALI, di muka surat terakhir sebenar. */}
                 <tr>
-                  <td colSpan={4} className="border border-black px-1 py-1 font-bold">Jumlah Tidak Hadir</td>
+                  <td colSpan={3} className="border border-black px-1 py-1 font-bold">Jumlah Tidak Hadir</td>
                   {senaraiHari.map((h) => (
                     <td key={h} className="border border-black text-center px-0.5 py-1 font-bold">{k.jumlahTakHadirIkutHari[h] ?? ''}</td>
                   ))}
                 </tr>
                 <tr>
-                  <td colSpan={4} className="border border-black px-1 py-1 font-bold">Jumlah Hadir</td>
+                  <td colSpan={3} className="border border-black px-1 py-1 font-bold">Jumlah Hadir</td>
                   {senaraiHari.map((h) => (
                     <td key={h} className="border border-black text-center px-0.5 py-1 font-bold">{k.jumlahHadirIkutHari[h] ?? ''}</td>
                   ))}
                 </tr>
-              </tfoot>
+              </tbody>
             </table>
           </div>
         )

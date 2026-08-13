@@ -16,12 +16,11 @@ const TAHUN_SEMASA = new Date().getFullYear()
 const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
 
 // Lebar lajur tetap (px) - untuk kira offset "sticky" Bil/Nama/Jantina/Kelas
-const LEBAR = { bil: 36, nama: 150, jantina: 56, kelas: 100 }
+const LEBAR = { bil: 36, nama: 150, kelas: 100 }
 const KIRI = {
   bil: 0,
   nama: LEBAR.bil,
-  jantina: LEBAR.bil + LEBAR.nama,
-  kelas: LEBAR.bil + LEBAR.nama + LEBAR.jantina,
+  kelas: LEBAR.bil + LEBAR.nama,
 }
 
 function pad2(n) {
@@ -40,7 +39,7 @@ export function kiraDataRMT(kehadiranBulan) {
     rekod.senaraiMurid.forEach((m) => {
       if (!m.adalahRMT) return
       if (!peta[m.idMurid]) {
-        peta[m.idMurid] = { idMurid: m.idMurid, nama: m.nama, jantina: m.jantina, namaKelas: rekod.namaKelas, tick: {} }
+        peta[m.idMurid] = { idMurid: m.idMurid, nama: m.nama, namaKelas: rekod.namaKelas, tick: {} }
       }
       peta[m.idMurid].tick[hari] = m.hadir
       if (m.hadir) hadirIkutHari[hari] = (hadirIkutHari[hari] ?? 0) + 1
@@ -77,16 +76,15 @@ export default function PapanRMT() {
 
   function janaAOA(k) {
     const senaraiHariBulan = Array.from({ length: k.hariDalamBulan }, (_, idx) => idx + 1)
-    const header = ['Bil', 'Nama Murid', 'Jantina', 'Kelas', ...senaraiHariBulan.map(String)]
+    const header = ['Bil', 'Nama Murid', 'Kelas', ...senaraiHariBulan.map(String)]
     const baris = k.pelajar.map((p, idx) => [
       idx + 1,
       p.nama,
-      p.jantina === 'LELAKI' ? 'L' : p.jantina === 'PEREMPUAN' ? 'P' : '-',
       p.namaKelas,
       ...senaraiHariBulan.map((h) => (p.tick[h] === true ? '/' : p.tick[h] === false ? '0' : '')),
     ])
-    const jumlahTH = ['', '', '', 'Jumlah Tidak Hadir', ...senaraiHariBulan.map((h) => k.jumlahTakHadirIkutHari[h] ?? '')]
-    const jumlahH = ['', '', '', 'Jumlah Hadir', ...senaraiHariBulan.map((h) => k.jumlahHadirIkutHari[h] ?? '')]
+    const jumlahTH = ['', '', 'Jumlah Tidak Hadir', ...senaraiHariBulan.map((h) => k.jumlahTakHadirIkutHari[h] ?? '')]
+    const jumlahH = ['', '', 'Jumlah Hadir', ...senaraiHariBulan.map((h) => k.jumlahHadirIkutHari[h] ?? '')]
     return [header, ...baris, jumlahTH, jumlahH]
   }
 
@@ -196,7 +194,6 @@ export default function PapanRMT() {
               <tr>
                 <th className="sticky z-30 bg-base px-1 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.bil, width: LEBAR.bil }}>Bil</th>
                 <th className="sticky z-30 bg-base text-left px-2 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.nama, width: LEBAR.nama }}>Nama Murid</th>
-                <th className="sticky z-30 bg-base px-1 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.jantina, width: LEBAR.jantina }}>Jantina</th>
                 <th className="sticky z-30 bg-base px-1 py-2 font-semibold text-ink border-b border-r border-border" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>Kelas</th>
                 {senaraiHari.map((h) => {
                   const iso = `${tahun}-${pad2(bulan)}-${pad2(h)}`
@@ -221,7 +218,6 @@ export default function PapanRMT() {
                 <tr key={p.idMurid}>
                   <td className="sticky z-10 bg-surface text-center px-1 py-2 border-r border-border" style={{ left: KIRI.bil, width: LEBAR.bil }}>{i + 1}</td>
                   <td className="sticky z-10 bg-surface px-2 py-2 border-r border-border whitespace-nowrap font-medium text-ink" style={{ left: KIRI.nama, width: LEBAR.nama }}>{p.nama}</td>
-                  <td className="sticky z-10 bg-surface text-center px-1 py-2 border-r border-border text-inkmuted" style={{ left: KIRI.jantina, width: LEBAR.jantina }}>{p.jantina === 'LELAKI' ? 'L' : p.jantina === 'PEREMPUAN' ? 'P' : '-'}</td>
                   <td className="sticky z-10 bg-surface px-2 py-2 border-r border-border whitespace-nowrap text-inkmuted" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>{p.namaKelas}</td>
                   {senaraiHari.map((h) => {
                     const status = p.tick[h] // true = hadir, false = tak hadir (RMT tapi tak hadir), undefined = tiada data
@@ -237,7 +233,7 @@ export default function PapanRMT() {
             </tbody>
             <tfoot className="sticky bottom-0 bg-base">
               <tr>
-                <td colSpan={4} className="sticky left-0 z-10 bg-base px-2 py-2 font-semibold text-ink border-t border-r border-border" style={{ minWidth: LEBAR.bil + LEBAR.nama + LEBAR.jantina + LEBAR.kelas }}>
+                <td colSpan={3} className="sticky left-0 z-10 bg-base px-2 py-2 font-semibold text-ink border-t border-r border-border" style={{ minWidth: LEBAR.bil + LEBAR.nama + LEBAR.kelas }}>
                   Jumlah Tidak Hadir
                 </td>
                 {senaraiHari.map((h) => (
@@ -247,7 +243,7 @@ export default function PapanRMT() {
                 ))}
               </tr>
               <tr>
-                <td colSpan={4} className="sticky left-0 z-10 bg-base px-2 py-2 font-semibold text-ink border-t border-r border-border">
+                <td colSpan={3} className="sticky left-0 z-10 bg-base px-2 py-2 font-semibold text-ink border-t border-r border-border">
                   Jumlah Hadir
                 </td>
                 {senaraiHari.map((h) => (

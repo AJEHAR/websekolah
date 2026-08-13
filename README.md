@@ -629,6 +629,14 @@ Guna dialog Cetak/Save PDF **browser sendiri** (Ctrl+P) - tiada pustaka luar. Te
 
 **Papan Kehadiran UBKS** (`/eubks/kehadiran-ubks`, tab Papan Kehadiran) - satu butang **Cetak** - papar SEMUA murid (bukan ikut carian semasa), semua kategori UB/K/S dengan warna yang sama macam paparan skrin.
 
+## Kemas Kini Sistem Cetak (fasa 3: pembetulan Papan RMT/UBKS)
+
+- **Lajur Jantina dibuang** dari Papan RMT sepenuhnya (paparan skrin, cetak, DAN Excel)
+- **Footer jumlah (RMT cetak)** - tukar dari `<tfoot>` ke baris biasa dalam `<tbody>`. `<tfoot>` automatik ULANG di setiap muka surat cetak kalau jadual pecah merentasi >1 muka surat (boleh keliru - nampak macam setiap muka surat ada jumlah sendiri). Baris biasa cuma keluar SEKALI, di hujung sebenar.
+- **Alamat sekolah** ditambah kembali dalam `KepalaSuratCetak.jsx` ("Indera Mahkota 2, 25200 Kuantan, Pahang.") - WAJIB untuk SEMUA laporan cetak (Perhimpunan, Harian, 3K, RMT, UBKS) sebab semua guna komponen kongsi yang sama, satu tempat kemas kini terpakai global
+- **Wording "Papan" dibuang** dari tajuk cetak RMT/UBKS (jadi "Kehadiran RMT — [Bulan] [Tahun]" dan "Kehadiran UBKS — Sesi [Tahun]") - tajuk PAGE/breadcrumb dalam app tak berubah, cuma tajuk pada cetakan
+- **Cetak Papan UBKS - buang SEMUA warna** (biru/hijau/oren kategori) - kini hitam putih tulen (border hitam sahaja). Papan RMT kekal ada kelabu lembut untuk lajur hujung minggu (grayscale, bukan warna sebenar, jadi masih dikira "hitam putih")
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

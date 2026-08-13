@@ -1,8 +1,9 @@
 export default function KepalaSuratCetak({ tajukLaporan }) {
   return (
-    <div className="mb-6 text-center">
+    <div className="mb-6 text-center text-black">
       <img src="/logo-cetak.png" alt="Logo Sekolah" className="h-20 mx-auto object-contain" />
       <p className="text-base font-bold uppercase mt-2">Sekolah Kebangsaan Pendidikan Khas Kuantan</p>
+      <p className="text-xs mt-0.5">Indera Mahkota 2, 25200 Kuantan, Pahang.</p>
       {tajukLaporan && (
         <>
           <div className="w-24 border-b-2 border-black mx-auto mt-3 mb-3" />
