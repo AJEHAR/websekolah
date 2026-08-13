@@ -324,13 +324,16 @@ Medan dikumpul 6 kategori untuk paparan (`KUMPULAN_MEDAN`): Identiti & Akademik,
 
 ## Analisis Maklumat Murid
 
-Sub-page `/maklumat-murid/analisis` - semua statistik dikira client-side (`statistikMurid.js`) dari senarai murid:
-- Jumlah keseluruhan, Prasekolah, Bukan Prasekolah
-- Keterangan Bidang, Jantina, Kaum, Agama - setiap satu **dipisah** Prasekolah vs Bukan Prasekolah (carta bar, `SenaraiKiraan.jsx`)
-- Jumlah Murid Ikut Kelas (carta bar)
-- Jantina/Kaum/Agama Ikut Kelas (jadual silang, `JadualIkutKelas.jsx`)
+Route `/maklumat-murid/analisis`. **3 tab**, setiap analisis dalam kotak berasingan (bukan carta bar - nombor sahaja, lebih jelas dibaca):
 
-"Prasekolah" dikesan dari medan `tahunTingkatan` (fungsi `adalahPra()`).
+1. **Keseluruhan** - kad ringkasan (Jumlah/Prasekolah/Sekolah Rendah) + kad "Prasekolah" (Jantina/Kaum/Agama, PRA SAHAJA) + kad ringkasan Kategori Ketidakupayaan (Sekolah Rendah sahaja)
+2. **Kelas** - Jumlah Murid Ikut Kelas + jadual silang Jantina/Kaum/Agama Ikut Kelas
+3. **Kategori Pendidikan Khas** - Sekolah Rendah SAHAJA (Prasekolah dikecualikan sepenuhnya). Setiap Kategori Ketidakupayaan (Pembelajaran/Pendengaran/Pelbagai/dll) dapat kad sendiri, dengan Jantina/Kaum/Agama/Subkategori disarangkan SEKALI dalam kad tu
+
+**Prinsip penting - "Prasekolah entiti berasingan":** SETIAP pengiraan dalam page ni (kecuali "Jumlah Keseluruhan" di kad ringkasan) mengecualikan murid Prasekolah secara eksplisit sebelum kira apa-apa pecahan lain. Ni elak nombor tercemar/bercampur antara dua kategori murid yang berbeza sifat sepenuhnya, walaupun sekolah yang sama. Fungsi `kiraIkutKategoriOKU()` dalam `statistikMurid.js` filter `!adalahPra(m)` SEBELUM apa-apa pengiraan lain.
+
+**Medan yang diperbetulkan:** guna `kategoriKetidakupayaan` (KATEGORI KETIDAKUPAYAAN - 5 kategori: Pembelajaran/Pendengaran/Pelbagai/Fizikal/Pertuturan), BUKAN `keteranganBidang` (KETERANGAN BIDANG - cuma 2 nilai, sebenarnya bidang program sekolah bukan kategori OKU sebenar) yang digunakan versi awal.
+
 
 ## Semakan Murid (ganti Maklumat Asas Murid)
 
@@ -522,6 +525,21 @@ Route `/guru-bertugas/perhimpunan`. Senarai laporan + Tambah/Lihat/Edit/Padam.
 - Nama Pentadbir & Dilaporkan Oleh - dropdown dari senarai staff (`useProfilesList`); Dilaporkan Oleh *default* ke pengguna semasa
 
 **Kebenaran:** mana-mana staff log masuk boleh isi/edit/padam (sama macam Laporan 3K - bukan admin sahaja, sebab guru bertugas minggu tu yang biasa isi).
+
+## Latar Belakang Hub (Panel Admin > Latar Belakang Hub)
+
+Admin PENUH boleh upload gambar latar untuk page hub setiap seksyen - **Telefon** dan **Desktop** berasingan (nisbah skrin berbeza), guna Google Drive upload biasa. Kalau kosong, gradient warna sedia ada (lihat jadual di seksyen "Hub Page Setiap Seksyen" di atas) terus terpakai sebagai *fallback* - tak perlu isi semua sekali gus.
+
+**Struktur data:**
+```
+latarHub/{seksyen}          <- ID: keberadaan | guru-bertugas | maklumat-murid | ebanci | admin | eubks
+  gambarTelefon (url | undefined)
+  gambarDesktop (url | undefined)
+```
+
+**Cara ia berfungsi (`HubHero.jsx`):** `<img>` berasingan untuk telefon (`sm:hidden`) dan desktop (`hidden sm:block`), dengan lapisan gelap (*scrim*) di atas gambar supaya tajuk & kad akses pantas (putih) sentiasa jelas dibaca tak kira gambar apa pun diupload. Setiap komponen Hub (`KeberadaanHub.jsx`, dll) panggil `useLatarHub(seksyen)` sendiri dan hantar terus ke `HubHero`.
+
+**Kebenaran:** baca umum (semua staff), tulis **Super Admin sahaja** (jejas paparan semua seksyen sekali, bukan satu domain fungsian).
 
 ## Cara Tambah Page Baru
 

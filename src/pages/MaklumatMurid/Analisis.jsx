@@ -1,12 +1,13 @@
-import { useMemo } from 'react'
-import { Users, Baby, GraduationCap } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useMuridList } from '../../hooks/useMurid.js'
-import { adalahPra, kiraIkutMedan, kiraIkutKelas } from './statistikMurid.js'
-import SenaraiKiraan from './SenaraiKiraan.jsx'
+import { adalahPra, kiraIkutMedan, kiraIkutKelas, kiraIkutKategoriOKU } from './statistikMurid.js'
+import KadAnalisis from './KadAnalisis.jsx'
+import KadKategoriOKU, { BarisKecil } from './KadKategoriOKU.jsx'
 import JadualIkutKelas from './JadualIkutKelas.jsx'
 
 export default function Analisis() {
   const { senarai, loading } = useMuridList()
+  const [tab, setTab] = useState('keseluruhan')
 
   const stat = useMemo(() => {
     const pra = senarai.filter(adalahPra)
@@ -15,94 +16,114 @@ export default function Analisis() {
       jumlah: senarai.length,
       jumlahPra: pra.length,
       jumlahBukanPra: bukanPra.length,
-      bidangPra: kiraIkutMedan(pra, 'keteranganBidang'),
-      bidangBukanPra: kiraIkutMedan(bukanPra, 'keteranganBidang'),
-      jantinaPra: kiraIkutMedan(pra, 'jantina'),
-      jantinaBukanPra: kiraIkutMedan(bukanPra, 'jantina'),
-      kaumPra: kiraIkutMedan(pra, 'kaum'),
-      kaumBukanPra: kiraIkutMedan(bukanPra, 'kaum'),
-      agamaPra: kiraIkutMedan(pra, 'agama'),
-      agamaBukanPra: kiraIkutMedan(bukanPra, 'agama'),
+      praJantina: kiraIkutMedan(pra, 'jantina'),
+      praKaum: kiraIkutMedan(pra, 'kaum'),
+      praAgama: kiraIkutMedan(pra, 'agama'),
+      kategoriRingkas: kiraIkutMedan(bukanPra, 'kategoriKetidakupayaan'),
       ikutKelas: kiraIkutMedan(senarai, 'namaKelas'),
       jantinaIkutKelas: kiraIkutKelas(senarai, 'jantina'),
       kaumIkutKelas: kiraIkutKelas(senarai, 'kaum'),
       agamaIkutKelas: kiraIkutKelas(senarai, 'agama'),
+      kategoriOKU: kiraIkutKategoriOKU(senarai),
     }
   }, [senarai])
 
   if (loading) return <p className="text-sm text-inkmuted">Memuatkan…</p>
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-3 gap-3">
-        <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#E6F1FB' }}>
-          <Users size={20} className="mx-auto mb-1.5" style={{ color: '#0C447C' }} />
-          <p className="text-2xl font-bold" style={{ color: '#0C447C' }}>{stat.jumlah}</p>
-          <p className="text-xs mt-1" style={{ color: '#0C447C' }}>Jumlah Murid</p>
-        </div>
-        <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#FBEAF0' }}>
-          <Baby size={20} className="mx-auto mb-1.5" style={{ color: '#72243E' }} />
-          <p className="text-2xl font-bold" style={{ color: '#72243E' }}>{stat.jumlahPra}</p>
-          <p className="text-xs mt-1" style={{ color: '#72243E' }}>Prasekolah</p>
-        </div>
-        <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#EAF3DE' }}>
-          <GraduationCap size={20} className="mx-auto mb-1.5" style={{ color: '#27500A' }} />
-          <p className="text-2xl font-bold" style={{ color: '#27500A' }}>{stat.jumlahBukanPra}</p>
-          <p className="text-xs mt-1" style={{ color: '#27500A' }}>Bukan Prasekolah</p>
-        </div>
+    <div>
+      <div className="flex gap-2 mb-6 p-1 rounded-full bg-base w-fit">
+        {[
+          { kunci: 'keseluruhan', label: 'Keseluruhan' },
+          { kunci: 'kelas', label: 'Kelas' },
+          { kunci: 'oku', label: 'Kategori Pendidikan Khas' },
+        ].map((t) => (
+          <button
+            key={t.kunci}
+            onClick={() => setTab(t.kunci)}
+            className="px-4 py-2 rounded-full text-xs font-semibold transition-colors"
+            style={tab === t.kunci ? { backgroundColor: '#1A1A1A', color: '#fff' } : { color: '#5C5C5C' }}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Keterangan Bidang</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <SenaraiKiraan tajuk="Prasekolah" data={stat.bidangPra} />
-          <SenaraiKiraan tajuk="Bukan Prasekolah" data={stat.bidangBukanPra} />
+      {tab === 'keseluruhan' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#E6F1FB' }}>
+              <p className="text-2xl font-bold" style={{ color: '#0C447C' }}>{stat.jumlah}</p>
+              <p className="text-xs mt-1" style={{ color: '#0C447C' }}>Keseluruhan</p>
+            </div>
+            <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#FBEAF0' }}>
+              <p className="text-2xl font-bold" style={{ color: '#72243E' }}>{stat.jumlahPra}</p>
+              <p className="text-xs mt-1" style={{ color: '#72243E' }}>Prasekolah</p>
+            </div>
+            <div className="p-4 rounded-card text-center" style={{ backgroundColor: '#EAF3DE' }}>
+              <p className="text-2xl font-bold" style={{ color: '#27500A' }}>{stat.jumlahBukanPra}</p>
+              <p className="text-xs mt-1" style={{ color: '#27500A' }}>Sekolah Rendah</p>
+            </div>
+          </div>
+
+          <div className="border border-border rounded-card p-3 bg-surface">
+            <h4 className="text-sm font-bold text-ink mb-3">Prasekolah</h4>
+            <BarisKecil tajuk="Jantina" data={stat.praJantina} />
+            <BarisKecil tajuk="Kaum" data={stat.praKaum} />
+            <BarisKecil tajuk="Agama" data={stat.praAgama} />
+          </div>
+
+          <KadAnalisis
+            tajuk="Kategori Ketidakupayaan (Sekolah Rendah)"
+            data={stat.kategoriRingkas}
+            nota='Lihat tab "Kategori Pendidikan Khas" untuk pecahan Jantina/Kaum/Agama setiap kategori.'
+          />
         </div>
-      </section>
+      )}
 
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Jantina</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <SenaraiKiraan tajuk="Prasekolah" data={stat.jantinaPra} />
-          <SenaraiKiraan tajuk="Bukan Prasekolah" data={stat.jantinaBukanPra} />
+      {tab === 'kelas' && (
+        <div className="space-y-4">
+          <KadAnalisis tajuk="Jumlah Murid Ikut Kelas" data={stat.ikutKelas} />
+
+          <div>
+            <h3 className="text-xs font-semibold text-inkmuted uppercase tracking-wide mb-2">Jantina Ikut Kelas</h3>
+            <JadualIkutKelas data={stat.jantinaIkutKelas} />
+          </div>
+
+          <div>
+            <h3 className="text-xs font-semibold text-inkmuted uppercase tracking-wide mb-2">Kaum Ikut Kelas</h3>
+            <JadualIkutKelas data={stat.kaumIkutKelas} />
+          </div>
+
+          <div>
+            <h3 className="text-xs font-semibold text-inkmuted uppercase tracking-wide mb-2">Agama Ikut Kelas</h3>
+            <JadualIkutKelas data={stat.agamaIkutKelas} />
+          </div>
         </div>
-      </section>
+      )}
 
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Kaum</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <SenaraiKiraan tajuk="Prasekolah" data={stat.kaumPra} />
-          <SenaraiKiraan tajuk="Bukan Prasekolah" data={stat.kaumBukanPra} />
+      {tab === 'oku' && (
+        <div>
+          <p className="text-xs text-inkmuted mb-4">Sekolah Rendah sahaja - Prasekolah tidak termasuk di sini.</p>
+          {stat.kategoriOKU.length === 0 ? (
+            <p className="text-sm text-inkmuted">Tiada data kategori ketidakupayaan.</p>
+          ) : (
+            <div className="space-y-4">
+              {stat.kategoriOKU.map((k) => (
+                <KadKategoriOKU
+                  key={k.kategori}
+                  kategori={k.kategori}
+                  jumlah={k.jumlah}
+                  jantina={k.jantina}
+                  kaum={k.kaum}
+                  agama={k.agama}
+                  subkategori={k.subkategori}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Agama</h3>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <SenaraiKiraan tajuk="Prasekolah" data={stat.agamaPra} />
-          <SenaraiKiraan tajuk="Bukan Prasekolah" data={stat.agamaBukanPra} />
-        </div>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Jumlah Murid Ikut Kelas</h3>
-        <SenaraiKiraan data={stat.ikutKelas} />
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Jantina Ikut Kelas</h3>
-        <JadualIkutKelas data={stat.jantinaIkutKelas} />
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Kaum Ikut Kelas</h3>
-        <JadualIkutKelas data={stat.kaumIkutKelas} />
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-ink mb-3">Agama Ikut Kelas</h3>
-        <JadualIkutKelas data={stat.agamaIkutKelas} />
-      </section>
+      )}
     </div>
   )
 }

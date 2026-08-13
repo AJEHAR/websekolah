@@ -27,3 +27,25 @@ export function kiraIkutKelas(senarai, medan) {
   })
   return hasil
 }
+
+// Kategori Ketidakupayaan (Sekolah Rendah SAHAJA - Prasekolah sentiasa
+// dikecualikan, entiti berasingan). Untuk setiap kategori, sarangkan
+// pecahan Jantina/Kaum/Agama/Subkategori SEKALI GUS.
+export function kiraIkutKategoriOKU(senarai) {
+  const bukanPra = senarai.filter((m) => !adalahPra(m))
+  const kategoriUnik = [...new Set(bukanPra.map((m) => (m.kategoriKetidakupayaan || '').trim() || 'Tiada Data'))]
+
+  return kategoriUnik
+    .map((kategori) => {
+      const ahli = bukanPra.filter((m) => ((m.kategoriKetidakupayaan || '').trim() || 'Tiada Data') === kategori)
+      return {
+        kategori,
+        jumlah: ahli.length,
+        jantina: kiraIkutMedan(ahli, 'jantina'),
+        kaum: kiraIkutMedan(ahli, 'kaum'),
+        agama: kiraIkutMedan(ahli, 'agama'),
+        subkategori: kiraIkutMedan(ahli, 'subkategoriKetidakupayaan'),
+      }
+    })
+    .sort((a, b) => b.jumlah - a.jumlah)
+}

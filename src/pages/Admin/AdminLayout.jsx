@@ -10,6 +10,7 @@ const TAJUK_SUBPAGE = {
   '/admin/blok3k': 'Blok 3K',
   '/admin/lajur-murid': 'Lajur Murid',
   '/admin/kategori-ubks': 'Kategori UBKS',
+  '/admin/latar-hub': 'Latar Belakang Hub',
 }
 
 export default function AdminLayout() {

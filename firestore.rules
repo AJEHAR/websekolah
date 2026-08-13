@@ -132,6 +132,13 @@ service cloud.firestore {
       allow write: if isAdminSeksyen('ubks');
     }
 
+    // Gambar latar hub setiap seksyen - baca umum, tulis SUPER ADMIN sahaja
+    // (jejas paparan SEMUA seksyen, bukan satu domain fungsian sahaja).
+    match /latarHub/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isSuperAdmin();
+    }
+
     // Kategori Unit UBKS (UB/K/S/lain-lain) - seksyen 'ubks'.
     match /kategoriUBKS/{docId} {
       allow read: if request.auth != null;

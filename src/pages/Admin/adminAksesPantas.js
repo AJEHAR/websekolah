@@ -1,4 +1,4 @@
-import { Users, UserCheck, ShieldCheck, ClipboardList, Table2, Award } from 'lucide-react'
+import { Users, UserCheck, ShieldCheck, ClipboardList, Table2, Award, Image } from 'lucide-react'
 
 export const ADMIN_AKSES_PANTAS = [
   { label: 'Staff', to: '/admin/staff', Ikon: Users },
@@ -7,4 +7,5 @@ export const ADMIN_AKSES_PANTAS = [
   { label: 'Blok 3K', to: '/admin/blok3k', Ikon: ClipboardList },
   { label: 'Lajur Murid', to: '/admin/lajur-murid', Ikon: Table2 },
   { label: 'Kategori UBKS', to: '/admin/kategori-ubks', Ikon: Award },
+  { label: 'Latar Belakang Hub', to: '/admin/latar-hub', Ikon: Image },
 ]

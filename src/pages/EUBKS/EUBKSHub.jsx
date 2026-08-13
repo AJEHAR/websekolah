@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { EUBKS_AKSES_PANTAS } from './eubksAksesPantas.js'
 
 export default function EUBKSHub() {
+  const { latar } = useLatarHub('eubks')
   return (
     <div
       className="w-full min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-start text-center px-6 pt-14 sm:pt-20 pb-16"
