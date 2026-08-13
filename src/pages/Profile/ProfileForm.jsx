@@ -50,6 +50,10 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
       setRalat('Sila pilih jenis PPM (Kelas/Asrama).')
       return
     }
+    if (!failGambar && !profile?.gambarURL) {
+      setRalat('Sila muat naik gambar.')
+      return
+    }
 
     setMenyimpan(true)
     try {
@@ -78,7 +82,7 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
           )}
         </div>
         <label className="text-sm font-medium text-brand-red cursor-pointer">
-          Muat naik gambar <span className="text-inkmuted font-normal">(pilihan)</span>
+          Muat naik gambar
           <input type="file" accept="image/*" onChange={pilihGambar} className="hidden" />
         </label>
       </div>
@@ -90,9 +94,9 @@ export default function ProfileForm({ profile, onSimpan, onBatal }) {
           type="text"
           required
           value={nama}
-          onChange={(e) => setNama(e.target.value)}
-          className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
-          placeholder="Nama penuh"
+          onChange={(e) => setNama(e.target.value.toUpperCase())}
+          className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm uppercase"
+          placeholder="NAMA PENUH"
         />
       </div>
 

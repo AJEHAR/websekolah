@@ -11,6 +11,7 @@ const TAJUK_SUBPAGE = {
   '/admin/lajur-murid': 'Lajur Murid',
   '/admin/kategori-ubks': 'Kategori UBKS',
   '/admin/latar-hub': 'Latar Belakang Hub',
+  '/admin/import-perhimpunan': 'Import Laporan Perhimpunan',
 }
 
 export default function AdminLayout() {

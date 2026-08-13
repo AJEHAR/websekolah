@@ -23,6 +23,7 @@ import Blok3KPage from './pages/Admin/Blok3KPage.jsx'
 import LajurMuridPage from './pages/Admin/LajurMuridPage.jsx'
 import KategoriUBKSPage from './pages/Admin/KategoriUBKSPage.jsx'
 import LatarHubPage from './pages/Admin/LatarHubPage.jsx'
+import ImportLaporanPerhimpunanPage from './pages/Admin/ImportLaporanPerhimpunanPage.jsx'
 import GuruBertugasLayout from './pages/GuruBertugas/GuruBertugasLayout.jsx'
 import GuruBertugasHub from './pages/GuruBertugas/GuruBertugasHub.jsx'
 import Kumpulan from './pages/GuruBertugas/Kumpulan.jsx'
@@ -46,12 +47,32 @@ import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
 import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
 import LaporanUBKS from './pages/EUBKS/LaporanUBKS.jsx'
 import PerancanganUBKS from './pages/EUBKS/PerancanganUBKS.jsx'
+import { Navigate, useLocation } from 'react-router-dom'
+import { useAuth } from './context/AuthContext.jsx'
+import { useAksesStatus } from './hooks/useAksesStatus.js'
+
+// Paksa staff yang log masuk TAPI belum ada profile terus ke /profil - tak
+// kira page mana pun mereka cuba akses. Elak isu "staff tak tahu kena isi
+// profile" sebab sebelum ni cuma mesej + pautan dalam AksesGate (boleh
+// diabaikan/tak disedari).
+function PenggeraPaksaProfil({ children }) {
+  const { user } = useAuth()
+  const { status, loading } = useAksesStatus(user)
+  const location = useLocation()
+
+  if (!user || loading) return children
+  if (status === 'belum-profile' && location.pathname !== '/profil') {
+    return <Navigate to="/profil" replace />
+  }
+  return children
+}
 
 export default function App() {
   return (
     <div className="min-h-dvh flex flex-col bg-base">
       <Navbar />
       <div className="flex-1">
+        <PenggeraPaksaProfil>
         <Routes>
           <Route path="/" element={<Home />} />
 
@@ -86,6 +107,7 @@ export default function App() {
             <Route path="lajur-murid" element={<LajurMuridPage />} />
             <Route path="kategori-ubks" element={<KategoriUBKSPage />} />
             <Route path="latar-hub" element={<LatarHubPage />} />
+            <Route path="import-perhimpunan" element={<ImportLaporanPerhimpunanPage />} />
           </Route>
 
           {/* Guru Bertugas - tab pills (Kumpulan/Laporan 3K/Laporan Banci/Laporan Harian) */}
@@ -125,6 +147,7 @@ export default function App() {
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}
         </Routes>
+        </PenggeraPaksaProfil>
       </div>
     </div>
   )

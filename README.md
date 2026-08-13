@@ -561,6 +561,25 @@ Route `/guru-bertugas/harian`. Borang PALING kompleks dalam sistem ni - buka seb
 
 **Kebenaran:** mana-mana staff log masuk boleh isi/edit/padam.
 
+## Kemas Kini: Profile Wajib, Paksa Isi Profile, Import CSV Perhimpunan
+
+**Bug dibetulkan - Rumusan Guru Mangkir auto-pilih:** effect auto-pilih dulu jalan sebelum data Keberadaan habis dimuatkan (race condition), jadi terpilih senarai KOSONG. Dibetulkan guna status `loading` sebenar dari `useKeberadaanTarikh()`.
+
+**Paksa isi Profile (bukan setakat pautan):**
+- `AksesGate.jsx` sekarang `<Navigate to="/profil" replace />` terus (bukan papar mesej + pautan)
+- Komponen baru `PenggeraPaksaProfil` (dalam `App.jsx`) bungkus SEMUA route - sebarang staff log masuk yang belum ada profile terus di-*redirect* ke `/profil` tak kira page mana pun mereka cuba akses, termasuk Utama
+
+**Profile - semua wajib termasuk Gambar:**
+- Nama: auto huruf besar semasa taip (`onChange` guna `.toUpperCase()`)
+- Gambar: sekarang WAJIB (sebelum ni pilihan) - borang tolak submit kalau tiada gambar
+- IC, Kategori, Jawatan (dan Jenis PPM bila Kategori=PPM) - kekal wajib (dah sedia ada)
+
+**Import CSV Laporan Perhimpunan** (Panel Admin > Import Laporan Perhimpunan, Admin Penuh sahaja):
+- Muat turun templat CSV (7 lajur: Minggu, Tarikh, Laporan Sivik, Hal-Hal Lain, Ucapan Pentadbir, Nama Pentadbir, Dilaporkan Oleh)
+- Isi dalam Excel/Sheets, eksport CSV, muat naik semula
+- Sistem cuba padankan "Nama Pentadbir"/"Dilaporkan Oleh" dengan staff sebenar (nama sepadan tepat) - kalau tak jumpa, nama tetap disimpan sebagai teks (papar merah dalam pratonton, makluman sahaja)
+- Parser CSV sendiri (`src/lib/csvUtils.js`) - sokong medan bertanda petik dengan koma di dalamnya, tiada pustaka luar diperlukan
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**

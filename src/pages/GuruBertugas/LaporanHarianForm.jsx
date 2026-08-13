@@ -29,7 +29,7 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
   const [menyimpan, setMenyimpan] = useState(false)
 
   const { senarai: kumpulanSenarai } = useKumpulanBertugas()
-  const { senarai: keberadaanSenarai } = useKeberadaanTarikh(tarikh)
+  const { senarai: keberadaanSenarai, loading: loadingKeberadaan } = useKeberadaanTarikh(tarikh)
   const { senarai: kehadiranMuridSenarai } = useKehadiranTarikh(tarikh)
   const { senarai: muridSenarai } = useMuridList()
   const { profiles } = useProfilesList()
@@ -124,10 +124,10 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
   }, [keberadaanSenarai, guruAktif])
 
   useEffect(() => {
-    if (guruMangkirDiautoisi) return
+    if (guruMangkirDiautoisi || loadingKeberadaan) return
     setGuruMangkirTerpilih(new Set(guruMangkirCadangan.map((g) => g.emel)))
     setGuruMangkirDiautoisi(true)
-  }, [guruMangkirCadangan, guruMangkirDiautoisi])
+  }, [guruMangkirCadangan, guruMangkirDiautoisi, loadingKeberadaan])
 
   function segarkanGuruMangkir() {
     setGuruMangkirTerpilih(new Set(guruMangkirCadangan.map((g) => g.emel)))

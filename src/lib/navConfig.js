@@ -67,5 +67,6 @@ export const ADMIN_NAV_ITEM = {
     { label: 'Lajur Murid', to: '/admin/lajur-murid' },
     { label: 'Kategori UBKS', to: '/admin/kategori-ubks' },
     { label: 'Latar Belakang Hub', to: '/admin/latar-hub' },
+    { label: 'Import Laporan Perhimpunan', to: '/admin/import-perhimpunan' },
   ],
 }
