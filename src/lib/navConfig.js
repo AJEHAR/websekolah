@@ -20,7 +20,7 @@ export const NAV_ITEMS = [
       { label: 'Kumpulan', to: '/guru-bertugas/kumpulan' },
       { label: 'Laporan 3K', to: '/guru-bertugas/3k' },
       { label: 'Jana Banci', to: '/guru-bertugas/banci' },
-      { label: 'Harian', to: '/guru-bertugas/harian' },
+      { label: 'Laporan Harian', to: '/guru-bertugas/harian' },
       { label: 'Laporan Perhimpunan', to: '/guru-bertugas/perhimpunan' },
     ],
   },

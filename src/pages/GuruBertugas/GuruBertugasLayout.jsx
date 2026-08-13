@@ -7,7 +7,7 @@ const TAJUK_SUBPAGE = {
   '/guru-bertugas/kumpulan': 'Kumpulan',
   '/guru-bertugas/3k': 'Laporan 3K',
   '/guru-bertugas/banci': 'Jana Banci',
-  '/guru-bertugas/harian': 'Harian',
+  '/guru-bertugas/harian': 'Laporan Harian',
   '/guru-bertugas/perhimpunan': 'Laporan Perhimpunan',
 }
 

@@ -7,6 +7,7 @@ import { useKehadiranTarikh } from '../../hooks/useKehadiranMurid.js'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { tambahLaporanHarian, kemaskiniLaporanHarian } from '../../hooks/useLaporanHarian.js'
+import PilihMuridCarian from './PilihMuridCarian.jsx'
 
 export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal }) {
   const [minggu, setMinggu] = useState(laporan?.minggu ?? '')
@@ -15,7 +16,8 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
   const [senaraiGuru, setSenaraiGuru] = useState(laporan?.senaraiGuruBertugas ?? [])
   const [ppmTerpilih, setPpmTerpilih] = useState(() => new Set((laporan?.senaraiPPMBertugas ?? []).map((p) => p.emel)))
   const [ppmDiautoisi, setPpmDiautoisi] = useState(Boolean(laporan))
-  const [rumusanGuruMangkir, setRumusanGuruMangkir] = useState(laporan?.rumusanGuruMangkir ?? [])
+  const [guruMangkirTerpilih, setGuruMangkirTerpilih] = useState(() => new Set((laporan?.rumusanGuruMangkir ?? []).map((r) => r.emel)))
+  const [guruMangkirDiautoisi, setGuruMangkirDiautoisi] = useState(Boolean(laporan))
   const [rumusanMuridSakit, setRumusanMuridSakit] = useState(laporan?.rumusanMuridSakit ?? [])
   const [laporanPDPC, setLaporanPDPC] = useState(laporan?.laporanPDPC ?? '')
   const [kokurikulumAktif, setKokurikulumAktif] = useState(laporan?.kokurikulumAktif ?? false)
@@ -102,23 +104,42 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
     setSenaraiGuru((s) => s.filter((g) => g.emel !== emel))
   }
 
-  function tambahGuruMangkir() {
-    setRumusanGuruMangkir((s) => [...s, { emel: '', nama: '', sebab: '' }])
+  // "Mangkir" = ada rekod Keberadaan yang buat mereka TAK berada di sekolah -
+  // kecuali KWB (bukan tak hadir sepanjang hari) dan Rasmi (Berada di Sekolah)
+  // (masih di sekolah, cuma urusan rasmi). Sebab = catatan (wajib diisi masa
+  // Keberadaan disubmit).
+  const guruMangkirCadangan = useMemo(() => {
+    return keberadaanSenarai
+      .filter((r) => {
+        if (r.urusan === 'Keluar Waktu Bekerja (KWB)') return false
+        if (r.urusan === 'Rasmi' && r.jenis === 'Rasmi (Berada di sekolah)') return false
+        return true
+      })
+      .map((r) => {
+        const p = guruAktif.find((g) => g.emel === r.profilEmel)
+        if (!p) return null // bukan Guru (PPM/AKP) - tak masuk Rumusan Guru Mangkir
+        return { emel: r.profilEmel, nama: p.nama, sebab: r.catatan || r.jenis || '-' }
+      })
+      .filter(Boolean)
+  }, [keberadaanSenarai, guruAktif])
+
+  useEffect(() => {
+    if (guruMangkirDiautoisi) return
+    setGuruMangkirTerpilih(new Set(guruMangkirCadangan.map((g) => g.emel)))
+    setGuruMangkirDiautoisi(true)
+  }, [guruMangkirCadangan, guruMangkirDiautoisi])
+
+  function segarkanGuruMangkir() {
+    setGuruMangkirTerpilih(new Set(guruMangkirCadangan.map((g) => g.emel)))
   }
-  function ubahGuruMangkir(i, medan, nilai) {
-    setRumusanGuruMangkir((s) => {
-      const baru = [...s]
-      if (medan === 'emel') {
-        const p = guruAktif.find((g) => g.emel === nilai)
-        baru[i] = { ...baru[i], emel: nilai, nama: p?.nama ?? '' }
-      } else {
-        baru[i] = { ...baru[i], [medan]: nilai }
-      }
+
+  function togglGuruMangkir(emel) {
+    setGuruMangkirTerpilih((s) => {
+      const baru = new Set(s)
+      if (baru.has(emel)) baru.delete(emel)
+      else baru.add(emel)
       return baru
     })
-  }
-  function buangGuruMangkir(i) {
-    setRumusanGuruMangkir((s) => s.filter((_, idx) => idx !== i))
   }
 
   function tambahMuridSakit() {
@@ -173,7 +194,7 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
       kumpulanBertugasNama: kumpulan?.nama ?? null,
       senaraiGuruBertugas: senaraiGuru,
       senaraiPPMBertugas: ppmKelasAktif.filter((p) => ppmTerpilih.has(p.emel)).map((p) => ({ emel: p.emel, nama: p.nama })),
-      rumusanGuruMangkir: rumusanGuruMangkir.filter((r) => r.emel && r.sebab.trim()),
+      rumusanGuruMangkir: guruMangkirCadangan.filter((g) => guruMangkirTerpilih.has(g.emel)),
       rumusanMuridSakit: rumusanMuridSakit.filter((r) => r.idMurid && r.sebab.trim()),
       laporanPDPC: laporanPDPC.trim(),
       kokurikulumAktif,
@@ -300,24 +321,26 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
 
         <div className="p-4 rounded-card border border-border bg-surface">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-inkmuted uppercase tracking-wide">Rumusan Guru Mangkir</p>
-            <button type="button" onClick={tambahGuruMangkir} className="flex items-center gap-1 text-xs font-semibold text-brand-red">
-              <Plus size={13} /> Tambah
+            <p className="text-xs font-semibold text-inkmuted uppercase tracking-wide">
+              Rumusan Guru Mangkir ({[...guruMangkirTerpilih].length})
+            </p>
+            <button type="button" onClick={segarkanGuruMangkir} className="flex items-center gap-1 text-xs font-medium text-brand-red">
+              <RefreshCw size={11} /> Segarkan
             </button>
           </div>
-          {rumusanGuruMangkir.length === 0 ? (
-            <p className="text-xs text-inkmuted">Tiada.</p>
+          <p className="text-[10px] text-inkmuted mb-2">Diambil automatik dari Keberadaan (Rasmi Tiada di Sekolah / Cuti) - KWB & Rasmi Berada di Sekolah tak dikira.</p>
+          {guruMangkirCadangan.length === 0 ? (
+            <p className="text-xs text-inkmuted">Tiada guru mangkir untuk tarikh ni.</p>
           ) : (
-            <div className="space-y-2">
-              {rumusanGuruMangkir.map((r, i) => (
-                <div key={i} className="flex gap-2 items-start">
-                  <select value={r.emel} onChange={(e) => ubahGuruMangkir(i, 'emel', e.target.value)} className="h-10 px-2 rounded-card border border-border bg-base text-xs flex-1 min-w-0">
-                    <option value="">-- Nama Guru --</option>
-                    {guruAktif.map((g) => <option key={g.emel} value={g.emel}>{g.nama}</option>)}
-                  </select>
-                  <input type="text" placeholder="Sebab" value={r.sebab} onChange={(e) => ubahGuruMangkir(i, 'sebab', e.target.value)} className="h-10 px-2 rounded-card border border-border bg-base text-xs flex-1 min-w-0" />
-                  <button type="button" onClick={() => buangGuruMangkir(i)} className="p-2 text-brand-red shrink-0"><X size={14} /></button>
-                </div>
+            <div className="space-y-1">
+              {guruMangkirCadangan.map((g) => (
+                <label key={g.emel} className="flex items-start gap-2 px-3 py-2 rounded-card bg-base text-sm cursor-pointer">
+                  <input type="checkbox" checked={guruMangkirTerpilih.has(g.emel)} onChange={() => togglGuruMangkir(g.emel)} className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>
+                    <span className="text-ink font-medium">{g.nama}</span>
+                    <span className="text-inkmuted"> - {g.sebab}</span>
+                  </span>
+                </label>
               ))}
             </div>
           )}
@@ -337,10 +360,11 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
               {rumusanMuridSakit.map((r, i) => (
                 <div key={i} className="p-2 rounded-card bg-base space-y-1.5">
                   <div className="flex gap-2">
-                    <select value={r.idMurid} onChange={(e) => ubahMuridSakit(i, 'idMurid', e.target.value)} className="h-10 px-2 rounded-card border border-border bg-surface text-xs flex-1 min-w-0">
-                      <option value="">-- Nama Murid --</option>
-                      {muridSenarai.map((m) => <option key={m.idMurid} value={m.idMurid}>{m.nama}</option>)}
-                    </select>
+                    <PilihMuridCarian
+                      muridSenarai={muridSenarai}
+                      value={r.idMurid}
+                      onChange={(idMurid) => ubahMuridSakit(i, 'idMurid', idMurid)}
+                    />
                     <button type="button" onClick={() => buangMuridSakit(i)} className="p-2 text-brand-red shrink-0"><X size={14} /></button>
                   </div>
                   <input type="text" placeholder="Sebab" value={r.sebab} onChange={(e) => ubahMuridSakit(i, 'sebab', e.target.value)} className="w-full h-10 px-2 rounded-card border border-border bg-surface text-xs" />
@@ -358,19 +382,23 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
           </div>
 
           <div>
-            <label className="flex items-center justify-between cursor-pointer">
+            <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-ink">Kokurikulum Minggu Ini</span>
               <button
                 type="button"
                 onClick={() => setKokurikulumAktif((s) => !s)}
                 role="switch"
                 aria-checked={kokurikulumAktif}
-                className="relative h-7 w-12 rounded-full transition-colors shrink-0"
+                aria-label="Kokurikulum Minggu Ini"
+                className="relative h-7 w-12 rounded-full transition-colors shrink-0 overflow-hidden"
                 style={{ backgroundColor: kokurikulumAktif ? '#C8102E' : '#E5E5E5' }}
               >
-                <span className="absolute top-1 h-5 w-5 rounded-full bg-white transition-transform shadow" style={{ transform: kokurikulumAktif ? 'translateX(22px)' : 'translateX(4px)' }} />
+                <span
+                  className="absolute top-1 left-1 h-5 w-5 rounded-full bg-white transition-transform shadow"
+                  style={{ transform: kokurikulumAktif ? 'translateX(20px)' : 'translateX(0)' }}
+                />
               </button>
-            </label>
+            </div>
             {kokurikulumAktif && (
               <textarea rows={3} placeholder="Butiran kokurikulum minggu ini…" value={butiranKokurikulum} onChange={(e) => setButiranKokurikulum(e.target.value)} className="w-full px-3 py-2 rounded-card border border-border bg-base text-sm resize-none mt-2" />
             )}

@@ -553,7 +553,9 @@ Route `/guru-bertugas/harian`. Borang PALING kompleks dalam sistem ni - buka seb
 - **Senarai Guru Bertugas** - pilih Kumpulan (dari Kumpulan Guru Bertugas sedia ada) -> sistem auto isi ahli, buang yang tak hadir (Rasmi/Cuti) tarikh tu. Boleh edit lepas tu (buang nama), butang "Segarkan" untuk kira semula.
 - **Senarai PPM Bertugas** - auto-tick semua PPM Kelas aktif yang tak ada rekod tak hadir tarikh tu (checklist, boleh untick manual). Auto-isi CUMA sekali untuk laporan BARU (bukan bila edit rekod sedia ada, elak timpa pilihan asal).
 
-**Repeatable list:** Rumusan Guru Mangkir (nama dari dropdown Guru + sebab) dan Rumusan Murid Sakit/Pulang Awal (nama dari dropdown Murid + sebab + tindakan) - butang "+ Tambah" untuk baris baru, boleh padam baris.
+**Repeatable list:** Rumusan Murid Sakit/Pulang Awal (nama dari dropdown Murid + sebab + tindakan) - butang "+ Tambah" untuk baris baru, boleh padam baris.
+
+**Rumusan Guru Mangkir - auto-ambil dari Keberadaan (bukan manual):** dikira dari rekod Keberadaan pada tarikh tu - Rasmi (Tiada di Sekolah) atau Cuti (mana-mana jenis) dikira "mangkir"; KWB dan Rasmi (Berada di Sekolah) TIDAK dikira (bukan tak hadir sepanjang hari). Nama & catatan (sebab, medan wajib di Keberadaan) diambil terus. Papar sebagai checklist (semua tertanda secara *default*), boleh untick kalau ada yang tak patut masuk laporan.
 
 **Kokurikulum Minggu Ini** - suis on/off (default OFF), bila ON keluar *textarea* pilihan untuk butiran.
 
