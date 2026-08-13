@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react'
+import { Printer, FileSpreadsheet } from 'lucide-react'
 import { namaHari, bilanganHariDalamBulan } from '../../lib/dateUtils.js'
-import { useKehadiranJulat } from '../../hooks/useKehadiranMurid.js'
+import { useKehadiranJulat, ambilKehadiranJulat } from '../../hooks/useKehadiranMurid.js'
+import { useCetak } from '../../hooks/useCetak.js'
+import { muatTurunXlsx } from '../../lib/xlsxExport.js'
+import CetakPapanRMT from './CetakPapanRMT.jsx'
 
 const NAMA_BULAN = [
   'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun',
@@ -24,6 +28,32 @@ function pad2(n) {
   return String(n).padStart(2, '0')
 }
 
+// Pivot data kehadiran mentah -> { pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari }
+// Diekstrak supaya boleh dipakai semula untuk cetak (bukan cuma paparan langsung).
+export function kiraDataRMT(kehadiranBulan) {
+  const peta = {}
+  const hadirIkutHari = {}
+  const takHadirIkutHari = {}
+
+  kehadiranBulan.forEach((rekod) => {
+    const hari = Number(rekod.tarikh.slice(8, 10))
+    rekod.senaraiMurid.forEach((m) => {
+      if (!m.adalahRMT) return
+      if (!peta[m.idMurid]) {
+        peta[m.idMurid] = { idMurid: m.idMurid, nama: m.nama, jantina: m.jantina, namaKelas: rekod.namaKelas, tick: {} }
+      }
+      peta[m.idMurid].tick[hari] = m.hadir
+      if (m.hadir) hadirIkutHari[hari] = (hadirIkutHari[hari] ?? 0) + 1
+      else takHadirIkutHari[hari] = (takHadirIkutHari[hari] ?? 0) + 1
+    })
+  })
+
+  const senarai = Object.values(peta).sort(
+    (a, b) => a.namaKelas.localeCompare(b.namaKelas) || a.nama.localeCompare(b.nama)
+  )
+  return { pelajar: senarai, jumlahHadirIkutHari: hadirIkutHari, jumlahTakHadirIkutHari: takHadirIkutHari }
+}
+
 export default function PapanRMT() {
   const [tahun, setTahun] = useState(TAHUN_SEMASA)
   const [bulan, setBulan] = useState(new Date().getMonth() + 1)
@@ -34,35 +64,95 @@ export default function PapanRMT() {
 
   const { senarai: kehadiranBulan, loading } = useKehadiranJulat(dari, hingga)
 
-  const { pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari } = useMemo(() => {
-    const peta = {}
-    const hadirIkutHari = {}
-    const takHadirIkutHari = {}
-
-    kehadiranBulan.forEach((rekod) => {
-      const hari = Number(rekod.tarikh.slice(8, 10))
-      rekod.senaraiMurid.forEach((m) => {
-        if (!m.adalahRMT) return
-        if (!peta[m.idMurid]) {
-          peta[m.idMurid] = { idMurid: m.idMurid, nama: m.nama, jantina: m.jantina, namaKelas: rekod.namaKelas, tick: {} }
-        }
-        peta[m.idMurid].tick[hari] = m.hadir
-        if (m.hadir) hadirIkutHari[hari] = (hadirIkutHari[hari] ?? 0) + 1
-        else takHadirIkutHari[hari] = (takHadirIkutHari[hari] ?? 0) + 1
-      })
-    })
-
-    const senarai = Object.values(peta).sort(
-      (a, b) => a.namaKelas.localeCompare(b.namaKelas) || a.nama.localeCompare(b.nama)
-    )
-    return { pelajar: senarai, jumlahHadirIkutHari: hadirIkutHari, jumlahTakHadirIkutHari: takHadirIkutHari }
-  }, [kehadiranBulan])
+  const { pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari } = useMemo(
+    () => kiraDataRMT(kehadiranBulan),
+    [kehadiranBulan]
+  )
 
   const senaraiHari = Array.from({ length: hariDalamBulan }, (_, i) => i + 1)
 
+  const [dataCetak, setDataCetak] = useCetak()
+  const [memuatkanCetak, setMemuatkanCetak] = useState(false)
+  const [memuatkanExcel, setMemuatkanExcel] = useState(false)
+
+  function janaAOA(k) {
+    const senaraiHariBulan = Array.from({ length: k.hariDalamBulan }, (_, idx) => idx + 1)
+    const header = ['Bil', 'Nama Murid', 'Jantina', 'Kelas', ...senaraiHariBulan.map(String)]
+    const baris = k.pelajar.map((p, idx) => [
+      idx + 1,
+      p.nama,
+      p.jantina === 'LELAKI' ? 'L' : p.jantina === 'PEREMPUAN' ? 'P' : '-',
+      p.namaKelas,
+      ...senaraiHariBulan.map((h) => (p.tick[h] === true ? '/' : p.tick[h] === false ? '0' : '')),
+    ])
+    const jumlahTH = ['', '', '', 'Jumlah Tidak Hadir', ...senaraiHariBulan.map((h) => k.jumlahTakHadirIkutHari[h] ?? '')]
+    const jumlahH = ['', '', '', 'Jumlah Hadir', ...senaraiHariBulan.map((h) => k.jumlahHadirIkutHari[h] ?? '')]
+    return [header, ...baris, jumlahTH, jumlahH]
+  }
+
+  function excelBulanIni() {
+    const aoa = janaAOA({ tahun, bulan, hariDalamBulan, pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari })
+    muatTurunXlsx(`Papan-RMT-${NAMA_BULAN[bulan - 1]}-${tahun}.xlsx`, [{ namaHelaian: `${NAMA_BULAN[bulan - 1]} ${tahun}`, aoa }])
+  }
+
+  async function excelTahunPenuh() {
+    setMemuatkanExcel(true)
+    try {
+      const helaianSenarai = []
+      for (let b = 1; b <= 12; b++) {
+        const hariDlmBulanNi = bilanganHariDalamBulan(tahun, b)
+        const dariB = `${tahun}-${pad2(b)}-01`
+        const hinggaB = `${tahun}-${pad2(b)}-${pad2(hariDlmBulanNi)}`
+        const kehadiranB = await ambilKehadiranJulat(dariB, hinggaB)
+        const dataB = kiraDataRMT(kehadiranB)
+        if (dataB.pelajar.length > 0) {
+          helaianSenarai.push({
+            namaHelaian: NAMA_BULAN[b - 1],
+            aoa: janaAOA({ tahun, bulan: b, hariDalamBulan: hariDlmBulanNi, ...dataB }),
+          })
+        }
+      }
+      if (helaianSenarai.length === 0) {
+        window.alert('Tiada rekod RMT untuk tahun ni langsung.')
+        return
+      }
+      muatTurunXlsx(`Papan-RMT-${tahun}-Tahun-Penuh.xlsx`, helaianSenarai)
+    } finally {
+      setMemuatkanExcel(false)
+    }
+  }
+
+  function cetakBulanIni() {
+    setDataCetak([{ tahun, bulan, hariDalamBulan, pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari }])
+  }
+
+  async function cetakTahunPenuh() {
+    setMemuatkanCetak(true)
+    try {
+      const semuaBulan = []
+      for (let b = 1; b <= 12; b++) {
+        const hariDlmBulanNi = bilanganHariDalamBulan(tahun, b)
+        const dariB = `${tahun}-${pad2(b)}-01`
+        const hinggaB = `${tahun}-${pad2(b)}-${pad2(hariDlmBulanNi)}`
+        const kehadiranB = await ambilKehadiranJulat(dariB, hinggaB)
+        const { pelajar: pelajarB, jumlahHadirIkutHari: hadirB, jumlahTakHadirIkutHari: takHadirB } = kiraDataRMT(kehadiranB)
+        if (pelajarB.length > 0) {
+          semuaBulan.push({ tahun, bulan: b, hariDalamBulan: hariDlmBulanNi, pelajar: pelajarB, jumlahHadirIkutHari: hadirB, jumlahTakHadirIkutHari: takHadirB })
+        }
+      }
+      if (semuaBulan.length === 0) {
+        window.alert('Tiada rekod RMT untuk tahun ni langsung.')
+        return
+      }
+      setDataCetak(semuaBulan)
+    } finally {
+      setMemuatkanCetak(false)
+    }
+  }
+
   return (
     <div>
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5 flex-wrap items-center">
         <select
           value={bulan}
           onChange={(e) => setBulan(Number(e.target.value))}
@@ -81,6 +171,18 @@ export default function PapanRMT() {
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <button onClick={cetakBulanIni} className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink">
+          <Printer size={14} /> Cetak Bulan Ini
+        </button>
+        <button onClick={cetakTahunPenuh} disabled={memuatkanCetak} className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink disabled:opacity-60">
+          <Printer size={14} /> {memuatkanCetak ? 'Memuatkan…' : 'Cetak Tahun Penuh'}
+        </button>
+        <button onClick={excelBulanIni} className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink">
+          <FileSpreadsheet size={14} /> Excel Bulan Ini
+        </button>
+        <button onClick={excelTahunPenuh} disabled={memuatkanExcel} className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink disabled:opacity-60">
+          <FileSpreadsheet size={14} /> {memuatkanExcel ? 'Memuatkan…' : 'Excel Tahun Penuh'}
+        </button>
       </div>
 
       {loading ? (
@@ -162,6 +264,8 @@ export default function PapanRMT() {
       <p className="text-xs text-inkmuted mt-3">
         / = hadir (RMT hari tu) · 0 = RMT tapi tak hadir · petak kosong = tiada data / bukan RMT hari tu (contoh: berubah ke Asrama)
       </p>
+
+      {dataCetak && <CetakPapanRMT kumpulan={dataCetak} />}
     </div>
   )
 }

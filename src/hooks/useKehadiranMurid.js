@@ -65,6 +65,14 @@ export function useKehadiranJulat(dari, hingga) {
   return { senarai, loading, muatSemula }
 }
 
+// Versi bukan-hook (fungsi biasa) - untuk cetak pukal, tak perlu render React.
+export async function ambilKehadiranJulat(dari, hingga) {
+  if (!isFirebaseConfigured || !dari || !hingga) return []
+  const q = query(collection(db, KOLEKSI), where('tarikh', '>=', dari), where('tarikh', '<=', hingga))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
 // senaraiMurid: [{ idMurid, nama, hadir: bool, adalahRMT: bool }, ...]
 export async function simpanKehadiranKelas(tarikh, namaKelas, senaraiMurid, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')

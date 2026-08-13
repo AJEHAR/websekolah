@@ -46,4 +46,13 @@ input:focus-visible {
   .print-page-break {
     page-break-after: always;
   }
+  /* Landskap - untuk jadual lebar (Papan RMT, Papan UBKS). Sokong Chrome/Edge
+     (named pages) - fallback pengguna pilih Landskap manual dalam dialog cetak
+     kalau pelayar tak sokong. */
+  .cetak-landskap {
+    page: landskap;
+  }
+  @page landskap {
+    size: A4 landscape;
+  }
 }

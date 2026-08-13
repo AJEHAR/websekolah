@@ -1,8 +1,11 @@
 import { Fragment, useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Printer, FileSpreadsheet } from 'lucide-react'
 import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
 import { useKehadiranUBKSTahun } from '../../hooks/useKehadiranUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
+import { useCetak } from '../../hooks/useCetak.js'
+import { muatTurunXlsx } from '../../lib/xlsxExport.js'
+import CetakPapanUBKS from './CetakPapanUBKS.jsx'
 
 const TAHUN_SEMASA = new Date().getFullYear()
 const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
@@ -78,6 +81,28 @@ export default function PapanUBKS() {
 
   const pelajarDitapis = pelajar.filter((p) => p.nama?.toLowerCase().includes(carian.toLowerCase()))
   const loading = loadingUnit || loadingKehadiran
+  const [dataCetak, setDataCetak] = useCetak()
+
+  function excelPapan() {
+    const header = ['Bil', 'Nama Murid', 'Tahun']
+    kategoriSenarai.forEach((k) => {
+      for (let pj = 1; pj <= 12; pj++) header.push(`${k.kod}-${pj}`)
+      header.push(`${k.kod}-Jum`)
+    })
+    const baris = pelajar.map((p, i) => {
+      const row = [i + 1, p.nama, p.tahunTingkatan]
+      kategoriSenarai.forEach((k) => {
+        const data = p.ikutKategori[k.kod]
+        for (let pj = 1; pj <= 12; pj++) {
+          const status = data.unitId ? data.perjumpaanStatus[pj] : null
+          row.push(status === true ? '/' : status === false ? '0' : (data.unitId ? '' : '-'))
+        }
+        row.push(data.unitId ? data.jumlahHadir : '-')
+      })
+      return row
+    })
+    muatTurunXlsx(`Papan-UBKS-${tahunSesi}.xlsx`, [{ namaHelaian: `Sesi ${tahunSesi}`, aoa: [header, ...baris] }])
+  }
 
   return (
     <div>
@@ -105,6 +130,18 @@ export default function PapanUBKS() {
             className="w-full h-11 pl-9 pr-3 rounded-card border border-border bg-surface text-sm"
           />
         </div>
+        <button
+          onClick={() => setDataCetak(true)}
+          className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
+        >
+          <Printer size={14} /> Cetak
+        </button>
+        <button
+          onClick={excelPapan}
+          className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
+        >
+          <FileSpreadsheet size={14} /> Excel
+        </button>
       </div>
 
       {loading ? (
@@ -192,6 +229,8 @@ export default function PapanUBKS() {
       <p className="text-xs text-inkmuted mt-3">
         / = hadir · 0 = tak hadir · petak kosong = murid tiada unit dalam kategori tu
       </p>
+
+      {dataCetak && <CetakPapanUBKS tahunSesi={tahunSesi} kategoriSenarai={kategoriSenarai} pelajar={pelajar} />}
     </div>
   )
 }

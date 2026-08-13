@@ -4,7 +4,10 @@ export default function KepalaSuratCetak({ tajukLaporan }) {
       <img src="/logo-cetak.png" alt="Logo Sekolah" className="h-20 mx-auto object-contain" />
       <p className="text-base font-bold uppercase mt-2">Sekolah Kebangsaan Pendidikan Khas Kuantan</p>
       {tajukLaporan && (
-        <p className="text-sm font-bold uppercase mt-4">{tajukLaporan}</p>
+        <>
+          <div className="w-24 border-b-2 border-black mx-auto mt-3 mb-3" />
+          <p className="text-2xl font-bold uppercase tracking-wide">{tajukLaporan}</p>
+        </>
       )}
     </div>
   )

@@ -612,6 +612,23 @@ Guna dialog Cetak/Save PDF **browser sendiri** (Ctrl+P) - tiada pustaka luar. Te
 
 **Nak tambah laporan lain untuk cetak kemudian** (contoh Kehadiran UBKS): cipta `Cetak<Nama>.jsx` guna `KepalaSuratCetak` + `RuangTandatangan` + `PrintArea`, tambah butang Printer + `useCetak()` pada page sedia ada - komponen kongsi dah wujud, tak perlu bina dari kosong.
 
+## Kemas Kini Sistem Cetak (fasa 2: reka bentuk + RMT/UBKS)
+
+**Reka bentuk dinaikkan taraf (semua 3 laporan sedia ada):**
+- Tajuk laporan dibesarkan (`text-2xl`, dengan garis pemisah kecil di bawah nama sekolah) - lebih menonjol
+- Komponen baru `components/cetak/KadStatistikCetak.jsx` - kad bulat kelabu (macam UI app) untuk papar Kehadiran Guru/Murid dalam Laporan Harian
+- Komponen baru `components/cetak/SenaraiBulletCetak.jsx` - senarai bullet kemas untuk Rumusan Guru Mangkir & Murid Sakit/Pulang Awal (ganti teks sambung koma)
+
+**Cetak landskap (jadual lebar):** `.cetak-landskap` class dalam `index.css` (CSS Named Pages - `@page landskap { size: A4 landscape; }`) - sokong Chrome/Edge. Kalau pelayar tak sokong, pengguna cuma perlu pilih "Landskap" manual dalam dialog cetak.
+
+**Papan Kehadiran RMT** (`/ebanci/papan-rmt`) - 2 butang cetak:
+- **Cetak Bulan Ini** - bulan/tahun yang dipilih sahaja, satu muka surat
+- **Cetak Tahun Penuh** - semua 12 bulan tahun tu (yang ada rekod sahaja), setiap bulan satu muka surat berasingan
+- Fungsi pivot data (`kiraDataRMT()`) diekstrak dalam `PapanRMT.jsx` supaya boleh dipakai semula untuk cetak pukal (tanpa perlu React hook)
+- `ambilKehadiranJulat()` (fungsi biasa, bukan hook) ditambah dalam `useKehadiranMurid.js` untuk fetch data pelbagai bulan berturut-turut
+
+**Papan Kehadiran UBKS** (`/eubks/kehadiran-ubks`, tab Papan Kehadiran) - satu butang **Cetak** - papar SEMUA murid (bukan ikut carian semasa), semua kategori UB/K/S dengan warna yang sama macam paparan skrin.
+
 ## Cara Tambah Page Baru
 
 **Page biasa (tiada sub-page):**
