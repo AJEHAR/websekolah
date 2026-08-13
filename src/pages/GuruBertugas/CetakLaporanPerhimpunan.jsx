@@ -1,10 +1,10 @@
 import KepalaSuratCetak from '../../components/cetak/KepalaSuratCetak.jsx'
 import PrintArea from '../../components/cetak/PrintArea.jsx'
 
-function Seksyen({ tajuk, teks }) {
+function Seksyen({ tajuk, adaTitikBertindih = true, teks }) {
   return (
     <div className="mb-5">
-      <p className="text-sm font-bold uppercase mb-1.5">{tajuk}:</p>
+      <p className="text-sm font-bold uppercase mb-1.5">{tajuk}{adaTitikBertindih ? ':' : ''}</p>
       <p className="text-sm whitespace-pre-wrap">{teks || '-'}</p>
     </div>
   )
@@ -25,7 +25,7 @@ export default function CetakLaporanPerhimpunan({ senarai }) {
           <p className="mb-5"><strong>DILAPORKAN OLEH</strong> : {l.dilaporkanOleh}</p>
 
           <Seksyen tajuk="Pendidikan Sivik" teks={l.laporanSivik} />
-          <Seksyen tajuk="Hal-Hal Lain" teks={l.halLain} />
+          <Seksyen tajuk="Ha-Hal Lain" adaTitikBertindih={false} teks={l.halLain} />
 
           <div className="mb-5">
             <p className="text-sm font-bold uppercase mb-1.5">Ucapan Pentadbir: {l.namaPentadbir}</p>
