@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
+import ButangTerapung from './components/ButangTerapung.jsx'
 import Home from './pages/Home.jsx'
 import Galeri from './pages/Galeri.jsx'
 import Hubungi from './pages/Hubungi.jsx'
@@ -41,10 +42,8 @@ import DaftarMasuk from './pages/MaklumatMurid/DaftarMasuk.jsx'
 import DaftarKeluar from './pages/MaklumatMurid/DaftarKeluar.jsx'
 import SemakanMurid from './pages/MaklumatMurid/SemakanMurid.jsx'
 import Analisis from './pages/MaklumatMurid/Analisis.jsx'
-import EBanciLayout from './pages/EBanci/EBanciLayout.jsx'
-import EBanciHub from './pages/EBanci/EBanciHub.jsx'
-import KehadiranMurid from './pages/EBanci/KehadiranMurid.jsx'
-import PapanRMT from './pages/EBanci/PapanRMT.jsx'
+import KehadiranMurid from './pages/MaklumatMurid/KehadiranMurid.jsx'
+import KehadiranRMT from './pages/MaklumatMurid/PapanRMT.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
 import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
 import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
@@ -56,6 +55,8 @@ import KurikulumHub from './pages/Kurikulum/KurikulumHub.jsx'
 import BorangPLC from './pages/Kurikulum/BorangPLC.jsx'
 import RPI from './pages/Kurikulum/RPI.jsx'
 import RPT from './pages/Kurikulum/RPT.jsx'
+import TemplateKertasKerja from './pages/Kurikulum/TemplateKertasKerja.jsx'
+import KoleksiPekeliling from './pages/Kurikulum/KoleksiPekeliling.jsx'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext.jsx'
 import { useAksesStatus } from './hooks/useAksesStatus.js'
@@ -93,6 +94,7 @@ function PenggeraAksesTerhad({ children }) {
 }
 
 export default function App() {
+  const { user } = useAuth()
   return (
     <div className="min-h-dvh flex flex-col bg-base">
       <Navbar />
@@ -149,23 +151,28 @@ export default function App() {
             <Route path="perhimpunan" element={<LaporanPerhimpunan />} />
           </Route>
 
-          {/* Maklumat Murid - Daftar Masuk/Keluar, Maklumat Asas */}
+          {/* HEM - Daftar Masuk/Keluar, Maklumat Asas, Kehadiran
+              Murid & RMT (dulu seksyen berasingan "eBanci" - digabung sini
+              sebab sama-sama kerja guru kelas berkaitan rekod murid, bukan
+              tugas guru bertugas - lihat Laporan Banci di bawah Guru
+              Bertugas untuk peranan yang berbeza: pemantauan merentas kelas) */}
           <Route path="/maklumat-murid" element={<MaklumatMuridLayout />}>
             <Route index element={<MaklumatMuridHub />} />
             <Route path="analisis" element={<Analisis />} />
             <Route path="semakan" element={<SemakanMurid />} />
             <Route path="daftar-masuk" element={<DaftarMasuk />} />
             <Route path="daftar-keluar" element={<DaftarKeluar />} />
-          </Route>
-
-          {/* eBanci - Kehadiran Murid, Papan Kehadiran RMT */}
-          <Route path="/ebanci" element={<EBanciLayout />}>
-            <Route index element={<EBanciHub />} />
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
-            <Route path="papan-rmt" element={<PapanRMT />} />
+            <Route path="kehadiran-rmt" element={<KehadiranRMT />} />
           </Route>
 
-          {/* eUBKS Ko - hub dengan akses pantas, + 4 sub-page */}
+          {/* URL lama "/ebanci/*" (seksyen dah digabung ke HEM) -
+              redirect supaya pautan/bookmark sedia ada staff tak terus mati. */}
+          <Route path="/ebanci" element={<Navigate to="/maklumat-murid" replace />} />
+          <Route path="/ebanci/kehadiran-murid" element={<Navigate to="/maklumat-murid/kehadiran-murid" replace />} />
+          <Route path="/ebanci/papan-rmt" element={<Navigate to="/maklumat-murid/kehadiran-rmt" replace />} />
+
+          {/* KOKU - hub dengan akses pantas, + 4 sub-page */}
           <Route path="/eubks" element={<EUBKSLayout />}>
             <Route index element={<EUBKSHub />} />
             <Route path="murid-ubks" element={<MuridUBKS />} />
@@ -174,18 +181,21 @@ export default function App() {
             <Route path="perancangan-ubks" element={<PerancanganUBKS />} />
           </Route>
 
-          {/* Kurikulum - hub dengan akses pantas, + sub-page (pengisian ditambah kemudian) */}
+          {/* KURI - hub dengan akses pantas, + sub-page (pengisian ditambah kemudian) */}
           <Route path="/kurikulum" element={<KurikulumLayout />}>
             <Route index element={<KurikulumHub />} />
             <Route path="borang-plc" element={<BorangPLC />} />
             <Route path="rpi" element={<RPI />} />
             <Route path="rpt" element={<RPT />} />
+            <Route path="template-kertas-kerja" element={<TemplateKertasKerja />} />
+            <Route path="koleksi-pekeliling" element={<KoleksiPekeliling />} />
           </Route>
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}
         </Routes>
         </PenggeraAksesTerhad>
       </div>
+      {user && <ButangTerapung />}
     </div>
   )
 }

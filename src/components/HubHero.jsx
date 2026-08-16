@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 
 // Komponen hero kongsi - dipakai oleh semua hub seksyen (Keberadaan, Guru
-// Bertugas, Maklumat Murid, eBanci, Panel Admin, eUBKS Ko). Setiap seksyen
+// Bertugas, HEM, Kokurikulum/UBKS, Kurikulum, Panel Admin).
 // hantar warna gradient & senarai akses pantas sendiri. gambarTelefon/
 // gambarDesktop pilihan - kalau ada, papar gambar (dengan scrim gelap untuk
 // pastikan teks putih sentiasa jelas dibaca); kalau tiada, gradient jadi latar.

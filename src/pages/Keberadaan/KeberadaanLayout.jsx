@@ -7,7 +7,7 @@ const TAJUK_SUBPAGE = {
   '/keberadaan/daftar': 'Daftar Keberadaan',
   '/keberadaan/hari-ini': 'Hari Ini',
   '/keberadaan/esok': 'Esok',
-  '/keberadaan/log': 'Log',
+  '/keberadaan/log': 'Log Keberadaan',
   '/keberadaan/saya': 'Rekod Saya',
 }
 

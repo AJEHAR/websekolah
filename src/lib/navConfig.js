@@ -9,7 +9,7 @@ export const NAV_ITEMS = [
       { label: 'Daftar Keberadaan', to: '/keberadaan/daftar' },
       { label: 'Hari Ini', to: '/keberadaan/hari-ini' },
       { label: 'Esok', to: '/keberadaan/esok' },
-      { label: 'Log', to: '/keberadaan/log' },
+      { label: 'Log Keberadaan', to: '/keberadaan/log' },
       { label: 'Rekod Saya', to: '/keberadaan/saya' },
     ],
   },
@@ -19,31 +19,25 @@ export const NAV_ITEMS = [
     children: [
       { label: 'Kumpulan', to: '/guru-bertugas/kumpulan' },
       { label: 'Laporan 3K', to: '/guru-bertugas/3k' },
-      { label: 'Jana Banci', to: '/guru-bertugas/banci' },
+      { label: 'Laporan Banci', to: '/guru-bertugas/banci' },
       { label: 'Laporan Harian', to: '/guru-bertugas/harian' },
       { label: 'Laporan Perhimpunan', to: '/guru-bertugas/perhimpunan' },
     ],
   },
   {
-    label: 'Maklumat Murid',
+    label: 'HEM',
     to: '/maklumat-murid',
     children: [
       { label: 'Analisis', to: '/maklumat-murid/analisis' },
       { label: 'Semakan Murid', to: '/maklumat-murid/semakan' },
       { label: 'Daftar Masuk Murid', to: '/maklumat-murid/daftar-masuk' },
       { label: 'Daftar Keluar Murid', to: '/maklumat-murid/daftar-keluar' },
+      { label: 'Kehadiran Murid', to: '/maklumat-murid/kehadiran-murid' },
+      { label: 'Kehadiran RMT', to: '/maklumat-murid/kehadiran-rmt' },
     ],
   },
   {
-    label: 'eBanci',
-    to: '/ebanci',
-    children: [
-      { label: 'Kehadiran Murid', to: '/ebanci/kehadiran-murid' },
-      { label: 'Papan Kehadiran RMT', to: '/ebanci/papan-rmt' },
-    ],
-  },
-  {
-    label: 'eUBKS Ko',
+    label: 'KOKU',
     to: '/eubks',
     children: [
       { label: 'Murid UBKS', to: '/eubks/murid-ubks' },
@@ -53,12 +47,14 @@ export const NAV_ITEMS = [
     ],
   },
   {
-    label: 'Kurikulum',
+    label: 'KURI',
     to: '/kurikulum',
     children: [
-      { label: 'Borang PLC', to: '/kurikulum/borang-plc' },
+      { label: 'Laporan PLC', to: '/kurikulum/borang-plc' },
       { label: 'RPI', to: '/kurikulum/rpi' },
       { label: 'RPT', to: '/kurikulum/rpt' },
+      { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja' },
+      { label: 'Koleksi Pekeliling', to: '/kurikulum/koleksi-pekeliling' },
       // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -
       // update juga kurikulumAksesPantas.js dan TAJUK_SUBPAGE dalam
       // KurikulumLayout.jsx, + <Route> baru dalam App.jsx.

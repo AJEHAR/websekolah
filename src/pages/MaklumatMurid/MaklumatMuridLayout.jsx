@@ -8,6 +8,8 @@ const TAJUK_SUBPAGE = {
   '/maklumat-murid/semakan': 'Semakan Murid',
   '/maklumat-murid/daftar-masuk': 'Daftar Masuk Murid',
   '/maklumat-murid/daftar-keluar': 'Daftar Keluar Murid',
+  '/maklumat-murid/kehadiran-murid': 'Kehadiran Murid',
+  '/maklumat-murid/kehadiran-rmt': 'Kehadiran RMT',
 }
 
 export default function MaklumatMuridLayout() {
@@ -19,7 +21,7 @@ export default function MaklumatMuridLayout() {
     return (
       <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
         <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
-          <h1 className="text-xl font-bold text-ink">Maklumat Murid</h1>
+          <h1 className="text-xl font-bold text-ink">HEM</h1>
           <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
           <button
             onClick={() => signInWithGoogle('login')}
@@ -39,9 +41,9 @@ export default function MaklumatMuridLayout() {
       ) : (
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
           <Link to="/maklumat-murid" className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4 w-fit">
-            <ChevronLeft size={14} /> Home Maklumat Murid
+            <ChevronLeft size={14} /> Home HEM
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-ink">Maklumat Murid</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-ink">HEM</h1>
           <p className="text-xs text-inkmuted mt-1 mb-5">
             {TAJUK_SUBPAGE[location.pathname] ?? ''}
           </p>

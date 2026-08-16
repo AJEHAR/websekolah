@@ -6,8 +6,8 @@ export default function MaklumatMuridHub() {
   const { latar } = useLatarHub('maklumat-murid')
   return (
     <HubHero
-      title="Maklumat Murid"
-      subtitle="Data, analisis & pendaftaran murid"
+      title="HEM"
+      subtitle="Data, analisis, pendaftaran & kehadiran murid"
       gradient="linear-gradient(160deg, #16240B 0%, #27500A 55%, #639922 130%)"
       aksesTeks="#27500A"
       gambarTelefon={latar?.gambarTelefon}

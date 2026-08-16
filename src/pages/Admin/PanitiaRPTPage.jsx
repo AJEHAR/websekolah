@@ -9,7 +9,7 @@ export default function PanitiaRPTPage() {
   const { user } = useOutletContext()
   const { adaSeksyen } = useIsAdmin(user)
   return (
-    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="kurikulum" namaSeksyen="Kurikulum">
+    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="kurikulum" namaSeksyen="KURI">
       <Isi />
     </AdminSeksyenGate>
   )

@@ -6,7 +6,7 @@ export default function EUBKSHub() {
   const { latar } = useLatarHub('eubks')
   return (
     <HubHero
-      title="eUBKS Ko"
+      title="KOKU"
       subtitle="Unit Beruniform, Kelab dan Sukan"
       gradient="linear-gradient(160deg, #1A1A1A 0%, #4A0E16 55%, #C8102E 130%)"
       aksesTeks="#C8102E"

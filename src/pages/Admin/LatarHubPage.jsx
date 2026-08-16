@@ -8,11 +8,10 @@ import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 const SEKSYEN_SENARAI = [
   { kunci: 'keberadaan', label: 'Keberadaan' },
   { kunci: 'guru-bertugas', label: 'Guru Bertugas' },
-  { kunci: 'maklumat-murid', label: 'Maklumat Murid' },
-  { kunci: 'ebanci', label: 'eBanci' },
+  { kunci: 'maklumat-murid', label: 'HEM' },
   { kunci: 'admin', label: 'Panel Admin' },
-  { kunci: 'eubks', label: 'eUBKS Ko' },
-  { kunci: 'kurikulum', label: 'Kurikulum' },
+  { kunci: 'eubks', label: 'KOKU' },
+  { kunci: 'kurikulum', label: 'KURI' },
 ]
 
 export default function LatarHubPage() {

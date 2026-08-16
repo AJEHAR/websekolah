@@ -19,7 +19,7 @@ export default function EUBKSLayout() {
     return (
       <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
         <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
-          <h1 className="text-xl font-bold text-ink">eUBKS Ko</h1>
+          <h1 className="text-xl font-bold text-ink">KOKU</h1>
           <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
           <button
             onClick={() => signInWithGoogle('login')}
@@ -41,7 +41,7 @@ export default function EUBKSLayout() {
           <Link to="/eubks" className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4 w-fit">
             <ChevronLeft size={14} /> Home UBKS
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-ink">eUBKS Ko</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-ink">KOKU</h1>
           <p className="text-xs text-inkmuted mt-1 mb-5">
             {TAJUK_SUBPAGE[location.pathname] ?? ''}
           </p>

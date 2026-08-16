@@ -101,7 +101,7 @@ export async function padamKehadiranKelas(tarikh, namaKelas) {
   await deleteDoc(doc(db, KOLEKSI, idKehadiran(tarikh, namaKelas)))
 }
 
-// Semua rekod kehadiran untuk satu bulan (semua kelas) - untuk Papan Kehadiran RMT
+// Semua rekod kehadiran untuk satu bulan (semua kelas) - untuk Kehadiran RMT
 export function useKehadiranBulan(tahun, bulan) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)

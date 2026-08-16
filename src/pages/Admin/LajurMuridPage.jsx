@@ -9,7 +9,7 @@ export default function LajurMuridPage() {
   const { user } = useOutletContext()
   const { adaSeksyen } = useIsAdmin(user)
   return (
-    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="murid" namaSeksyen="Murid">
+    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="murid" namaSeksyen="HEM">
       <Isi />
     </AdminSeksyenGate>
   )

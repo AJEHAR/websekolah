@@ -4,9 +4,11 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import AksesGate from '../../components/AksesGate.jsx'
 
 const TAJUK_SUBPAGE = {
-  '/kurikulum/borang-plc': 'Borang PLC',
+  '/kurikulum/borang-plc': 'Laporan PLC',
   '/kurikulum/rpi': 'RPI',
   '/kurikulum/rpt': 'RPT',
+  '/kurikulum/template-kertas-kerja': 'Template Kertas Kerja',
+  '/kurikulum/koleksi-pekeliling': 'Koleksi Pekeliling',
 }
 
 export default function KurikulumLayout() {
@@ -18,7 +20,7 @@ export default function KurikulumLayout() {
     return (
       <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
         <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
-          <h1 className="text-xl font-bold text-ink">Kurikulum</h1>
+          <h1 className="text-xl font-bold text-ink">KURI</h1>
           <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
           <button
             onClick={() => signInWithGoogle('login')}
@@ -38,9 +40,9 @@ export default function KurikulumLayout() {
       ) : (
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
           <Link to="/kurikulum" className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4 w-fit">
-            <ChevronLeft size={14} /> Home Kurikulum
+            <ChevronLeft size={14} /> Home KURI
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-ink">Kurikulum</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-ink">KURI</h1>
           <p className="text-xs text-inkmuted mt-1 mb-5">
             {TAJUK_SUBPAGE[location.pathname] ?? ''}
           </p>

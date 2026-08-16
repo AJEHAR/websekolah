@@ -13,8 +13,8 @@ const IKON = {
   '/keberadaan': CalendarCheck,
   '/guru-bertugas': Users,
   '/maklumat-murid': GraduationCap,
-  '/ebanci': ClipboardList,
   '/eubks': Award,
+  '/kurikulum': ClipboardList,
   '/profil': User,
   '/admin': ShieldCheck,
 }

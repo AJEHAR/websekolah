@@ -9,7 +9,7 @@ export default function KategoriUBKSPage() {
   const { user } = useOutletContext()
   const { adaSeksyen } = useIsAdmin(user)
   return (
-    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="ubks" namaSeksyen="eUBKS Ko">
+    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="ubks" namaSeksyen="KOKU">
       <Isi />
     </AdminSeksyenGate>
   )

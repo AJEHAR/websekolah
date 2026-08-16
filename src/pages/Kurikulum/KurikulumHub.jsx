@@ -6,7 +6,7 @@ export default function KurikulumHub() {
   const { latar } = useLatarHub('kurikulum')
   return (
     <HubHero
-      title="Kurikulum"
+      title="KURI"
       subtitle="Borang PLC, RPI & RPT"
       gradient="linear-gradient(160deg, #052E2B 0%, #0B6E64 55%, #2DD4BF 130%)"
       aksesTeks="#0B6E64"
