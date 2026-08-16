@@ -42,7 +42,10 @@ const HAD_SAIZ_BAIT = 20 * 1024 * 1024 // 20MB
 const JENIS_FAIL_DIBENARKAN = {
   rpt: ['application/pdf'],
   profil: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-  kehadiran: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  // Keberadaan ("Dokumen Berkaitan") terima PDF (surat rasmi/lampiran)
+  // SELAIN gambar - client (KeberadaanForm.jsx) dah izin
+  // accept="application/pdf,image/*", jadi senarai server MESTI sepadan.
+  kehadiran: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'],
   unitUBKS: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
   latarHub: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
 }
