@@ -22,7 +22,7 @@ export default function EUBKSLayout() {
           <h1 className="text-xl font-bold text-ink">eUBKS Ko</h1>
           <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
           <button
-            onClick={signInWithGoogle}
+            onClick={() => signInWithGoogle('login')}
             className="mt-6 h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold"
           >
             Log Masuk dengan Google

@@ -2,14 +2,26 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Menu, ChevronDown } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { useIsAdmin } from '../hooks/useIsAdmin.js'
+import { useAksesStatus } from '../hooks/useAksesStatus.js'
+import { useTetapanPendaftaran } from '../hooks/useTetapanPendaftaran.js'
 import { NAV_ITEMS, ADMIN_NAV_ITEM } from '../lib/navConfig.js'
 import SideDrawer from './SideDrawer.jsx'
 
 export default function Navbar() {
   const { user, signInWithGoogle, signOutUser } = useAuth()
-  const { isAdmin } = useIsAdmin(user)
-  const links = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS
+  const { status, isAdmin } = useAksesStatus(user)
+  const { dibuka: pendaftaranDibuka } = useTetapanPendaftaran()
+
+  // Staff belum diluluskan admin (atau belum isi profile lagi) - jangan
+  // dedah struktur menu dalaman (nama seksyen/sub-halaman). Cuma "Profil"
+  // ditunjukkan supaya dia boleh semak status/isi maklumat sendiri.
+  // Admin dikecualikan - status 'admin' ditentukan berasingan. PENTING:
+  // semak `user` dulu - useAksesStatus(null) (pengunjung belum log masuk)
+  // turut pulangkan status 'belum-profile' (sebab tiada rekod profile),
+  // tanpa semakan `user` di sini pengunjung AWAM pun tersalah kena sekat.
+  const belumLulus = Boolean(user) && (status === 'menunggu' || status === 'belum-profile' || status === 'disekat')
+  const itemAsas = belumLulus ? NAV_ITEMS.filter((l) => l.to === '/profil') : NAV_ITEMS
+  const links = isAdmin ? [...itemAsas, ADMIN_NAV_ITEM] : itemAsas
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -90,12 +102,24 @@ export default function Navbar() {
                   Log Keluar
                 </button>
               ) : (
-                <button
-                  onClick={signInWithGoogle}
-                  className="ml-2 px-4 py-2 rounded-card text-sm font-semibold bg-brand-red hover:opacity-90 transition-opacity"
-                >
-                  Log Masuk Google
-                </button>
+                <div className="ml-2 flex items-center gap-2">
+                  <button
+                    onClick={() => signInWithGoogle('login')}
+                    title="Untuk staff yang SUDAH ada akaun berdaftar"
+                    className="px-4 py-2 rounded-card text-sm font-semibold bg-brand-red hover:opacity-90 transition-opacity"
+                  >
+                    Log Masuk
+                  </button>
+                  {pendaftaranDibuka && (
+                    <button
+                      onClick={() => signInWithGoogle('daftar')}
+                      title="Untuk staff BARU yang belum ada akaun"
+                      className="px-4 py-2 rounded-card text-sm font-semibold border border-white/30 hover:bg-white/10"
+                    >
+                      Daftar
+                    </button>
+                  )}
+                </div>
               )}
             </nav>
           </div>
@@ -107,7 +131,9 @@ export default function Navbar() {
         onClose={() => setDrawerOpen(false)}
         links={links}
         user={user}
-        onSignIn={signInWithGoogle}
+        onLogin={() => signInWithGoogle('login')}
+        onDaftar={() => signInWithGoogle('daftar')}
+        pendaftaranDibuka={pendaftaranDibuka}
         onSignOut={signOutUser}
       />
     </>

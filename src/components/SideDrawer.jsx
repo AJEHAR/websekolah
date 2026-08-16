@@ -19,7 +19,7 @@ const IKON = {
   '/admin': ShieldCheck,
 }
 
-export default function SideDrawer({ open, onClose, links, user, onSignIn, onSignOut }) {
+export default function SideDrawer({ open, onClose, links, user, onLogin, onDaftar, pendaftaranDibuka, onSignOut }) {
   const location = useLocation()
   const [dibuka, setDibuka] = useState({})
 
@@ -152,12 +152,25 @@ export default function SideDrawer({ open, onClose, links, user, onSignIn, onSig
               </div>
             </div>
           ) : (
-            <button
-              onClick={() => { onSignIn(); onClose() }}
-              className="w-full h-12 rounded-full bg-brand-red text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-soft hover:opacity-90 transition-opacity"
-            >
-              <LogIn size={17} /> Log Masuk dengan Google
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => { onLogin(); onClose() }}
+                className="w-full h-12 rounded-full bg-brand-red text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-soft hover:opacity-90 transition-opacity"
+              >
+                <LogIn size={17} /> Log Masuk
+              </button>
+              {pendaftaranDibuka && (
+                <button
+                  onClick={() => { onDaftar(); onClose() }}
+                  className="w-full h-11 rounded-full border border-border text-ink text-sm font-semibold flex items-center justify-center gap-2 hover:bg-base"
+                >
+                  Daftar (staff baru)
+                </button>
+              )}
+              <p className="text-[11px] text-inkmuted text-center mt-2">
+                Khas untuk staff SK Pendidikan Khas Kuantan sahaja.
+              </p>
+            </div>
           )}
         </div>
 

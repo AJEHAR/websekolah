@@ -3,6 +3,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ============================================================
+    // FUNGSI ASAS
+    // ============================================================
+
     // Admin ditentukan oleh kewujudan dokumen di koleksi 'admins' dengan
     // ID = emel admin. Contoh: admins/pengetua@moe-dl.edu.my
     function adaRekodAdmin() {
@@ -39,23 +43,121 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email == emelDokumen;
     }
 
+    // ID dokumen profile/sekatan untuk emel semasa - MESTI sepadan dengan
+    // emelKeDocId() dalam src/lib/emelUtils.js (client).
+    function emelDocIdSendiri() {
+      return request.auth.token.email.lower().trim().replace('/', '_');
+    }
+
+    // Sama ada emel pengguna SEMASA disekat kekal daripada mendaftar
+    // (lihat koleksi emelDisekat di bawah - diurus admin, isi bila admin
+    // "Tolak & Sekat Kekal" permohonan yang jelas bukan staff sekolah).
+    function emelDisekatSendiri() {
+      return exists(/databases/$(database)/documents/emelDisekat/$(emelDocIdSendiri()));
+    }
+
+    // Suis awam "pendaftaran staff baru dibuka/ditutup" (tetapanAwam/pendaftaran).
+    // Tiada dokumen lagi = anggap TERBUKA (lalai selamat untuk sistem baru
+    // sebelum admin sempat tetapkan apa-apa - padan dengan lalai client).
+    function pendaftaranDibuka() {
+      return !exists(/databases/$(database)/documents/tetapanAwam/pendaftaran) ||
+        get(/databases/$(database)/documents/tetapanAwam/pendaftaran).data.get('dibuka', true) == true;
+    }
+
+    // Sama ada ID dokumen (path) sepadan dengan profile pengguna SENDIRI.
+    // Sengaja guna ID path (bukan resource.data.emel) sebab kena selamat
+    // untuk kes dokumen BELUM WUJUD lagi (staff kali pertama log masuk,
+    // belum cipta profile) - resource.data akan ranap (permission-denied)
+    // kalau resource == null, tapi ID path sentiasa boleh dinilai.
+    function isProfilSendiriById(id) {
+      return request.auth != null && id == emelDocIdSendiri();
+    }
+
+    // Status profile staff SEMASA ('menunggu' | 'diluluskan' | tiada langsung).
+    // Profile lama tanpa medan 'status' dianggap 'diluluskan' (padan dengan
+    // useAksesStatus.js di client - elak "downgrade" staff sedia ada).
+    function statusProfilSendiri() {
+      return exists(/databases/$(database)/documents/profiles/$(emelDocIdSendiri()))
+        ? get(/databases/$(database)/documents/profiles/$(emelDocIdSendiri())).data.get('status', 'diluluskan')
+        : 'tiada-profile';
+    }
+
+    // PENJAGA UTAMA data sensitif sekolah: mesti dah log masuk DAN (admin
+    // ATAU profile staff sendiri berstatus 'diluluskan'). Ini pembeza
+    // penting antara "dah log masuk Google" dengan "staff sekolah yang
+    // diluluskan admin" - sebab log masuk Google TIDAK dihadkan kepada
+    // domain emel sekolah (lihat firebase.js), sesiapa sahaja di dunia
+    // boleh cipta akaun Google dan log masuk. Tanpa fungsi ni, status
+    // 'menunggu' cuma kawalan paparan (UI) semata-mata, bukan kawalan
+    // data sebenar - orang luar yang belum diluluskan boleh terus baca
+    // (malah tulis) semua data sensitif murid/staff sebelum admin sempat
+    // tolak/lulus mereka.
+    function isStaffDiluluskan() {
+      return request.auth != null && (isAdmin() || statusProfilSendiri() == 'diluluskan');
+    }
+
+    // ============================================================
+    // KOLEKSI
+    // ============================================================
+
     // Urus admin/peranan - SUPER ADMIN SAHAJA (elak admin seksyen naikkan
     // diri sendiri/orang lain jadi admin penuh - lubang keselamatan).
+    // 'get' (baca SATU dokumen - emel sendiri) dibuka kepada sesiapa log
+    // masuk sebab setiap pengguna (termasuk staff belum diluluskan) perlu
+    // semak "adakah saya admin" (useIsAdmin.js). 'list' (baca SEMUA
+    // dokumen admin sekali gus - senarai penuh emel+peranan admin)
+    // dihadkan kepada admin sahaja - elak sesiapa yang baru log masuk
+    // (belum diluluskan pun) boleh enumerate senarai penuh admin sekolah.
     match /admins/{emelAdmin} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if isAdmin();
       allow create: if isSuperAdmin();
       allow update: if isSuperAdmin();
       allow delete: if isSuperAdmin() && emelAdmin != request.auth.token.email;
     }
 
-    match /profiles/{docId} {
-      // Semua staff yang log masuk boleh baca (termasuk No. IC)
-      allow read: if request.auth != null;
+    // Senarai emel disekat kekal daripada mendaftar (lihat emelDisekatSendiri()
+    // di atas). 'get' dibuka kepada sesiapa log masuk TAPI cuma untuk EMEL
+    // SENDIRI (setiap pengguna perlu semak status sekatan diri - useSekatan.js -
+    // tapi tak patut boleh teka/semak status sekatan emel ORANG LAIN satu-satu).
+    // 'list' (senarai penuh utk Panel Admin) & tulis (sekat/buka sekatan) -
+    // SUPER ADMIN SAHAJA, selaras dengan kelulusan/tolakan profile staff
+    // (satu aliran keputusan yang sama, bukan didelegasi ke admin seksyen).
+    match /emelDisekat/{emelId} {
+      allow get: if request.auth != null && emelId == emelDocIdSendiri();
+      allow list: if isSuperAdmin();
+      allow write: if isSuperAdmin();
+    }
 
-      // Self-register: staff cipta profile sendiri MESTI status='menunggu'.
-      // Kelulusan/urus profile staff lain - SUPER ADMIN SAHAJA (bukan admin seksyen).
+    // Tetapan awam (cth. suis pendaftaran dibuka/ditutup) - MESTI boleh
+    // dibaca sesiapa sahaja (termasuk pengunjung belum log masuk langsung)
+    // sebab guna untuk tentukan sama ada tunjuk butang "Daftar" SEBELUM
+    // orang tu log masuk pun. Tulis - SUPER ADMIN SAHAJA.
+    match /tetapanAwam/{docId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    match /profiles/{docId} {
+      // Staff diluluskan/admin boleh baca semua profile (termasuk No. IC).
+      // Staff SENDIRI (walaupun masih 'menunggu', atau malah SEBELUM
+      // profile dicipta lagi - staff kali pertama log masuk) boleh baca
+      // profile sendiri - perlu untuk paparkan/edit borang Profile, dan
+      // untuk dapat jawapan "tiada wujud" yang bersih (bukan ranap) bila
+      // staff baru belum cipta profile. Ini juga selamat untuk operasi
+      // 'list': Firestore nilai peraturan ni bagi SETIAP dokumen dalam
+      // keputusan query, jadi staff belum diluluskan yang cuba list()
+      // seluruh koleksi cuma dapat balik dokumen sendiri sahaja (kalau
+      // wujud), bukan semua orang.
+      allow read: if isStaffDiluluskan() || isProfilSendiriById(docId);
+
+      // Self-register: staff cipta profile sendiri MESTI status='menunggu',
+      // emel MESTI tidak disekat kekal, DAN pendaftaran mesti dibuka.
+      // Kelulusan/urus profile staff lain (termasuk pra-daftar oleh admin
+      // walaupun pendaftaran awam ditutup) - SUPER ADMIN SAHAJA.
       allow create: if isSuperAdmin() ||
-        (isPemilik(request.resource.data.emel) && request.resource.data.status == 'menunggu');
+        (isPemilik(request.resource.data.emel) && request.resource.data.status == 'menunggu' &&
+         !emelDisekatSendiri() && pendaftaranDibuka());
 
       allow update: if isSuperAdmin() ||
         (isPemilik(resource.data.emel) && request.resource.data.status == resource.data.status);
@@ -65,102 +167,137 @@ service cloud.firestore {
 
     // Koleksi utama 'kehadiran' - rekod keberadaan semua staff.
     match /kehadiran/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       // Override oleh admin (edit/padam rekod orang lain) - SUPER ADMIN SAHAJA.
-      allow create: if isSuperAdmin() || isPemilik(request.resource.data.profilEmel);
-      allow update: if isSuperAdmin() || isPemilik(resource.data.profilEmel);
-      allow delete: if isSuperAdmin() || isPemilik(resource.data.profilEmel);
+      allow create: if isSuperAdmin() || (isStaffDiluluskan() && isPemilik(request.resource.data.profilEmel));
+      allow update: if isSuperAdmin() || (isStaffDiluluskan() && isPemilik(resource.data.profilEmel));
+      allow delete: if isSuperAdmin() || (isStaffDiluluskan() && isPemilik(resource.data.profilEmel));
     }
 
     // Kumpulan Guru Bertugas & senarai Tugas kongsi - seksyen 'guru-bertugas'.
     match /kumpulanBertugas/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isAdminSeksyen('guru-bertugas');
     }
 
     match /tugasBertugas/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isAdminSeksyen('guru-bertugas');
     }
 
     // Blok Laporan 3K - seksyen 'guru-bertugas' (Laporan 3K hidup bawah Guru Bertugas).
     match /blokLaporan3K/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isAdminSeksyen('guru-bertugas');
     }
 
-    // Rekod Laporan 3K harian - mana-mana staff log masuk boleh isi/kemas kini.
+    // Rekod Laporan 3K harian - mana-mana staff DILULUSKAN boleh isi/kemas kini.
     match /laporan3K/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
     }
 
-    // Laporan Perhimpunan - mana-mana staff log masuk boleh isi/kemas kini.
+    // Laporan Perhimpunan - mana-mana staff DILULUSKAN boleh isi/kemas kini.
     match /laporanPerhimpunan/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
     }
 
-    // Laporan Harian - mana-mana staff log masuk boleh isi/kemas kini.
+    // Laporan Harian - mana-mana staff DILULUSKAN boleh isi/kemas kini.
     match /laporanHarian/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    // Laporan PLC (Kurikulum) - mana-mana staff DILULUSKAN boleh isi/kemas kini.
+    match /laporanPLC/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
     }
 
     // Maklumat Murid - seksyen 'murid'. Data sangat sensitif (IC penjaga,
-    // kewangan, OKU) - baca umum, tulis/import terhad seksyen 'murid' sahaja.
+    // kewangan, OKU) - baca staff diluluskan, tulis/import terhad seksyen 'murid' sahaja.
     match /murid/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isAdminSeksyen('murid');
     }
 
     // Tetapan sistem (contoh: lajurMurid) - seksyen 'murid'.
     match /tetapan/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isAdminSeksyen('murid');
     }
 
-    // Kehadiran Murid - mana-mana staff log masuk boleh isi kehadiran mana-mana kelas.
+    // Kehadiran Murid - mana-mana staff DILULUSKAN boleh isi kehadiran mana-mana kelas.
     match /kehadiranMurid/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
     }
 
     // Nilai "hari belajar dari bulan lepas" untuk Papan Kehadiran RMT.
     match /hariBelajarRMT/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
     }
 
     // Unit UBKS - seksyen 'ubks'.
     match /unitUBKS/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isAdminSeksyen('ubks');
     }
 
-    // Gambar latar hub setiap seksyen - baca umum, tulis SUPER ADMIN sahaja
+    // Gambar latar hub setiap seksyen - baca staff diluluskan, tulis SUPER ADMIN sahaja
     // (jejas paparan SEMUA seksyen, bukan satu domain fungsian sahaja).
     match /latarHub/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isSuperAdmin();
     }
 
     // Kategori Unit UBKS (UB/K/S/lain-lain) - seksyen 'ubks'.
     match /kategoriUBKS/{docId} {
-      allow read: if request.auth != null;
+      allow read: if isStaffDiluluskan();
       allow write: if isAdminSeksyen('ubks');
     }
 
-    // Kehadiran UBKS - mana-mana staff log masuk boleh isi kehadiran mana-mana unit.
-    match /kehadiranUBKS/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+    // Panitia & Kategori RPT (Kurikulum) - senarai diurus admin seksyen 'kurikulum'.
+    match /panitiaRPT/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isAdminSeksyen('kurikulum');
+    }
+    match /kategoriRPT/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isAdminSeksyen('kurikulum');
     }
 
-    // Perancangan UBKS - mana-mana staff log masuk boleh isi (biasanya guru unit sendiri).
+    // Laporan RPT (dokumen PDF dimuat naik) - mana-mana staff DILULUSKAN
+    // boleh muat naik/kemas kini (termasuk tukar guru bagi pihak orang lain).
+    match /laporanRPT/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    // RPI (Rancangan Pendidikan Individu) & Rumusan Prasidang - mana-mana
+    // staff DILULUSKAN boleh isi/kemas kini (data sensitif murid, tapi
+    // semua staff Pendidikan Khas perlu akses baca untuk kerja harian).
+    match /rpi/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+    match /rpiPrasidang/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    // Kehadiran UBKS - mana-mana staff DILULUSKAN boleh isi kehadiran mana-mana unit.
+    match /kehadiranUBKS/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    // Perancangan UBKS - mana-mana staff DILULUSKAN boleh isi (biasanya guru unit sendiri).
     match /perancanganUBKS/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
     }
   }
 }

@@ -163,7 +163,7 @@ Gambar profile & dokumen keberadaan disimpan di **Google Drive**, bukan Firebase
 1. Pergi ke [script.google.com](https://script.google.com) → New project
 2. Padam kod default, salin-tampal **semua** kandungan `appscript/Code.gs` daripada projek ni
 3. Project Settings (ikon gear) → Script Properties → Add property:
-   - `RAHSIA_UPLOAD` = satu rentetan rahsia rawak (contoh: `skpk-2026-x9k2m`) - anda cipta sendiri
+   - `FIREBASE_API_KEY` = sama nilai dengan `VITE_FIREBASE_API_KEY` dalam `.env` anda (ni **bukan** rahsia - API key Firebase memang reka bentuk untuk didedahkan awam, dilindungi oleh Firestore Security Rules, bukan kerahsiaan)
 4. Deploy → New deployment → Type: **Web app**
    - Execute as: **Me**
    - Who has access: **Anyone**
@@ -171,12 +171,11 @@ Gambar profile & dokumen keberadaan disimpan di **Google Drive**, bukan Firebase
 6. Dalam `.env` projek React, isi:
    ```
    VITE_APPS_SCRIPT_URL=<web app URL dari langkah 5>
-   VITE_DRIVE_UPLOAD_SECRET=<sama dengan RAHSIA_UPLOAD di langkah 3>
    ```
 
-Fail akan disimpan dalam Google Drive akaun yang deploy Apps Script ni, di bawah folder "Laman Web Sekolah - Upload" (folder dicipta automatik, dengan sub-folder `profil` dan `kehadiran`).
+Fail akan disimpan dalam Google Drive akaun yang deploy Apps Script ni, di bawah folder "Laman Web Sekolah - Upload" (folder dicipta automatik, dengan sub-folder `profil`, `kehadiran`, `latarHub` dan `rpt` - dicipta automatik ikut keperluan, tak perlu setup manual).
 
-**Nota keselamatan:** kaedah "rahsia dikongsi" (`RAHSIA_UPLOAD`) ni mudah tapi bukan sempurna - sesiapa yang tahu URL + rahsia boleh upload fail. Memandangkan Web App URL & rahsia tak terdedah dalam kod client (cuma dalam `.env`, tak commit ke git), risiko rendah untuk kegunaan dalaman sekolah. Kalau nak lebih selamat kemudian, boleh tambah pengesahan token Firebase Auth dalam `doPost()`.
+**Nota keselamatan:** Endpoint ni sahkan **Firebase ID Token** pengguna semasa terus dengan Google (Identity Toolkit REST API dalam `doPost()`) - bukan "rahsia dikongsi" statik. Ini penting: sebarang nilai `VITE_*` di projek Vite **dibakar terus ke fail JS awam** semasa `npm run build` (reka bentuk asas Vite, bukan bug) - jadi kalau guna rahsia statik dalam `.env`, ia **akan** terdedah dalam bundle JS yang dihantar ke setiap pelawat laman web, walaupun fail `.env` sendiri tak pernah di-commit ke git. Pengesahan ID Token elak isu ni sepenuhnya - token disahkan setiap kali, luput ~1 jam, tak boleh dipalsukan. Server (`Code.gs`) juga semak jenis & saiz fail (bukan setakat di browser) dan ada had kadar asas (40 muat naik/jam setiap staff) untuk elak spam.
 
 **Kalau `.env` kosong:** upload gambar/dokumen akan gagal dengan mesej "Google Drive upload belum disetup" (bukan crash) - selaras dengan cara app ni "downgrade" bila Firebase pun belum disetup.
 

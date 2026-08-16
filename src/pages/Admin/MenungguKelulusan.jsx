@@ -1,7 +1,8 @@
-import { Check, X } from 'lucide-react'
+import { Check, X, ShieldBan } from 'lucide-react'
 import { luluskanProfile, padamProfileAdmin } from '../../hooks/useAdminProfiles.js'
+import { sekatEmel } from '../../hooks/useSenaraiSekatan.js'
 
-export default function MenungguKelulusan({ profiles, loading, onSelesai }) {
+export default function MenungguKelulusan({ profiles, loading, onSelesai, admin }) {
   const senarai = profiles.filter((p) => p.status === 'menunggu')
 
   async function lulus(emel) {
@@ -10,8 +11,20 @@ export default function MenungguKelulusan({ profiles, loading, onSelesai }) {
   }
 
   async function tolak(emel) {
-    if (!window.confirm('Tolak permohonan ni? Profile akan dipadam dan staff perlu daftar semula.')) return
+    if (!window.confirm('Tolak permohonan ni? Profile akan dipadam dan staff BOLEH mohon semula (cth. kalau maklumat borang tersalah).')) return
     await padamProfileAdmin(emel)
+    onSelesai()
+  }
+
+  async function tolakDanSekat(emel) {
+    const sebab = window.prompt(
+      `Sekat "${emel}" KEKAL daripada mendaftar semula - guna untuk yang JELAS BUKAN staff sekolah ini.\n\nSebab (pilihan, untuk rekod):`,
+      ''
+    )
+    if (sebab === null) return // batal prompt
+    if (!window.confirm(`Pasti nak sekat "${emel}" KEKAL? Dia takkan boleh mendaftar semula sehingga admin buka sekatan secara manual.`)) return
+    await padamProfileAdmin(emel)
+    await sekatEmel(emel, sebab, admin?.email, admin?.displayName || admin?.email)
     onSelesai()
   }
 
@@ -49,9 +62,17 @@ export default function MenungguKelulusan({ profiles, loading, onSelesai }) {
               onClick={() => tolak(p.emel)}
               aria-label="Tolak"
               className="p-2 rounded-card hover:bg-base text-brand-red"
-              title="Tolak"
+              title="Tolak (boleh mohon semula)"
             >
               <X size={18} />
+            </button>
+            <button
+              onClick={() => tolakDanSekat(p.emel)}
+              aria-label="Tolak & Sekat Kekal"
+              className="p-2 rounded-card hover:bg-base text-brand-red"
+              title="Tolak & Sekat Kekal (untuk yang jelas bukan staff)"
+            >
+              <ShieldBan size={18} />
             </button>
           </div>
         </div>

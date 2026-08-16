@@ -32,7 +32,6 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_APPS_SCRIPT_URL: ${{ secrets.VITE_APPS_SCRIPT_URL }}
-          VITE_DRIVE_UPLOAD_SECRET: ${{ secrets.VITE_DRIVE_UPLOAD_SECRET }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist

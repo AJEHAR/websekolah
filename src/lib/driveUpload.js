@@ -1,5 +1,6 @@
+import { auth } from './firebase.js'
+
 const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL
-const RAHSIA_UPLOAD = import.meta.env.VITE_DRIVE_UPLOAD_SECRET
 
 export const isDriveUploadConfigured = Boolean(APPS_SCRIPT_URL)
 
@@ -51,13 +52,23 @@ function failKeBase64(fail) {
 // Muat naik fail ke Google Drive melalui Apps Script Web App.
 // subfolder: 'profil'/'kehadiran'/'unitUBKS' dll - untuk susun fail ikut kategori dalam Drive.
 // Pulangkan { url, previewUrl, fileId, fileName }.
+//
+// KESELAMATAN: Guna Firebase ID Token pengguna semasa (bukan "rahsia" statik)
+// supaya Apps Script boleh sahkan permintaan ni betul-betul datang dari staff
+// yang log masuk sistem - lihat nota panjang dalam appscript/Code.gs untuk
+// sebab perubahan ni (rahsia statik lama terbukti terdedah dalam bundle JS awam).
 export async function muatNaikKeDrive(failAsal, subfolder) {
   if (!isDriveUploadConfigured) {
     throw new Error('Google Drive upload belum disetup (isi VITE_APPS_SCRIPT_URL dalam .env)')
   }
+  if (!auth?.currentUser) {
+    throw new Error('Sesi log masuk tidak dijumpai. Sila log masuk semula sebelum muat naik fail.')
+  }
   if (failAsal.size > SAIZ_MAKS_ASAL) {
     throw new Error('Fail terlalu besar (maksimum 20MB). Sila pilih gambar lain.')
   }
+
+  const idToken = await auth.currentUser.getIdToken()
 
   const fail = await mampatkanGambar(failAsal)
   const base64Data = await failKeBase64(fail)
@@ -73,7 +84,7 @@ export async function muatNaikKeDrive(failAsal, subfolder) {
       // elak isu CORS preflight dengan Apps Script Web App.
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
-        secret: RAHSIA_UPLOAD,
+        idToken,
         fileName: fail.name,
         mimeType: fail.type,
         base64Data,

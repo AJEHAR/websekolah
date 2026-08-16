@@ -12,6 +12,7 @@ const SEKSYEN_SENARAI = [
   { kunci: 'ebanci', label: 'eBanci' },
   { kunci: 'admin', label: 'Panel Admin' },
   { kunci: 'eubks', label: 'eUBKS Ko' },
+  { kunci: 'kurikulum', label: 'Kurikulum' },
 ]
 
 export default function LatarHubPage() {

@@ -52,6 +52,18 @@ export const NAV_ITEMS = [
       { label: 'Perancangan UBKS', to: '/eubks/perancangan-ubks' },
     ],
   },
+  {
+    label: 'Kurikulum',
+    to: '/kurikulum',
+    children: [
+      { label: 'Borang PLC', to: '/kurikulum/borang-plc' },
+      { label: 'RPI', to: '/kurikulum/rpi' },
+      { label: 'RPT', to: '/kurikulum/rpt' },
+      // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -
+      // update juga kurikulumAksesPantas.js dan TAJUK_SUBPAGE dalam
+      // KurikulumLayout.jsx, + <Route> baru dalam App.jsx.
+    ],
+  },
   { label: 'Profil', to: '/profil' },
 ]
 
@@ -62,10 +74,13 @@ export const ADMIN_NAV_ITEM = {
   children: [
     { label: 'Staff', to: '/admin/staff' },
     { label: 'Menunggu Kelulusan', to: '/admin/menunggu' },
+    { label: 'Emel Disekat', to: '/admin/sekatan' },
     { label: 'Pentadbir', to: '/admin/pentadbir' },
     { label: 'Blok 3K', to: '/admin/blok3k' },
     { label: 'Lajur Murid', to: '/admin/lajur-murid' },
     { label: 'Kategori UBKS', to: '/admin/kategori-ubks' },
+    { label: 'Panitia RPT', to: '/admin/panitia-rpt' },
+    { label: 'Kategori RPT', to: '/admin/kategori-rpt' },
     { label: 'Latar Belakang Hub', to: '/admin/latar-hub' },
     { label: 'Import Laporan Perhimpunan', to: '/admin/import-perhimpunan' },
     { label: 'Reset Data Ujian', to: '/admin/reset-data' },

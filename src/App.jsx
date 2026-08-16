@@ -18,10 +18,13 @@ import AdminLayout from './pages/Admin/AdminLayout.jsx'
 import AdminHub from './pages/Admin/AdminHub.jsx'
 import StaffPage from './pages/Admin/StaffPage.jsx'
 import MenungguPage from './pages/Admin/MenungguPage.jsx'
+import SenaraiSekatanPage from './pages/Admin/SenaraiSekatanPage.jsx'
 import PentadbirPage from './pages/Admin/PentadbirPage.jsx'
 import Blok3KPage from './pages/Admin/Blok3KPage.jsx'
 import LajurMuridPage from './pages/Admin/LajurMuridPage.jsx'
 import KategoriUBKSPage from './pages/Admin/KategoriUBKSPage.jsx'
+import PanitiaRPTPage from './pages/Admin/PanitiaRPTPage.jsx'
+import KategoriRPTPage from './pages/Admin/KategoriRPTPage.jsx'
 import LatarHubPage from './pages/Admin/LatarHubPage.jsx'
 import ImportLaporanPerhimpunanPage from './pages/Admin/ImportLaporanPerhimpunanPage.jsx'
 import ResetDataPage from './pages/Admin/ResetDataPage.jsx'
@@ -48,23 +51,44 @@ import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
 import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
 import LaporanUBKS from './pages/EUBKS/LaporanUBKS.jsx'
 import PerancanganUBKS from './pages/EUBKS/PerancanganUBKS.jsx'
+import KurikulumLayout from './pages/Kurikulum/KurikulumLayout.jsx'
+import KurikulumHub from './pages/Kurikulum/KurikulumHub.jsx'
+import BorangPLC from './pages/Kurikulum/BorangPLC.jsx'
+import RPI from './pages/Kurikulum/RPI.jsx'
+import RPT from './pages/Kurikulum/RPT.jsx'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext.jsx'
 import { useAksesStatus } from './hooks/useAksesStatus.js'
 
-// Paksa staff yang log masuk TAPI belum ada profile terus ke /profil - tak
-// kira page mana pun mereka cuba akses. Elak isu "staff tak tahu kena isi
-// profile" sebab sebelum ni cuma mesej + pautan dalam AksesGate (boleh
-// diabaikan/tak disedari).
-function PenggeraPaksaProfil({ children }) {
+// Kawal akaun yang belum LENGKAP diluluskan - dua kes:
+// 1. 'belum-profile' (staff kali pertama log masuk, tak ada profile
+//    lagi) - paksa ke /profil supaya isi borang wajib.
+// 2. 'menunggu' (dah isi profile, tapi admin belum luluskan) - hadkan
+//    ke Utama ('/') + Profil sahaja. Sebelum ni staff status 'menunggu'
+//    masih boleh nampak PENUH struktur menu (nama semua seksyen/sub-
+//    halaman dalaman) walaupun data sendiri disekat oleh AksesGate/
+//    Firestore rules - bukan kebocoran data, tapi tak selaras dengan
+//    dasar "tak nampak apa-apa sehingga admin sahkan". Redirect terus
+//    ke Utama lebih bersih berbanding skrin "Menunggu Kelulusan" bagi
+//    setiap seksyen satu-satu.
+// Admin (status='admin' dari useAksesStatus, walaupun profile sendiri
+// belum 'diluluskan') TIDAK terjejas peraturan ni - admin ditentukan
+// berasingan daripada aliran kelulusan profile staff.
+function PenggeraAksesTerhad({ children }) {
   const { user } = useAuth()
   const { status, loading } = useAksesStatus(user)
   const location = useLocation()
 
   if (!user || loading) return children
+
   if (status === 'belum-profile' && location.pathname !== '/profil') {
     return <Navigate to="/profil" replace />
   }
+
+  if ((status === 'menunggu' || status === 'disekat') && location.pathname !== '/' && location.pathname !== '/profil') {
+    return <Navigate to="/" replace />
+  }
+
   return children
 }
 
@@ -73,7 +97,7 @@ export default function App() {
     <div className="min-h-dvh flex flex-col bg-base">
       <Navbar />
       <div className="flex-1">
-        <PenggeraPaksaProfil>
+        <PenggeraAksesTerhad>
         <Routes>
           <Route path="/" element={<Home />} />
 
@@ -103,10 +127,13 @@ export default function App() {
             <Route index element={<AdminHub />} />
             <Route path="staff" element={<StaffPage />} />
             <Route path="menunggu" element={<MenungguPage />} />
+            <Route path="sekatan" element={<SenaraiSekatanPage />} />
             <Route path="pentadbir" element={<PentadbirPage />} />
             <Route path="blok3k" element={<Blok3KPage />} />
             <Route path="lajur-murid" element={<LajurMuridPage />} />
             <Route path="kategori-ubks" element={<KategoriUBKSPage />} />
+            <Route path="panitia-rpt" element={<PanitiaRPTPage />} />
+            <Route path="kategori-rpt" element={<KategoriRPTPage />} />
             <Route path="latar-hub" element={<LatarHubPage />} />
             <Route path="import-perhimpunan" element={<ImportLaporanPerhimpunanPage />} />
             <Route path="reset-data" element={<ResetDataPage />} />
@@ -147,9 +174,17 @@ export default function App() {
             <Route path="perancangan-ubks" element={<PerancanganUBKS />} />
           </Route>
 
+          {/* Kurikulum - hub dengan akses pantas, + sub-page (pengisian ditambah kemudian) */}
+          <Route path="/kurikulum" element={<KurikulumLayout />}>
+            <Route index element={<KurikulumHub />} />
+            <Route path="borang-plc" element={<BorangPLC />} />
+            <Route path="rpi" element={<RPI />} />
+            <Route path="rpt" element={<RPT />} />
+          </Route>
+
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}
         </Routes>
-        </PenggeraPaksaProfil>
+        </PenggeraAksesTerhad>
       </div>
     </div>
   )

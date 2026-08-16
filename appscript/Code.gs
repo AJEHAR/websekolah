@@ -2,41 +2,98 @@
 // Apps Script Web App - terima upload fail dari laman web
 // sekolah dan simpan ke Google Drive (ganti Firebase Storage).
 //
+// KESELAMATAN: Endpoint ni sahkan Firebase ID Token pengguna terus
+// dengan Google (Identity Toolkit REST API) - BUKAN guna "rahsia"
+// statik. Rahsia statik yang dulu digunakan (RAHSIA_UPLOAD) terbukti
+// terdedah kepada sesiapa sahaja sebab semua VITE_* env var Vite
+// dibakar terus ke fail JS awam semasa build (bukan bug, memang reka
+// bentuk Vite) - jadi ia bukan perlindungan sebenar. Sahkan ID Token
+// pastikan permintaan datang dari staff yang BENAR-BENAR log masuk
+// sistem sekolah (token luput ~1 jam, tak boleh dipalsukan).
+//
 // CARA DEPLOY:
 // 1. Pergi ke script.google.com -> New project
 // 2. Padam kod default, salin-tampal SEMUA kod dalam fail ni
 // 3. Project Settings (ikon gear) -> Script Properties -> Add property:
-//      RAHSIA_UPLOAD = (satu rentetan rahsia rawak, contoh: skpk-2026-x9k2m)
-//    Nilai ni MESTI sama dengan VITE_DRIVE_UPLOAD_SECRET dalam .env
+//      FIREBASE_API_KEY = (sama nilai dengan VITE_FIREBASE_API_KEY dalam .env -
+//      ni BUKAN rahsia, API key Firebase memang reka bentuk untuk didedahkan
+//      awam, dilindungi oleh Firestore Security Rules bukan kerahsiaan)
 // 4. Deploy -> New deployment -> Type: "Web app"
 //      Execute as: Me
 //      Who has access: Anyone
 // 5. Salin "Web app URL" yang diberikan -> letak dalam .env sebagai
 //    VITE_APPS_SCRIPT_URL
 // 6. Setiap kali kod ni diedit, kena "Deploy" -> "Manage deployments"
-//    -> edit -> New version, supaya perubahan berkuatkuasa.
+//    -> edit -> New version, supaya perubahan berkuatkuasa (URL kekal sama).
+//
+// NOTA MIGRASI: kalau upgrade dari versi lama (guna RAHSIA_UPLOAD),
+// kemaskini Code.gs INI DULU (deploy versi baru), BARU deploy website
+// (kod React) yang hantar idToken. Susunan terbalik akan buat upload
+// gagal sekejap sehingga kedua-dua bahagian dikemaskini.
 // ============================================================
 
-const RAHSIA_UPLOAD = PropertiesService.getScriptProperties().getProperty('RAHSIA_UPLOAD')
+const FIREBASE_API_KEY = PropertiesService.getScriptProperties().getProperty('FIREBASE_API_KEY')
 const NAMA_FOLDER_INDUK = 'Laman Web Sekolah - Upload'
+
+// Had saiz & jenis fail dibenarkan ikut subfolder - disemak di SINI (server),
+// bukan setakat di browser, sebab semakan client-side mudah dipintas kalau
+// seseorang panggil endpoint ni terus (bukan melalui laman web).
+const HAD_SAIZ_BAIT = 20 * 1024 * 1024 // 20MB
+const JENIS_FAIL_DIBENARKAN = {
+  rpt: ['application/pdf'],
+  profil: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  kehadiran: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  unitUBKS: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  latarHub: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+}
+
+// Had kadar ringkas - elak spam - guna CacheService (bertahan ~ beberapa minit,
+// cukup untuk elak automasi/bot spam, bukan pengganti had kadar peringkat
+// infra sebenar tapi lebih baik daripada tiada apa-apa langsung).
+const HAD_MUAT_NAIK_SEJAM = 40
+const TEMPOH_CACHE_SAAT = 3600
 
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents)
 
-    if (!RAHSIA_UPLOAD || data.secret !== RAHSIA_UPLOAD) {
-      return jsonResponse({ error: 'Tidak dibenarkan - rahsia tidak sepadan' })
+    if (!data.idToken) {
+      return jsonResponse({ error: 'Tidak dibenarkan - sila log masuk semula.' })
     }
+
+    const emel = sahkanIdTokenDapatkanEmel(data.idToken)
+    if (!emel) {
+      return jsonResponse({ error: 'Tidak dibenarkan - sesi log masuk tidak sah atau tamat tempoh. Sila log masuk semula.' })
+    }
+
+    const semakanKadar = semakHadKadar(emel)
+    if (!semakanKadar.dibenarkan) {
+      return jsonResponse({ error: 'Terlalu banyak muat naik dalam masa singkat. Sila cuba lagi sebentar.' })
+    }
+
     if (!data.base64Data || !data.fileName) {
       return jsonResponse({ error: 'Data fail tidak lengkap' })
     }
 
+    // Anggaran saiz fail asal daripada panjang base64 (~4/3 ganda lebih besar
+    // daripada bait sebenar).
+    const anggaranBait = Math.floor((data.base64Data.length * 3) / 4)
+    if (anggaranBait > HAD_SAIZ_BAIT) {
+      return jsonResponse({ error: 'Fail terlalu besar (maksimum 20MB).' })
+    }
+
+    const subfolder = data.folder || 'lain-lain'
+    const jenisDibenarkan = JENIS_FAIL_DIBENARKAN[subfolder]
+    if (jenisDibenarkan && jenisDibenarkan.indexOf(data.mimeType) === -1) {
+      return jsonResponse({ error: 'Jenis fail tidak dibenarkan untuk kategori ini.' })
+    }
+
     const folderInduk = dapatkanAtauCiptaFolder(NAMA_FOLDER_INDUK)
-    const subfolder = dapatkanAtauCiptaFolder(data.folder || 'lain-lain', folderInduk)
+    const subfolderDrive = dapatkanAtauCiptaFolder(subfolder, folderInduk)
 
     const bytes = Utilities.base64Decode(data.base64Data)
     const blob = Utilities.newBlob(bytes, data.mimeType || 'application/octet-stream', data.fileName)
-    const file = subfolder.createFile(blob)
+    const file = subfolderDrive.createFile(blob)
 
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW)
 
@@ -49,6 +106,45 @@ function doPost(e) {
   } catch (err) {
     return jsonResponse({ error: err.message })
   }
+}
+
+// Sahkan Firebase ID Token terus dengan Google guna Identity Toolkit REST API
+// (accounts:lookup) - ni cara sahkan token tanpa Firebase Admin SDK (yang
+// tak tersedia dalam Apps Script). Pulangkan emel yang disahkan, atau null
+// kalau token tak sah/tamat/dipalsukan.
+function sahkanIdTokenDapatkanEmel(idToken) {
+  if (!FIREBASE_API_KEY) {
+    throw new Error('Apps Script belum disetup lengkap - FIREBASE_API_KEY tiada dalam Script Properties.')
+  }
+  try {
+    const res = UrlFetchApp.fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FIREBASE_API_KEY,
+      {
+        method: 'post',
+        contentType: 'application/json',
+        payload: JSON.stringify({ idToken: idToken }),
+        muteHttpExceptions: true,
+      }
+    )
+    const hasil = JSON.parse(res.getContentText())
+    if (hasil.users && hasil.users.length > 0 && hasil.users[0].email) {
+      return hasil.users[0].email
+    }
+    return null
+  } catch (err) {
+    return null
+  }
+}
+
+function semakHadKadar(emel) {
+  const cache = CacheService.getScriptCache()
+  const kunci = 'muatnaik_' + emel
+  const kiraSemasa = Number(cache.get(kunci) || '0')
+  if (kiraSemasa >= HAD_MUAT_NAIK_SEJAM) {
+    return { dibenarkan: false }
+  }
+  cache.put(kunci, String(kiraSemasa + 1), TEMPOH_CACHE_SAAT)
+  return { dibenarkan: true }
 }
 
 function dapatkanAtauCiptaFolder(nama, folderInduk) {
