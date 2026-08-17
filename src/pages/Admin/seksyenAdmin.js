@@ -3,5 +3,5 @@ export const SEKSYEN_ADMIN = [
   { kunci: 'guru-bertugas', label: 'Guru Bertugas (Kumpulan, Blok 3K)' },
   { kunci: 'murid', label: 'HEM (Import/Lajur Semakan Murid)' },
   { kunci: 'ubks', label: 'KOKU - UBKS (Unit UBKS)' },
-  { kunci: 'kurikulum', label: 'KURI (Panitia/Kategori RPT)' },
+  { kunci: 'kurikulum', label: 'KURI (Kategori/Panitia)' },
 ]

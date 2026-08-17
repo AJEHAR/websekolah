@@ -119,7 +119,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
               ))}
             </select>
             {panitiaSenarai.length === 0 && (
-              <p className="text-xs text-inkmuted mt-1">Belum ada panitia disetup. Minta admin tambah di Panel Admin &gt; Panitia RPT.</p>
+              <p className="text-xs text-inkmuted mt-1">Belum ada panitia disetup. Minta admin tambah di Panel Admin &gt; Panitia.</p>
             )}
           </div>
 
@@ -138,7 +138,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
               ))}
             </select>
             {kategoriSenarai.length === 0 && (
-              <p className="text-xs text-inkmuted mt-1">Belum ada kategori disetup. Minta admin tambah di Panel Admin &gt; Kategori RPT.</p>
+              <p className="text-xs text-inkmuted mt-1">Belum ada kategori disetup. Minta admin tambah di Panel Admin &gt; Kategori.</p>
             )}
           </div>
 

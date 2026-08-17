@@ -4,12 +4,13 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 
 const TAJUK_SUBPAGE = {
-  '/admin/staff': 'Staff',
-  '/admin/menunggu': 'Menunggu Kelulusan',
-  '/admin/pentadbir': 'Pentadbir',
+  '/admin/staff': 'Staf/Admin',
+  '/admin/sekatan': 'Emel Disekat',
   '/admin/blok3k': 'Blok 3K',
   '/admin/lajur-murid': 'Lajur Murid',
   '/admin/kategori-ubks': 'Kategori UBKS',
+  '/admin/kategori-rpt': 'Kategori',
+  '/admin/panitia-rpt': 'Panitia',
   '/admin/latar-hub': 'Latar Belakang Hub',
   '/admin/import-perhimpunan': 'Import Laporan Perhimpunan',
   '/admin/reset-data': 'Reset Data Ujian',
@@ -64,7 +65,7 @@ export default function AdminLayout() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
       <Link to="/admin" className="flex items-center gap-1 text-xs font-medium text-brand-red mb-4 w-fit">
-        <ChevronLeft size={14} /> Home Panel Admin
+        <ChevronLeft size={14} /> Kembali ke Panel Admin
       </Link>
       <h1 className="text-xl sm:text-2xl font-bold text-ink">Panel Admin</h1>
       <p className="text-xs text-inkmuted mt-1 mb-5">

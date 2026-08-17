@@ -17,10 +17,8 @@ import BeritaList from './pages/Berita/BeritaList.jsx'
 import BeritaDetail from './pages/Berita/BeritaDetail.jsx'
 import AdminLayout from './pages/Admin/AdminLayout.jsx'
 import AdminHub from './pages/Admin/AdminHub.jsx'
-import StaffPage from './pages/Admin/StaffPage.jsx'
-import MenungguPage from './pages/Admin/MenungguPage.jsx'
+import StafAdminPage from './pages/Admin/StafAdminPage.jsx'
 import SenaraiSekatanPage from './pages/Admin/SenaraiSekatanPage.jsx'
-import PentadbirPage from './pages/Admin/PentadbirPage.jsx'
 import Blok3KPage from './pages/Admin/Blok3KPage.jsx'
 import LajurMuridPage from './pages/Admin/LajurMuridPage.jsx'
 import KategoriUBKSPage from './pages/Admin/KategoriUBKSPage.jsx'
@@ -152,13 +150,14 @@ export default function App() {
             <Route path="saya" element={<SenaraiKeberadaanSaya />} />
           </Route>
 
-          {/* Panel Admin - tab pills (Staff/Menunggu Kelulusan/Pentadbir) */}
+          {/* Panel Admin - "Staf/Admin" (dulu 3 page berasingan: Staff/
+              Menunggu Kelulusan/Pentadbir, digabung jadi 1 page bertab) */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminHub />} />
-            <Route path="staff" element={<StaffPage />} />
-            <Route path="menunggu" element={<MenungguPage />} />
+            <Route path="staff" element={<StafAdminPage />} />
+            <Route path="menunggu" element={<Navigate to="/admin/staff" replace />} />
             <Route path="sekatan" element={<SenaraiSekatanPage />} />
-            <Route path="pentadbir" element={<PentadbirPage />} />
+            <Route path="pentadbir" element={<Navigate to="/admin/staff" replace />} />
             <Route path="blok3k" element={<Blok3KPage />} />
             <Route path="lajur-murid" element={<LajurMuridPage />} />
             <Route path="kategori-ubks" element={<KategoriUBKSPage />} />
