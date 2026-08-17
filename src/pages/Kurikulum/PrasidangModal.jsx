@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import PemilihMurid from './PemilihMurid.jsx'
+import PemilihMurid from '../../components/PemilihMurid.jsx'
 
 export default function PrasidangModal({ open, prasidang, senaraiMurid, onClose, onSimpan }) {
   const [muridDipilih, setMuridDipilih] = useState(

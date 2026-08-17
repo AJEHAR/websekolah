@@ -12,6 +12,8 @@ const DATA_UJIAN = [
   { kunci: 'laporanHarian', label: 'Laporan Harian' },
   { kunci: 'laporanPerhimpunan', label: 'Laporan Perhimpunan' },
   { kunci: 'murid', label: 'Data Murid (boleh import semula dari XLSX)' },
+  { kunci: 'daftarMasukMurid', label: 'Daftar Masuk Murid (boleh import semula dari CSV)' },
+  { kunci: 'sijilTamat', label: 'Sijil Tamat (boleh import semula dari CSV)' },
   { kunci: 'kehadiranMurid', label: 'Kehadiran Murid' },
   { kunci: 'hariBelajarRMT', label: 'Hari Belajar RMT' },
   { kunci: 'unitUBKS', label: 'Unit UBKS' },

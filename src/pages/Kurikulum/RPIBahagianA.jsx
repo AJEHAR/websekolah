@@ -1,4 +1,4 @@
-import PemilihMurid from './PemilihMurid.jsx'
+import PemilihMurid from '../../components/PemilihMurid.jsx'
 import { KOD_SEKOLAH, NAMA_SEKOLAH, PROGRAM_PK_OPTIONS } from './rpiConstants.js'
 
 function Medan({ label, wajib, children }) {

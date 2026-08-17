@@ -222,6 +222,21 @@ service cloud.firestore {
       allow write: if isAdminSeksyen('murid');
     }
 
+    // Daftar Masuk Murid (buku daftar rasmi) - borang operasi harian, sama
+    // corak dengan Kehadiran Murid/RMT (mana-mana staff diluluskan boleh
+    // isi), BUKAN dihadkan admin seksyen 'murid' macam koleksi 'murid'
+    // sendiri (yang data induk import pukal, bukan borang harian).
+    match /daftarMasukMurid/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    // Sijil Tamat - sama corak akses dengan Daftar Masuk Murid.
+    match /sijilTamat/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
     // Tetapan sistem (contoh: lajurMurid) - seksyen 'murid'.
     match /tetapan/{docId} {
       allow read: if isStaffDiluluskan();

@@ -27,6 +27,7 @@ export const NAV_ITEMS = [
       { label: 'Daftar Keluar Murid', to: '/maklumat-murid/daftar-keluar' },
       { label: 'Kehadiran Murid', to: '/maklumat-murid/kehadiran-murid' },
       { label: 'Kehadiran RMT', to: '/maklumat-murid/kehadiran-rmt' },
+      { label: 'Sijil Tamat', to: '/maklumat-murid/sijil-tamat' },
     ],
   },
   {

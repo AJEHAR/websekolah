@@ -2,30 +2,25 @@ import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Printer, Upload } from 'lucide-react'
 import { useMuridList } from '../../hooks/useMurid.js'
+import { useDaftarMasukMurid } from '../../hooks/useDaftarMasukMurid.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { useDialog } from '../../context/DialogContext.jsx'
-import {
-  useDaftarMasukMurid,
-  tambahDaftarMasuk,
-  kemaskiniDaftarMasuk,
-  padamDaftarMasuk,
-} from '../../hooks/useDaftarMasukMurid.js'
-import DaftarMasukModal from './DaftarMasukModal.jsx'
-import ImportDaftarMasukModal from './ImportDaftarMasukModal.jsx'
-import CetakDaftarMasuk from './CetakDaftarMasuk.jsx'
+import { useSijilTamat, tambahSijilTamat, kemaskiniSijilTamat, padamSijilTamat } from '../../hooks/useSijilTamat.js'
+import SijilTamatModal from './SijilTamatModal.jsx'
+import ImportSijilTamatModal from './ImportSijilTamatModal.jsx'
+import CetakSijilTamat from './CetakSijilTamat.jsx'
 
-export default function DaftarMasuk() {
+export default function SijilTamat() {
   const { user } = useOutletContext()
   const { konfirm } = useDialog()
   const { senarai: senaraiMurid } = useMuridList()
-  const { senarai, loading, muatSemula } = useDaftarMasukMurid()
+  const { senarai: senaraiDaftarMasuk } = useDaftarMasukMurid()
+  const { senarai, loading, muatSemula } = useSijilTamat()
   const [dataCetak, setDataCetak] = useCetak()
 
   const [tunjukBorang, setTunjukBorang] = useState(false)
   const [tunjukImport, setTunjukImport] = useState(false)
   const [rekodEdit, setRekodEdit] = useState(null)
-
-  const muridById = Object.fromEntries(senaraiMurid.map((m) => [m.id, m]))
 
   function bukaTambah() {
     setRekodEdit(null)
@@ -39,10 +34,10 @@ export default function DaftarMasuk() {
 
   async function simpan(data) {
     if (rekodEdit) {
-      await kemaskiniDaftarMasuk(rekodEdit.id, data, user.uid)
+      await kemaskiniSijilTamat(rekodEdit.id, data, user.uid)
     } else {
       const bilanganSeterusnya = senarai.length > 0 ? Math.max(...senarai.map((r) => r.bilangan ?? 0)) + 1 : 1
-      await tambahDaftarMasuk(data, bilanganSeterusnya, user.uid)
+      await tambahSijilTamat(data, bilanganSeterusnya, user.uid)
     }
     setTunjukBorang(false)
     setRekodEdit(null)
@@ -50,24 +45,16 @@ export default function DaftarMasuk() {
   }
 
   async function padam(id) {
-    if (!(await konfirm('Padam rekod daftar masuk ini? Nombor bilangan rekod lain TIDAK akan berubah.', { bahaya: true }))) return
-    await padamDaftarMasuk(id)
+    if (!(await konfirm('Padam sijil ini? Tindakan ini tidak boleh dibatalkan.', { bahaya: true }))) return
+    await padamSijilTamat(id)
     muatSemula()
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <p className="text-xs text-inkmuted">{senarai.length} rekod</p>
+        <p className="text-xs text-inkmuted">{senarai.length} sijil</p>
         <div className="flex items-center gap-2 flex-wrap">
-          {senarai.length > 0 && (
-            <button
-              onClick={() => setDataCetak(senarai)}
-              className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
-            >
-              <Printer size={14} /> Cetak Semua
-            </button>
-          )}
           <button
             onClick={() => setTunjukImport(true)}
             className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
@@ -78,7 +65,7 @@ export default function DaftarMasuk() {
             onClick={bukaTambah}
             className="flex items-center gap-1.5 h-11 px-4 rounded-card bg-brand-red text-white text-xs font-semibold"
           >
-            <Plus size={14} /> Daftar Masuk
+            <Plus size={14} /> Jana Sijil
           </button>
         </div>
       </div>
@@ -86,7 +73,7 @@ export default function DaftarMasuk() {
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
       ) : senarai.length === 0 ? (
-        <p className="text-sm text-inkmuted">Tiada rekod daftar masuk lagi.</p>
+        <p className="text-sm text-inkmuted">Tiada sijil tamat lagi.</p>
       ) : (
         <div className="rounded-card border border-border overflow-hidden">
           <table className="w-full text-sm">
@@ -94,20 +81,21 @@ export default function DaftarMasuk() {
               <tr>
                 <th className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide w-14">Bil.</th>
                 <th className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide">Nama</th>
-                <th className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide hidden sm:table-cell">Darjah</th>
-                <th className="w-24"></th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide hidden sm:table-cell">Tahun Tamat</th>
+                <th className="w-28"></th>
               </tr>
             </thead>
             <tbody className="bg-surface divide-y divide-border">
               {senarai.map((r) => (
                 <tr key={r.id}>
                   <td className="px-3 py-2.5 text-inkmuted">{r.bilangan}</td>
-                  <td className="px-3 py-2.5 text-ink font-medium">{r.muridNama}</td>
-                  <td className="px-3 py-2.5 text-inkmuted hidden sm:table-cell">
-                    {muridById[r.muridId]?.namaKelas || muridById[r.muridId]?.tahunTingkatan || '-'}
-                  </td>
+                  <td className="px-3 py-2.5 text-ink font-medium">{r.nama}</td>
+                  <td className="px-3 py-2.5 text-inkmuted hidden sm:table-cell">{r.tahunTamat}</td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-1 justify-end">
+                      <button onClick={() => setDataCetak([r])} aria-label="Cetak" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
+                        <Printer size={15} />
+                      </button>
                       <button onClick={() => bukaEdit(r)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
                         <Pencil size={15} />
                       </button>
@@ -123,15 +111,16 @@ export default function DaftarMasuk() {
         </div>
       )}
 
-      <DaftarMasukModal
+      <SijilTamatModal
         open={tunjukBorang}
         rekod={rekodEdit}
         senaraiMurid={senaraiMurid}
+        senaraiDaftarMasuk={senaraiDaftarMasuk}
         onClose={() => { setTunjukBorang(false); setRekodEdit(null) }}
         onSimpan={simpan}
       />
 
-      <ImportDaftarMasukModal
+      <ImportSijilTamatModal
         open={tunjukImport}
         onClose={() => setTunjukImport(false)}
         user={user}
@@ -139,7 +128,7 @@ export default function DaftarMasuk() {
         onSelesai={muatSemula}
       />
 
-      {dataCetak && <CetakDaftarMasuk senarai={dataCetak} muridById={muridById} />}
+      {dataCetak && <CetakSijilTamat senarai={dataCetak} />}
     </div>
   )
 }

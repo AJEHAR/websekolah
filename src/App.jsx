@@ -42,6 +42,7 @@ import SemakanMurid from './pages/MaklumatMurid/SemakanMurid.jsx'
 import Analisis from './pages/MaklumatMurid/Analisis.jsx'
 import KehadiranMurid from './pages/MaklumatMurid/KehadiranMurid.jsx'
 import KehadiranRMT from './pages/MaklumatMurid/PapanRMT.jsx'
+import SijilTamat from './pages/MaklumatMurid/SijilTamat.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
 import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
 import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
@@ -191,6 +192,7 @@ export default function App() {
             <Route path="daftar-keluar" element={<DaftarKeluar />} />
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
             <Route path="kehadiran-rmt" element={<KehadiranRMT />} />
+            <Route path="sijil-tamat" element={<SijilTamat />} />
           </Route>
 
           {/* URL lama "/ebanci/*" (seksyen dah digabung ke HEM) -
