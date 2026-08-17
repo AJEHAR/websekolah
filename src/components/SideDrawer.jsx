@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
   X, Home, Newspaper, Image, Phone, CalendarCheck, Users,
   User, ShieldCheck, LogIn, LogOut, ChevronDown, GraduationCap, ClipboardList, Award,
@@ -19,7 +19,7 @@ const IKON = {
   '/admin': ShieldCheck,
 }
 
-export default function SideDrawer({ open, onClose, links, user, onLogin, onDaftar, pendaftaranDibuka, onSignOut }) {
+export default function SideDrawer({ open, onClose, links, user, pendaftaranDibuka, onSignOut }) {
   const location = useLocation()
   const [dibuka, setDibuka] = useState({})
 
@@ -153,19 +153,22 @@ export default function SideDrawer({ open, onClose, links, user, onLogin, onDaft
             </div>
           ) : (
             <div className="space-y-2">
-              <button
-                onClick={() => { onLogin(); onClose() }}
+              <Link
+                to="/profil"
+                onClick={onClose}
                 className="w-full h-12 rounded-full bg-brand-red text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-soft hover:opacity-90 transition-opacity"
               >
                 <LogIn size={17} /> Log Masuk
-              </button>
+              </Link>
               {pendaftaranDibuka && (
-                <button
-                  onClick={() => { onDaftar(); onClose() }}
+                <Link
+                  to="/profil"
+                  state={{ mod: 'daftar' }}
+                  onClick={onClose}
                   className="w-full h-11 rounded-full border border-border text-ink text-sm font-semibold flex items-center justify-center gap-2 hover:bg-base"
                 >
                   Daftar (staff baru)
-                </button>
+                </Link>
               )}
               <p className="text-[11px] text-inkmuted text-center mt-2">
                 Khas untuk staff SK Pendidikan Khas Kuantan sahaja.

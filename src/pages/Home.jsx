@@ -1,14 +1,6 @@
 export default function Home() {
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 lg:py-16">
-      <div className="bg-brand-red text-white rounded-card shadow-soft p-5 sm:p-6 mb-6 text-center">
-        <p className="font-bold text-sm sm:text-base uppercase tracking-wide">Notis Penting</p>
-        <p className="text-sm sm:text-base mt-1">
-          Sistem log masuk laman web ini adalah <span className="font-bold">KHAS untuk staff SK Pendidikan Khas Kuantan sahaja</span>.
-          Sekiranya anda bukan staff sekolah ini, sila JANGAN log masuk.
-        </p>
-      </div>
-
       <div className="bg-surface border border-border rounded-card shadow-soft p-8 sm:p-12 lg:p-16 text-center">
         <img
           src="/logo.png"

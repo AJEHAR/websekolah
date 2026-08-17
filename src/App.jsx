@@ -79,7 +79,13 @@ import { useAksesStatus } from './hooks/useAksesStatus.js'
 // Laluan yang tetap terbuka kepada SESIAPA sahaja (tak kira log masuk ke
 // tidak) - Utama + kandungan awam (Berita/Galeri/Hubungi, walaupun tak
 // dipautkan dalam nav sekarang, URL tu masih patut boleh dicapai terus).
-const LALUAN_AWAM = ['/', '/galeri', '/hubungi']
+// Laluan yang tetap terbuka kepada SESIAPA sahaja (tak kira log masuk ke
+// tidak) - Utama + kandungan awam (Berita/Galeri/Hubungi, walaupun tak
+// dipautkan dalam nav sekarang, URL tu masih patut boleh dicapai terus) +
+// /profil (papar skrin Log Masuk/Daftar sahaja untuk pengunjung belum log
+// masuk - lihat Profile.jsx, TIADA data sebenar terdedah, sifar Firestore
+// read - jadi selamat jadi destinasi butang Log Masuk/Daftar di Navbar).
+const LALUAN_AWAM = ['/', '/galeri', '/hubungi', '/profil']
 function adalahLaluanAwam(pathname) {
   return LALUAN_AWAM.includes(pathname) || pathname.startsWith('/berita')
 }

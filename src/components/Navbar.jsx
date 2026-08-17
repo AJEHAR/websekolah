@@ -8,7 +8,7 @@ import { NAV_ITEMS, ADMIN_NAV_ITEM } from '../lib/navConfig.js'
 import SideDrawer from './SideDrawer.jsx'
 
 export default function Navbar() {
-  const { user, signInWithGoogle, signOutUser } = useAuth()
+  const { user, signOutUser } = useAuth()
   const { status, isAdmin } = useAksesStatus(user)
   const { dibuka: pendaftaranDibuka } = useTetapanPendaftaran()
 
@@ -108,21 +108,22 @@ export default function Navbar() {
                 </button>
               ) : (
                 <div className="ml-2 flex items-center gap-2">
-                  <button
-                    onClick={() => signInWithGoogle('login')}
+                  <Link
+                    to="/profil"
                     title="Untuk staff yang SUDAH ada akaun berdaftar"
                     className="px-4 py-2 rounded-card text-sm font-semibold bg-brand-red hover:opacity-90 transition-opacity"
                   >
                     Log Masuk
-                  </button>
+                  </Link>
                   {pendaftaranDibuka && (
-                    <button
-                      onClick={() => signInWithGoogle('daftar')}
+                    <Link
+                      to="/profil"
+                      state={{ mod: 'daftar' }}
                       title="Untuk staff BARU yang belum ada akaun"
                       className="px-4 py-2 rounded-card text-sm font-semibold border border-white/30 hover:bg-white/10"
                     >
                       Daftar
-                    </button>
+                    </Link>
                   )}
                 </div>
               )}
@@ -136,8 +137,6 @@ export default function Navbar() {
         onClose={() => setDrawerOpen(false)}
         links={links}
         user={user}
-        onLogin={() => signInWithGoogle('login')}
-        onDaftar={() => signInWithGoogle('daftar')}
         pendaftaranDibuka={pendaftaranDibuka}
         onSignOut={signOutUser}
       />

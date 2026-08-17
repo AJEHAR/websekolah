@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import GoogleIcon from './GoogleIcon.jsx'
 
@@ -44,7 +45,12 @@ const KANDUNGAN = {
 // papar mod "login" sahaja (tiada apa-apa untuk togol kepada).
 export default function AksesPrompt({ namaHalaman, pendaftaranDibuka = true }) {
   const { signInWithGoogle } = useAuth()
-  const [modDipilih, setModDipilih] = useState('login')
+  const location = useLocation()
+  // Navbar/SideDrawer "Daftar" pautan ke /profil bawa state={{ mod: 'daftar' }}
+  // supaya terus mendarat di tab/panel Daftar, tak perlu klik togol sekali
+  // lagi. Kalau tiada state (cth. akses /profil terus/dari pautan lain),
+  // lalai 'login'.
+  const [modDipilih, setModDipilih] = useState(location.state?.mod === 'daftar' ? 'daftar' : 'login')
   const mod = pendaftaranDibuka ? modDipilih : 'login'
   const k = KANDUNGAN[mod]
 
