@@ -9,6 +9,7 @@ const TAJUK_SUBPAGE = {
   '/kurikulum/rpt': 'RPT',
   '/kurikulum/template-kertas-kerja': 'Template Kertas Kerja',
   '/kurikulum/koleksi-pekeliling': 'Koleksi Pekeliling',
+  '/kurikulum/opr': 'OPR',
 }
 
 export default function KurikulumLayout() {

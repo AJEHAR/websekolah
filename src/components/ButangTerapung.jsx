@@ -3,21 +3,23 @@ import { Link } from 'react-router-dom'
 import { LayoutGrid, X } from 'lucide-react'
 import { PINTASAN_PANTAS } from '../lib/pintasanPantas.js'
 
-// Butang terapung global (muncul di SEMUA page) - pintasan terus ke 2 tugas
-// harian paling kerap (Daftar Keberadaan, Isi Kehadiran Murid) tanpa perlu
-// susur menu penuh. Sengaja TAK disekat ikut status kelulusan admin (staff
-// "menunggu" pun nampak butang ni) - kalau tersasar tekan, PenggeraAksesTerhad
-// dalam App.jsx dah kendalikan redirect balik ke Utama macam biasa, jadi
-// tiada risiko keselamatan, cuma kesederhanaan (tak payah logik tambahan di sini).
+// "Akses Pantas" - butang terapung global (muncul di SEMUA page): gabungan
+// 2 tugas harian paling kerap (Daftar Keberadaan, Isi Kehadiran Murid) +
+// pautan terus ke 4 hub seksyen utama (Guru Bertugas, HEM, KOKU, KURI) -
+// tanpa perlu buka menu navbar dulu. Sengaja TAK disekat ikut status
+// kelulusan admin (staff "menunggu" pun nampak butang ni) - kalau tersasar
+// tekan, PenggeraAksesTerhad dalam App.jsx dah kendalikan redirect balik ke
+// Utama macam biasa, jadi tiada risiko keselamatan, cuma kesederhanaan (tak
+// payah logik tambahan di sini).
 //
 // Reka bentuk sengaja BEZA daripada FloatingTambahButton.jsx (bulat, merah,
-// bottom-6 right-5, guna di Keberadaan Hari Ini/Esok & Admin Staff): butang
-// ni segi empat lembut (rounded-card, sepadan gaya butang lain di seluruh
-// laman web - bulat sebenarnya kekecualian, bukan corak biasa sistem ni),
-// warna emas jenama (bukan merah), dan diletak LEBIH TINGGI (bottom-24)
-// supaya di page yang kebetulan ada kedua-dua butang, ia bertindan bersih
-// (bertumpuk menegak, bukan bertindih terus). Beza bentuk/warna ni sengaja -
-// bulat+merah = "tambah rekod page ni", segi empat+emas = "lompat ke page lain".
+// bottom-6 right-5, guna di Admin Staff): butang ni segi empat lembut
+// (rounded-card, sepadan gaya butang lain di seluruh laman web - bulat
+// sebenarnya kekecualian, bukan corak biasa sistem ni), warna emas jenama
+// (bukan merah), dan diletak LEBIH TINGGI (bottom-24) supaya di page yang
+// kebetulan ada kedua-dua butang, ia bertindan bersih (bertumpuk menegak,
+// bukan bertindih terus). Beza bentuk/warna ni sengaja - bulat+merah =
+// "tambah rekod page ni", segi empat+emas = "lompat ke page/seksyen lain".
 export default function ButangTerapung() {
   const [terbuka, setTerbuka] = useState(false)
 
@@ -25,7 +27,7 @@ export default function ButangTerapung() {
     <>
       {terbuka && (
         <button
-          aria-label="Tutup pintasan pantas"
+          aria-label="Tutup Akses Pantas"
           onClick={() => setTerbuka(false)}
           className="fixed inset-0 z-20 cursor-default"
         />
@@ -52,7 +54,7 @@ export default function ButangTerapung() {
 
         <button
           onClick={() => setTerbuka((s) => !s)}
-          aria-label={terbuka ? 'Tutup pintasan pantas' : 'Buka pintasan pantas'}
+          aria-label={terbuka ? 'Tutup Akses Pantas' : 'Buka Akses Pantas'}
           aria-expanded={terbuka}
           className="h-12 w-12 rounded-card bg-brand-gold text-ink shadow-lg flex items-center justify-center hover:opacity-90 active:scale-95 transition-transform"
         >

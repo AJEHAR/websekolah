@@ -6,7 +6,6 @@ import { useKeberadaanTarikh, tambahKeberadaan, kemaskiniKeberadaan, padamKebera
 import { todayISO, formatTarikhPaparan } from '../../lib/dateUtils.js'
 import { KUMPULAN_KEBERADAAN, kumpulanKategori } from './constants.js'
 import KumpulanCard from './KumpulanCard.jsx'
-import FloatingTambahButton from './FloatingTambahButton.jsx'
 import BorangModal from './BorangModal.jsx'
 import DetailModal from './DetailModal.jsx'
 
@@ -65,7 +64,6 @@ export default function HariIni() {
         </div>
       )}
 
-      <FloatingTambahButton onClick={() => { setRekodEdit(null); setTunjukBorang(true) }} />
       <BorangModal
         open={tunjukBorang}
         onClose={() => { setTunjukBorang(false); setRekodEdit(null) }}

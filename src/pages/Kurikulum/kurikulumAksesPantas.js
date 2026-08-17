@@ -1,4 +1,4 @@
-import { ClipboardList, FileText, CalendarRange, FileStack, FolderOpen } from 'lucide-react'
+import { ClipboardList, FileText, CalendarRange, FileStack, FolderOpen, Sparkles } from 'lucide-react'
 
 // Senarai akses pantas untuk hub KURI - tambah entri baru di sini bila
 // ada sub-page baru (pengisian akan ditambah kemudian), akan terus muncul
@@ -10,4 +10,5 @@ export const KURIKULUM_AKSES_PANTAS = [
   { label: 'RPT', to: '/kurikulum/rpt', Ikon: CalendarRange },
   { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja', Ikon: FileStack },
   { label: 'Koleksi Pekeliling', to: '/kurikulum/koleksi-pekeliling', Ikon: FolderOpen },
+  { label: 'OPR', to: '/kurikulum/opr', Ikon: Sparkles },
 ]

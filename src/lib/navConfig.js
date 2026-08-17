@@ -55,6 +55,7 @@ export const NAV_ITEMS = [
       { label: 'RPT', to: '/kurikulum/rpt' },
       { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja' },
       { label: 'Koleksi Pekeliling', to: '/kurikulum/koleksi-pekeliling' },
+      { label: 'OPR', to: '/kurikulum/opr' },
       // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -
       // update juga kurikulumAksesPantas.js dan TAJUK_SUBPAGE dalam
       // KurikulumLayout.jsx, + <Route> baru dalam App.jsx.

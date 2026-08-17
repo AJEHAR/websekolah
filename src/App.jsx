@@ -57,6 +57,7 @@ import RPI from './pages/Kurikulum/RPI.jsx'
 import RPT from './pages/Kurikulum/RPT.jsx'
 import TemplateKertasKerja from './pages/Kurikulum/TemplateKertasKerja.jsx'
 import KoleksiPekeliling from './pages/Kurikulum/KoleksiPekeliling.jsx'
+import OPR from './pages/Kurikulum/OPR.jsx'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext.jsx'
 import { useAksesStatus } from './hooks/useAksesStatus.js'
@@ -189,6 +190,7 @@ export default function App() {
             <Route path="rpt" element={<RPT />} />
             <Route path="template-kertas-kerja" element={<TemplateKertasKerja />} />
             <Route path="koleksi-pekeliling" element={<KoleksiPekeliling />} />
+            <Route path="opr" element={<OPR />} />
           </Route>
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}

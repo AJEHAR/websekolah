@@ -50,6 +50,29 @@ const JENIS_FAIL_DIBENARKAN = {
   latarHub: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
 }
 
+// Sesetengah sumber (contoh: pemilih fail Android/cloud storage tertentu)
+// laporkan jenis fail (mimeType) PDF dalam bentuk sedikit berbeza daripada
+// standard 'application/pdf' - normalize dulu sebelum semak, elak tolak
+// fail yang sebenarnya sah cuma label mimeType dia tak standard.
+const ALIAS_MIMETYPE = {
+  'application/x-pdf': 'application/pdf',
+  'application/acrobat': 'application/pdf',
+  'application/vnd.pdf': 'application/pdf',
+  'text/pdf': 'application/pdf',
+  'text/x-pdf': 'application/pdf',
+}
+
+// Sambungan fail dibenarkan ikut subfolder - digunakan sebagai SANDARAN kalau
+// mimeType yang diterima tak dikenali/kosong (contoh: 'application/octet-stream'
+// generik) tapi nama fail jelas ada sambungan yang sah.
+const SAMBUNGAN_DIBENARKAN = {
+  rpt: ['.pdf'],
+  profil: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  kehadiran: ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.pdf'],
+  unitUBKS: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  latarHub: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+}
+
 // Had kadar ringkas - elak spam - guna CacheService (bertahan ~ beberapa minit,
 // cukup untuk elak automasi/bot spam, bukan pengganti had kadar peringkat
 // infra sebenar tapi lebih baik daripada tiada apa-apa langsung).
@@ -87,8 +110,26 @@ function doPost(e) {
 
     const subfolder = data.folder || 'lain-lain'
     const jenisDibenarkan = JENIS_FAIL_DIBENARKAN[subfolder]
-    if (jenisDibenarkan && jenisDibenarkan.indexOf(data.mimeType) === -1) {
-      return jsonResponse({ error: 'Jenis fail tidak dibenarkan untuk kategori ini.' })
+    if (jenisDibenarkan) {
+      const mimeTypeSebenar = ALIAS_MIMETYPE[data.mimeType] || data.mimeType
+      const mimeTypeSah = jenisDibenarkan.indexOf(mimeTypeSebenar) !== -1
+
+      // Sandaran: kalau mimeType tak sepadan (cth. kosong atau generik
+      // 'application/octet-stream'), semak sambungan nama fail pula sebelum
+      // tolak terus - elak tolak fail sah gara-gara label mimeType pelik.
+      const sambunganDibenarkan = SAMBUNGAN_DIBENARKAN[subfolder] || []
+      const namaFailKecil = String(data.fileName || '').toLowerCase()
+      const sambunganSah = sambunganDibenarkan.some(function (sfx) {
+        return namaFailKecil.slice(-sfx.length) === sfx
+      })
+
+      if (!mimeTypeSah && !sambunganSah) {
+        return jsonResponse({
+          error: 'Jenis fail tidak dibenarkan untuk kategori ini. (kategori: ' + subfolder +
+            ', jenis fail diterima: "' + data.mimeType + '", nama fail: "' + data.fileName +
+            '", dibenarkan: ' + jenisDibenarkan.join(', ') + ')',
+        })
+      }
     }
 
     const folderInduk = dapatkanAtauCiptaFolder(NAMA_FOLDER_INDUK)
