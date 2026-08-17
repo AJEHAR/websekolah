@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useKategoriUBKS, tambahKategori, padamKategori } from '../../hooks/useKategoriUBKS.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import AdminSeksyenGate from './AdminSeksyenGate.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function KategoriUBKSPage() {
   const { user } = useOutletContext()
@@ -16,6 +17,7 @@ export default function KategoriUBKSPage() {
 }
 
 function Isi() {
+  const { konfirm } = useDialog()
   const { senarai, loading, muatSemula } = useKategoriUBKS()
   const [nama, setNama] = useState('')
   const [kod, setKod] = useState('')
@@ -44,7 +46,7 @@ function Isi() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam kategori ini? Unit sedia ada yang guna kategori ni tak akan terjejas, cuma tak boleh pilih untuk unit baru.')) return
+    if (!(await konfirm('Padam kategori ini? Unit sedia ada yang guna kategori ni tak akan terjejas, cuma tak boleh pilih untuk unit baru.', { bahaya: true }))) return
     await padamKategori(id)
     muatSemula()
   }
@@ -57,7 +59,7 @@ function Isi() {
 
       <form onSubmit={tambah} className="flex flex-wrap items-end gap-2 mb-5">
         <div>
-          <label htmlFor="namaKategori" className="block text-xs font-medium text-ink mb-1">Nama Kategori</label>
+          <label htmlFor="namaKategori" className="block text-xs font-medium text-ink mb-1">Nama Kategori <span className="text-brand-red">*</span></label>
           <input
             id="namaKategori"
             type="text"
@@ -68,7 +70,7 @@ function Isi() {
           />
         </div>
         <div>
-          <label htmlFor="kodKategori" className="block text-xs font-medium text-ink mb-1">Kod (ringkas)</label>
+          <label htmlFor="kodKategori" className="block text-xs font-medium text-ink mb-1">Kod (ringkas) <span className="text-brand-red">*</span></label>
           <input
             id="kodKategori"
             type="text"

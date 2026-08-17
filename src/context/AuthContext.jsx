@@ -3,10 +3,12 @@ import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db, googleProvider, isFirebaseConfigured } from '../lib/firebase.js'
 import { emelKeDocId } from '../lib/emelUtils.js'
+import { useDialog } from './DialogContext.jsx'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
+  const { amaran } = useDialog()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(isFirebaseConfigured)
   const [sedangLogMasuk, setSedangLogMasuk] = useState(false)
@@ -45,7 +47,7 @@ export function AuthProvider({ children }) {
   // & emelDisekatSendiri() di server).
   const signInWithGoogle = async (mod = 'login') => {
     if (!isFirebaseConfigured) {
-      window.alert('Firebase belum disetup lagi. Isi maklumat dalam fail .env dahulu (lihat README).')
+      amaran('Firebase belum disetup lagi. Isi maklumat dalam fail .env dahulu (lihat README).')
       return
     }
     if (sedangLogMasuk) return
@@ -78,9 +80,10 @@ export function AuthProvider({ children }) {
 
       if (mod === 'login' && !adaProfile) {
         await signOut(auth)
-        window.alert(
+        await amaran(
           `Tiada akaun berdaftar untuk emel ini (${emel}).\n\n` +
-          'Sekiranya anda staff baru, sila guna butang "Daftar".'
+          'Sekiranya anda staff baru, sila guna butang "Daftar".',
+          { tajuk: 'Tiada Akaun' }
         )
         return
       }
@@ -90,7 +93,7 @@ export function AuthProvider({ children }) {
         const dibuka = snapTetapan.exists() ? snapTetapan.data().dibuka !== false : true
         if (!dibuka) {
           await signOut(auth)
-          window.alert('Pendaftaran staff baru ditutup buat masa ini. Sila hubungi pentadbir sekolah.')
+          await amaran('Pendaftaran staff baru ditutup buat masa ini. Sila hubungi pentadbir sekolah.', { tajuk: 'Pendaftaran Ditutup' })
           return
         }
       }
@@ -99,7 +102,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       if (err.code !== 'auth/cancelled-popup-request' && err.code !== 'auth/popup-closed-by-user') {
         console.error('Ralat log masuk:', err)
-        window.alert('Gagal log masuk. Sila cuba lagi.')
+        amaran('Gagal log masuk. Sila cuba lagi.')
       }
     } finally {
       setSedangLogMasuk(false)

@@ -2,6 +2,8 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import AksesGate from '../../components/AksesGate.jsx'
+import AksesPrompt from '../../components/AksesPrompt.jsx'
+import { useTetapanPendaftaran } from '../../hooks/useTetapanPendaftaran.js'
 
 const TAJUK_SUBPAGE = {
   '/keberadaan/daftar': 'Daftar Keberadaan',
@@ -12,25 +14,13 @@ const TAJUK_SUBPAGE = {
 }
 
 export default function KeberadaanLayout() {
-  const { user, signInWithGoogle } = useAuth()
+  const { user } = useAuth()
+  const { dibuka: pendaftaranDibuka } = useTetapanPendaftaran()
   const location = useLocation()
   const adalahHub = location.pathname === '/keberadaan'
 
   if (!user) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
-        <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
-          <h1 className="text-xl font-bold text-ink">Keberadaan</h1>
-          <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk akses halaman ini.</p>
-          <button
-            onClick={() => signInWithGoogle('login')}
-            className="mt-6 h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold"
-          >
-            Log Masuk dengan Google
-          </button>
-        </div>
-      </main>
-    )
+    return <AksesPrompt namaHalaman="Keberadaan" pendaftaranDibuka={pendaftaranDibuka} />
   }
 
   return (

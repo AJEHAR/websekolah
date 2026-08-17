@@ -6,8 +6,10 @@ import { useCetak } from '../../hooks/useCetak.js'
 import LaporanHarianForm from './LaporanHarianForm.jsx'
 import LaporanHarianDetailModal from './LaporanHarianDetailModal.jsx'
 import CetakLaporanHarian from './CetakLaporanHarian.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function LaporanHarian() {
+  const { konfirm, amaran } = useDialog()
   const { user } = useOutletContext()
   const { senarai, loading, muatSemula } = useLaporanHarian()
   const [dataCetak, setDataCetak] = useCetak()
@@ -36,7 +38,7 @@ export default function LaporanHarian() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam laporan harian ini?')) return
+    if (!(await konfirm('Padam laporan harian ini?', { bahaya: true }))) return
     await padamLaporanHarian(id)
     muatSemula()
   }
@@ -45,14 +47,14 @@ export default function LaporanHarian() {
     setDataCetak([laporan])
   }
 
-  function cetakJulat() {
+  async function cetakJulat() {
     const ditapis = senarai.filter((l) => {
       if (dariTarikh && l.tarikh < dariTarikh) return false
       if (hinggaTarikh && l.tarikh > hinggaTarikh) return false
       return true
     })
     if (ditapis.length === 0) {
-      window.alert('Tiada laporan dalam julat tarikh tu.')
+      await amaran('Tiada laporan dalam julat tarikh tu.')
       return
     }
     const tersusun = [...ditapis].sort((a, b) => a.tarikh.localeCompare(b.tarikh))

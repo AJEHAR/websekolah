@@ -62,7 +62,7 @@ export default function Laporan3KModal({ blok, rekod, profiles, onClose, onSimpa
 
         <form onSubmit={hantar} className="space-y-4">
           <div>
-            <label htmlFor="catatanKeselamatan" className="block text-sm font-medium text-ink mb-1">Catatan Keselamatan</label>
+            <label htmlFor="catatanKeselamatan" className="block text-sm font-medium text-ink mb-1">Catatan Keselamatan <span className="text-brand-red">*</span></label>
             <textarea
               id="catatanKeselamatan"
               required
@@ -75,7 +75,7 @@ export default function Laporan3KModal({ blok, rekod, profiles, onClose, onSimpa
           </div>
 
           <div>
-            <label htmlFor="catatanKebersihan" className="block text-sm font-medium text-ink mb-1">Catatan Kebersihan</label>
+            <label htmlFor="catatanKebersihan" className="block text-sm font-medium text-ink mb-1">Catatan Kebersihan <span className="text-brand-red">*</span></label>
             <textarea
               id="catatanKebersihan"
               required
@@ -89,7 +89,7 @@ export default function Laporan3KModal({ blok, rekod, profiles, onClose, onSimpa
 
           {blok.adaDisiplin && (
             <div>
-              <label htmlFor="catatanDisiplin" className="block text-sm font-medium text-ink mb-1">Catatan Disiplin</label>
+              <label htmlFor="catatanDisiplin" className="block text-sm font-medium text-ink mb-1">Catatan Disiplin <span className="text-brand-red">*</span></label>
               <textarea
                 id="catatanDisiplin"
                 required
@@ -103,7 +103,7 @@ export default function Laporan3KModal({ blok, rekod, profiles, onClose, onSimpa
           )}
 
           <div>
-            <label htmlFor="guru3k" className="block text-sm font-medium text-ink mb-1">Nama Guru</label>
+            <label htmlFor="guru3k" className="block text-sm font-medium text-ink mb-1">Nama Guru <span className="text-brand-red">*</span></label>
             <select
               id="guru3k"
               required

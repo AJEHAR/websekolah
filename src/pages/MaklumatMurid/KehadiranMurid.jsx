@@ -6,8 +6,10 @@ import { todayISO } from '../../lib/dateUtils.js'
 import KelasKehadiranCard from './KelasKehadiranCard.jsx'
 import KehadiranMuridModal from './KehadiranMuridModal.jsx'
 import DetailKehadiranModal from './DetailKehadiranModal.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function KehadiranMurid() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { senarai: muridSenarai, loading: loadingMurid } = useMuridList()
   const [tarikh, setTarikh] = useState(todayISO())
@@ -32,7 +34,7 @@ export default function KehadiranMurid() {
   }
 
   async function padam(namaKelas) {
-    if (!window.confirm(`Padam rekod kehadiran kelas ${namaKelas} untuk tarikh ni?`)) return
+    if (!(await konfirm(`Padam rekod kehadiran kelas ${namaKelas} untuk tarikh ni?`, { bahaya: true }))) return
     await padamKehadiranKelas(tarikh, namaKelas)
     muatSemula()
   }

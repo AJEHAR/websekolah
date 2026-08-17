@@ -6,6 +6,7 @@ import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import SenaraiStaff from './SenaraiStaff.jsx'
 import AdminFormModal from './AdminFormModal.jsx'
 import FloatingTambahButton from '../Keberadaan/FloatingTambahButton.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function StaffPage() {
   const { user } = useOutletContext()
@@ -24,6 +25,7 @@ export default function StaffPage() {
 }
 
 function Isi({ user }) {
+  const { konfirm } = useDialog()
   const { profiles, loading, muatSemula } = useProfilesList()
   const staffAktif = profiles.filter((p) => p.status !== 'menunggu')
 
@@ -43,7 +45,7 @@ function Isi({ user }) {
   }
 
   async function padam(emel) {
-    if (!window.confirm('Padam profile staff ini? Tindakan ini tidak boleh dibatalkan.')) return
+    if (!(await konfirm('Padam profile staff ini? Tindakan ini tidak boleh dibatalkan.', { bahaya: true }))) return
     await padamProfileAdmin(emel)
     muatSemula()
   }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Pencil, Trash2, Plus, Printer } from 'lucide-react'
+import { useDialog } from '../../context/DialogContext.jsx'
 import { useBlokLaporan3K } from '../../hooks/useBlokLaporan3K.js'
 import { useLaporan3KTarikh, simpanLaporan3K, padamLaporan3K, ambilLaporan3KJulat } from '../../hooks/useLaporan3K.js'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
@@ -10,6 +11,7 @@ import Laporan3KModal from './Laporan3KModal.jsx'
 import CetakLaporan3K from './CetakLaporan3K.jsx'
 
 export default function Laporan3K() {
+  const { konfirm, amaran } = useDialog()
   const { user } = useOutletContext()
   const [tarikh, setTarikh] = useState(todayISO())
   const { senarai: bloks, loading: loadingBlok } = useBlokLaporan3K()
@@ -30,7 +32,7 @@ export default function Laporan3K() {
 
   async function cetakJulat() {
     if (!dariTarikh || !hinggaTarikh) {
-      window.alert('Sila isi Dari Tarikh dan Hingga Tarikh.')
+      await amaran('Sila isi Dari Tarikh dan Hingga Tarikh.')
       return
     }
     setMemuatkanCetak(true)
@@ -38,7 +40,7 @@ export default function Laporan3K() {
       const semuaRekod = await ambilLaporan3KJulat(dariTarikh, hinggaTarikh)
       const tarikhUnik = [...new Set(semuaRekod.map((r) => r.tarikh))].sort()
       if (tarikhUnik.length === 0) {
-        window.alert('Tiada rekod Laporan 3K dalam julat tarikh tu.')
+        await amaran('Tiada rekod Laporan 3K dalam julat tarikh tu.')
         return
       }
       const kumpulan = tarikhUnik.map((t) => ({
@@ -63,7 +65,7 @@ export default function Laporan3K() {
   }
 
   async function padam(blokId) {
-    if (!window.confirm('Padam rekod Laporan 3K untuk blok dan tarikh ini?')) return
+    if (!(await konfirm('Padam rekod Laporan 3K untuk blok dan tarikh ini?', { bahaya: true }))) return
     await padamLaporan3K(tarikh, blokId)
     muatSemula()
   }
@@ -125,7 +127,7 @@ export default function Laporan3K() {
                       aria-label={r ? 'Edit rekod' : 'Isi rekod'}
                       className="p-1.5 rounded-card hover:bg-base text-inkmuted"
                     >
-                      {r ? <Pencil size={15} /> : <Plus size={15} />}
+                      {r ? <Pencil size={16} /> : <Plus size={16} />}
                     </button>
                     {r && (
                       <button
@@ -133,7 +135,7 @@ export default function Laporan3K() {
                         aria-label="Padam rekod"
                         className="p-1.5 rounded-card hover:bg-base text-brand-red"
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={16} />
                       </button>
                     )}
                   </div>

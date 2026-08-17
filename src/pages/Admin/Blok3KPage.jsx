@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useBlokLaporan3K, tambahBlok, kemaskiniBlok, padamBlok } from '../../hooks/useBlokLaporan3K.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import AdminSeksyenGate from './AdminSeksyenGate.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function Blok3KPage() {
   const { user } = useOutletContext()
@@ -16,6 +17,7 @@ export default function Blok3KPage() {
 }
 
 function Isi() {
+  const { konfirm } = useDialog()
   const { senarai, loading, muatSemula } = useBlokLaporan3K()
   const [namaBaru, setNamaBaru] = useState('')
   const [adaDisiplinBaru, setAdaDisiplinBaru] = useState(false)
@@ -56,7 +58,7 @@ function Isi() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam blok ini? Rekod Laporan 3K sedia ada untuk blok ni akan kekal dalam sistem.')) return
+    if (!(await konfirm('Padam blok ini? Rekod Laporan 3K sedia ada untuk blok ni akan kekal dalam sistem.', { bahaya: true }))) return
     setRalat(null)
     try {
       await padamBlok(id)

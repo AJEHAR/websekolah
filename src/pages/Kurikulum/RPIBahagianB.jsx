@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import IntervensiBlok from './IntervensiBlok.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 function Medan({ label, children }) {
   return (
@@ -11,6 +12,7 @@ function Medan({ label, children }) {
 }
 
 export default function RPIBahagianB({ data, onUbah }) {
+  const { konfirm } = useDialog()
   function u(medan, nilai) {
     onUbah({ ...data, [medan]: nilai })
   }
@@ -31,8 +33,8 @@ export default function RPIBahagianB({ data, onUbah }) {
     u('intervensi', salinan)
   }
 
-  function padamIntervensi(i) {
-    if (!window.confirm('Padam blok intervensi ini beserta semua rekod pencapaiannya?')) return
+  async function padamIntervensi(i) {
+    if (!(await konfirm('Padam blok intervensi ini beserta semua rekod pencapaiannya?', { bahaya: true }))) return
     u('intervensi', data.intervensi.filter((_, idx) => idx !== i))
   }
 

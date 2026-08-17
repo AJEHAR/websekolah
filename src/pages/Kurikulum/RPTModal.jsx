@@ -92,7 +92,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
 
         <form onSubmit={hantar} className="space-y-4">
           <div>
-            <label htmlFor="tahunSesiRPT" className="block text-sm font-medium text-ink mb-1">Tahun / Sesi</label>
+            <label htmlFor="tahunSesiRPT" className="block text-sm font-medium text-ink mb-1">Tahun / Sesi <span className="text-brand-red">*</span></label>
             <input
               id="tahunSesiRPT"
               type="text"
@@ -105,7 +105,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
           </div>
 
           <div>
-            <label htmlFor="panitiaRPT" className="block text-sm font-medium text-ink mb-1">Panitia</label>
+            <label htmlFor="panitiaRPT" className="block text-sm font-medium text-ink mb-1">Panitia <span className="text-brand-red">*</span></label>
             <select
               id="panitiaRPT"
               required
@@ -124,7 +124,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
           </div>
 
           <div>
-            <label htmlFor="kategoriRPT" className="block text-sm font-medium text-ink mb-1">Kategori</label>
+            <label htmlFor="kategoriRPT" className="block text-sm font-medium text-ink mb-1">Kategori <span className="text-brand-red">*</span></label>
             <select
               id="kategoriRPT"
               required
@@ -143,7 +143,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
           </div>
 
           <div>
-            <label htmlFor="mataPelajaranRPT" className="block text-sm font-medium text-ink mb-1">Nama Mata Pelajaran</label>
+            <label htmlFor="mataPelajaranRPT" className="block text-sm font-medium text-ink mb-1">Nama Mata Pelajaran <span className="text-brand-red">*</span></label>
             <input
               id="mataPelajaranRPT"
               type="text"
@@ -156,7 +156,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
           </div>
 
           <div>
-            <label htmlFor="tahunDarjahRPT" className="block text-sm font-medium text-ink mb-1">Tahun / Darjah</label>
+            <label htmlFor="tahunDarjahRPT" className="block text-sm font-medium text-ink mb-1">Tahun / Darjah <span className="text-brand-red">*</span></label>
             <input
               id="tahunDarjahRPT"
               type="text"
@@ -169,7 +169,7 @@ export default function RPTModal({ open, laporan, profiles, panitiaSenarai, kate
           </div>
 
           <div>
-            <label htmlFor="guruRPT" className="block text-sm font-medium text-ink mb-1">Nama Guru</label>
+            <label htmlFor="guruRPT" className="block text-sm font-medium text-ink mb-1">Nama Guru <span className="text-brand-red">*</span></label>
             <select
               id="guruRPT"
               required

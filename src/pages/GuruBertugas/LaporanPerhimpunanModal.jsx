@@ -78,7 +78,7 @@ export default function LaporanPerhimpunanModal({ open, laporan, profiles, emelS
         <form onSubmit={hantar} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="minggu" className="block text-sm font-medium text-ink mb-1">Minggu Ke-</label>
+              <label htmlFor="minggu" className="block text-sm font-medium text-ink mb-1">Minggu Ke- <span className="text-brand-red">*</span></label>
               <input
                 id="minggu"
                 type="number"
@@ -90,7 +90,7 @@ export default function LaporanPerhimpunanModal({ open, laporan, profiles, emelS
               />
             </div>
             <div>
-              <label htmlFor="tarikhPerhimpunan" className="block text-sm font-medium text-ink mb-1">Tarikh</label>
+              <label htmlFor="tarikhPerhimpunan" className="block text-sm font-medium text-ink mb-1">Tarikh <span className="text-brand-red">*</span></label>
               <input
                 id="tarikhPerhimpunan"
                 type="date"
@@ -110,7 +110,7 @@ export default function LaporanPerhimpunanModal({ open, laporan, profiles, emelS
           </div>
 
           <div>
-            <label htmlFor="laporanSivik" className="block text-sm font-medium text-ink mb-1">Laporan Sivik</label>
+            <label htmlFor="laporanSivik" className="block text-sm font-medium text-ink mb-1">Laporan Sivik <span className="text-brand-red">*</span></label>
             <textarea
               id="laporanSivik"
               required
@@ -144,7 +144,7 @@ export default function LaporanPerhimpunanModal({ open, laporan, profiles, emelS
           </div>
 
           <div>
-            <label htmlFor="namaPentadbir" className="block text-sm font-medium text-ink mb-1">Nama Pentadbir</label>
+            <label htmlFor="namaPentadbir" className="block text-sm font-medium text-ink mb-1">Nama Pentadbir <span className="text-brand-red">*</span></label>
             <select
               id="namaPentadbir"
               required
@@ -160,7 +160,7 @@ export default function LaporanPerhimpunanModal({ open, laporan, profiles, emelS
           </div>
 
           <div>
-            <label htmlFor="dilaporkanOleh" className="block text-sm font-medium text-ink mb-1">Dilaporkan Oleh</label>
+            <label htmlFor="dilaporkanOleh" className="block text-sm font-medium text-ink mb-1">Dilaporkan Oleh <span className="text-brand-red">*</span></label>
             <select
               id="dilaporkanOleh"
               required

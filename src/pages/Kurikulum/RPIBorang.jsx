@@ -101,7 +101,7 @@ export default function RPIBorang({ rpi, senaraiMurid, onSimpan, onBatal }) {
           <button type="submit" disabled={menyimpan} className="flex-1 sm:flex-none h-12 px-8 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
             {menyimpan ? 'Menyimpan…' : 'Simpan RPI'}
           </button>
-          <button type="button" onClick={onBatal} className="h-12 px-6 rounded-card border border-border bg-surface text-sm font-medium text-ink">
+          <button type="button" onClick={onBatal} className="h-12 px-5 rounded-card border border-border text-sm font-medium text-ink">
             Batal
           </button>
         </div>

@@ -229,11 +229,11 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
       <form onSubmit={hantar} className="space-y-4">
         <div className="p-4 rounded-card border border-border bg-surface grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="minggu" className="block text-sm font-medium text-ink mb-1">Minggu Ke-</label>
+            <label htmlFor="minggu" className="block text-sm font-medium text-ink mb-1">Minggu Ke- <span className="text-brand-red">*</span></label>
             <input id="minggu" type="number" min="1" required value={minggu} onChange={(e) => setMinggu(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
           </div>
           <div>
-            <label htmlFor="tarikhHarian" className="block text-sm font-medium text-ink mb-1">Tarikh</label>
+            <label htmlFor="tarikhHarian" className="block text-sm font-medium text-ink mb-1">Tarikh <span className="text-brand-red">*</span></label>
             <input id="tarikhHarian" type="date" required value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
           </div>
           <div className="col-span-2">
@@ -415,7 +415,7 @@ export default function LaporanHarianForm({ laporan, user, onSelesai, onBatal })
           </div>
 
           <div>
-            <label htmlFor="dilaporkanOleh" className="block text-sm font-medium text-ink mb-1">Dilaporkan Oleh</label>
+            <label htmlFor="dilaporkanOleh" className="block text-sm font-medium text-ink mb-1">Dilaporkan Oleh <span className="text-brand-red">*</span></label>
             <select id="dilaporkanOleh" required value={dilaporkanOlehEmel} onChange={(e) => setDilaporkanOlehEmel(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
               <option value="">-- Pilih guru --</option>
               {guruAktif.map((g) => <option key={g.emel} value={g.emel}>{g.nama}</option>)}

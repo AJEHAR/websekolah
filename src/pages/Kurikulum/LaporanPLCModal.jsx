@@ -75,7 +75,7 @@ export default function LaporanPLCModal({ open, laporan, profiles, penggunaSendi
 
         <form onSubmit={hantar} className="space-y-4">
           <div>
-            <label htmlFor="tajukFokus" className="block text-sm font-medium text-ink mb-1">Tajuk / Fokus</label>
+            <label htmlFor="tajukFokus" className="block text-sm font-medium text-ink mb-1">Tajuk / Fokus <span className="text-brand-red">*</span></label>
             <input
               id="tajukFokus"
               type="text"
@@ -88,7 +88,7 @@ export default function LaporanPLCModal({ open, laporan, profiles, penggunaSendi
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="tarikhPLC" className="block text-sm font-medium text-ink mb-1">Tarikh</label>
+              <label htmlFor="tarikhPLC" className="block text-sm font-medium text-ink mb-1">Tarikh <span className="text-brand-red">*</span></label>
               <input
                 id="tarikhPLC"
                 type="date"
@@ -122,7 +122,7 @@ export default function LaporanPLCModal({ open, laporan, profiles, penggunaSendi
           </div>
 
           <div>
-            <label htmlFor="namaKumpulanPLC" className="block text-sm font-medium text-ink mb-1">Nama Kumpulan</label>
+            <label htmlFor="namaKumpulanPLC" className="block text-sm font-medium text-ink mb-1">Nama Kumpulan <span className="text-brand-red">*</span></label>
             <input
               id="namaKumpulanPLC"
               type="text"

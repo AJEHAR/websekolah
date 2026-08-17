@@ -1,10 +1,12 @@
 import PemilihMurid from './PemilihMurid.jsx'
 import { KOD_SEKOLAH, NAMA_SEKOLAH, PROGRAM_PK_OPTIONS } from './rpiConstants.js'
 
-function Medan({ label, children }) {
+function Medan({ label, wajib, children }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-ink mb-1">{label}</label>
+      <label className="block text-sm font-medium text-ink mb-1">
+        {label}{wajib && <span className="text-brand-red"> *</span>}
+      </label>
       {children}
     </div>
   )
@@ -27,7 +29,7 @@ export default function RPIBahagianA({ data, onUbah, senaraiMurid, muridDipilih,
         <Medan label="1. Kod Sekolah">
           <div className="h-11 px-3 rounded-card border border-border bg-base text-sm flex items-center text-inkmuted">{KOD_SEKOLAH}</div>
         </Medan>
-        <Medan label="2. Tahun">
+        <Medan label="2. Tahun" wajib>
           <Input type="text" required value={data.tahunSesi} onChange={(e) => u('tahunSesi', e.target.value)} placeholder="contoh: 2026" />
         </Medan>
       </div>
@@ -47,7 +49,7 @@ export default function RPIBahagianA({ data, onUbah, senaraiMurid, muridDipilih,
         </div>
       </Medan>
 
-      <Medan label="5. Nama Murid">
+      <Medan label="5. Nama Murid" wajib>
         <PemilihMurid senaraiMurid={senaraiMurid} muridDipilih={muridDipilih} onPilih={onPilihMurid} />
       </Medan>
 

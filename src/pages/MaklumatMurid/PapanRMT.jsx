@@ -5,6 +5,7 @@ import { useKehadiranJulat, ambilKehadiranJulat } from '../../hooks/useKehadiran
 import { useCetak } from '../../hooks/useCetak.js'
 import { muatTurunXlsx } from '../../lib/xlsxExport.js'
 import CetakPapanRMT from './CetakPapanRMT.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 const NAMA_BULAN = [
   'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun',
@@ -54,6 +55,7 @@ export function kiraDataRMT(kehadiranBulan) {
 }
 
 export default function PapanRMT() {
+  const { amaran } = useDialog()
   const [tahun, setTahun] = useState(TAHUN_SEMASA)
   const [bulan, setBulan] = useState(new Date().getMonth() + 1)
 
@@ -111,7 +113,7 @@ export default function PapanRMT() {
         }
       }
       if (helaianSenarai.length === 0) {
-        window.alert('Tiada rekod RMT untuk tahun ni langsung.')
+        await amaran('Tiada rekod RMT untuk tahun ni langsung.')
         return
       }
       muatTurunXlsx(`Papan-RMT-${tahun}-Tahun-Penuh.xlsx`, helaianSenarai)
@@ -139,7 +141,7 @@ export default function PapanRMT() {
         }
       }
       if (semuaBulan.length === 0) {
-        window.alert('Tiada rekod RMT untuk tahun ni langsung.')
+        await amaran('Tiada rekod RMT untuk tahun ni langsung.')
         return
       }
       setDataCetak(semuaBulan)
@@ -203,7 +205,7 @@ export default function PapanRMT() {
                     <th
                       key={h}
                       className={`px-1.5 py-2 font-semibold text-center border-b border-border w-8 ${
-                        hujungMinggu ? 'bg-[#F1EFE8] text-inkmuted' : 'text-ink'
+                        hujungMinggu ? 'bg-tint-hujungMinggu text-inkmuted' : 'text-ink'
                       }`}
                     >
                       <div>{h}</div>

@@ -9,8 +9,10 @@ import RPIBorang from './RPIBorang.jsx'
 import PrasidangModal from './PrasidangModal.jsx'
 import CetakRPI from './CetakRPI.jsx'
 import CetakPrasidang from './CetakPrasidang.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function RPI() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { senarai: senaraiMurid } = useMuridList()
   const { senarai, loading, muatSemula } = useRPIList()
@@ -44,7 +46,7 @@ export default function RPI() {
   }
 
   async function padamSatu(id) {
-    if (!window.confirm('Padam RPI ini beserta semua rekod intervensi/pencapaian di dalamnya?')) return
+    if (!(await konfirm('Padam RPI ini beserta semua rekod intervensi/pencapaian di dalamnya?', { bahaya: true }))) return
     await padamRPI(id)
     muatSemula()
   }
@@ -58,7 +60,7 @@ export default function RPI() {
   }
 
   async function padamPrasidangSatu(id) {
-    if (!window.confirm('Padam rumusan prasidang ini?')) return
+    if (!(await konfirm('Padam rumusan prasidang ini?', { bahaya: true }))) return
     await padamPrasidang(id)
     muatSemulaPrasidang()
   }

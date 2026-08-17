@@ -11,6 +11,43 @@ Tarikh audit asal: rujuk git log fail ni.
 
 ## ✅ TELAH DIBAIKI
 
+### Audit Reka Bentuk Menyeluruh (4 Fasa) - konsistensi, wording, dialog
+
+Audit menyeluruh reka bentuk web (borang, mobile/responsive, simetri,
+wording) mendapati beberapa isu, semua dibaiki dalam 4 fasa:
+
+**Fasa 1 - Login/Signup baharu:** Komponen `AksesPrompt.jsx` (2 mod
+kontras - tab mobile, panel warna jenama desktop) menggantikan corak
+"satu butang Log Masuk" lama di 6 tempat (Keberadaan, Guru Bertugas,
+HEM, KOKU, KURI, Profil). Turut ambil kira suis pendaftaran
+dibuka/ditutup (sembunyi mod "Daftar" bila admin tutup pendaftaran).
+
+**Fasa 2 - 5 pembetulan simetri/konsistensi kecil:** RPI Bahagian C
+(`h-10` → `h-11`, padan Bahagian A/B), butang Batal RPI diselaraskan
+dengan 8 modal lain, saiz ikon Guru Bertugas (15→16, padan skala
+14/16/18 sistem), 2 warna hex terus jadi token rasmi
+(`tint-hujungMinggu`, `tint-amaran` dalam `tailwind.config.js`), tajuk
+sekolah di drawer mobile tak lagi terpotong.
+
+**Fasa 3 - Tanda medan wajib (`*`):** 45+ medan wajib merentasi 18
+fail kini bertanda `*` merah - termasuk medan yang wajib secara logik
+JS (pemilih murid, gambar profile) walaupun tiada atribut HTML
+`required`.
+
+**Fasa 4 - Ganti 45 dialog asli pelayar:** `DialogContext.jsx` (sistem
+konfirmasi/amaran/input sendiri, guna Promise - API serupa
+`window.confirm`/`alert`/`prompt` supaya tukar minimum kod) menggantikan
+**semua** 45 panggilan `window.confirm`/`window.alert`/`window.prompt`
+merentasi 29 fail (termasuk `AuthContext.jsx`). Disahkan 0 tinggal
+melalui carian penuh + semakan setiap fungsi yang guna `await
+konfirm/amaran/soal` memang `async`.
+
+**Pengesahan:** Setiap fasa dibina build bersih + pratonton visual
+(mock statik guna token reka bentuk sebenar, sebab log masuk sebenar
+tak boleh diuji dalam sandbox) sebelum sambung ke fasa seterusnya.
+
+---
+
 ### Pisah "Log Masuk" vs "Daftar" + suis buka/tutup pendaftaran
 
 **Fail:** `firestore.rules`, `src/context/AuthContext.jsx`,

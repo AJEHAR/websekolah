@@ -3,6 +3,7 @@ import { Copy, Check, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { useKehadiranTarikh } from '../../hooks/useKehadiranMurid.js'
 import { todayISO, formatTarikhPaparan, namaHari } from '../../lib/dateUtils.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 const LABEL_KATEGORI = {
   PRASEKOLAH: 'MBK Prasekolah',
@@ -39,6 +40,7 @@ async function salinTeks(teks) {
 }
 
 export default function LaporanBanci() {
+  const { amaran } = useDialog()
   const [tarikh, setTarikh] = useState(todayISO())
   const { senarai: muridSenarai, loading: loadingMurid } = useMuridList()
   const { senarai: kehadiranSenarai, loading: loadingKehadiran } = useKehadiranTarikh(tarikh)
@@ -66,7 +68,7 @@ export default function LaporanBanci() {
       setDisalinSenarai(true)
       setTimeout(() => setDisalinSenarai(false), 2000)
     } else {
-      window.alert('Gagal salin. Sila salin manual daripada kotak teks tu.')
+      await amaran('Gagal salin. Sila salin manual daripada kotak teks tu.')
     }
   }
 
@@ -113,7 +115,7 @@ export default function LaporanBanci() {
       setDisalinPapan(true)
       setTimeout(() => setDisalinPapan(false), 2000)
     } else {
-      window.alert('Gagal salin. Sila salin manual daripada papan tu.')
+      await amaran('Gagal salin. Sila salin manual daripada papan tu.')
     }
   }
 
@@ -152,9 +154,9 @@ export default function LaporanBanci() {
           {/* Status ringkas - bukan gate, papan tetap papar walau data belum lengkap */}
           <div className="flex items-center gap-2 mb-4 text-xs">
             {kelasBelumIsi.length === 0 ? (
-              <><CheckCircle2 size={15} className="text-green-700" /> <span className="text-green-700 font-medium">Semua kelas dah isi kehadiran</span></>
+              <><CheckCircle2 size={16} className="text-green-700" /> <span className="text-green-700 font-medium">Semua kelas dah isi kehadiran</span></>
             ) : (
-              <><AlertTriangle size={15} className="text-brand-red" /> <span className="text-brand-red font-medium">{kelasBelumIsi.length} kelas belum isi - data papan di bawah belum lengkap</span></>
+              <><AlertTriangle size={16} className="text-brand-red" /> <span className="text-brand-red font-medium">{kelasBelumIsi.length} kelas belum isi - data papan di bawah belum lengkap</span></>
             )}
           </div>
 

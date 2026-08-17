@@ -87,14 +87,14 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
           )}
         </div>
         <label className="text-sm font-medium text-brand-red cursor-pointer">
-          Muat naik gambar
+          Muat naik gambar <span className="text-brand-red">*</span>
           <input type="file" accept="image/*" onChange={pilihGambar} className="hidden" />
         </label>
       </div>
 
       <div>
         <label htmlFor="emel" className="block text-sm font-medium text-ink mb-1">
-          Emel {modeEdit && <span className="text-inkmuted font-normal">(tak boleh diubah)</span>}
+          Emel <span className="text-brand-red">*</span> {modeEdit && <span className="text-inkmuted font-normal">(tak boleh diubah)</span>}
         </label>
         <input
           id="emel"
@@ -114,7 +114,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
       </div>
 
       <div>
-        <label htmlFor="nama" className="block text-sm font-medium text-ink mb-1">Nama</label>
+        <label htmlFor="nama" className="block text-sm font-medium text-ink mb-1">Nama <span className="text-brand-red">*</span></label>
         <input
           id="nama"
           type="text"
@@ -127,7 +127,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
       </div>
 
       <div>
-        <label htmlFor="ic" className="block text-sm font-medium text-ink mb-1">No. IC</label>
+        <label htmlFor="ic" className="block text-sm font-medium text-ink mb-1">No. IC <span className="text-brand-red">*</span></label>
         <input
           id="ic"
           type="text"
@@ -140,7 +140,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
       </div>
 
       <div>
-        <label htmlFor="jawatan" className="block text-sm font-medium text-ink mb-1">Jawatan</label>
+        <label htmlFor="jawatan" className="block text-sm font-medium text-ink mb-1">Jawatan <span className="text-brand-red">*</span></label>
         <select
           id="jawatan"
           required
@@ -155,7 +155,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
       </div>
 
       <div>
-        <label htmlFor="kategori" className="block text-sm font-medium text-ink mb-1">Kategori</label>
+        <label htmlFor="kategori" className="block text-sm font-medium text-ink mb-1">Kategori <span className="text-brand-red">*</span></label>
         <select
           id="kategori"
           required
@@ -171,7 +171,7 @@ export default function AdminProfileForm({ profile, onSimpan, onBatal }) {
 
       {kategori === 'PPM' && (
         <div>
-          <label htmlFor="jenisPPM" className="block text-sm font-medium text-ink mb-1">Jenis PPM</label>
+          <label htmlFor="jenisPPM" className="block text-sm font-medium text-ink mb-1">Jenis PPM <span className="text-brand-red">*</span></label>
           <select
             id="jenisPPM"
             required

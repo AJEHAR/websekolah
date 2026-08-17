@@ -7,8 +7,10 @@ import { useOutletContext } from 'react-router-dom'
 import KumpulanBertugasCard from './KumpulanBertugasCard.jsx'
 import KumpulanBertugasModal from './KumpulanBertugasModal.jsx'
 import TugasBertugasSenarai from './TugasBertugasSenarai.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function Kumpulan() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { adaSeksyen } = useIsAdmin(user)
   const { profiles } = useProfilesList()
@@ -32,7 +34,7 @@ export default function Kumpulan() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam kumpulan ini?')) return
+    if (!(await konfirm('Padam kumpulan ini?', { bahaya: true }))) return
     await padamKumpulan(id)
     muatSemula()
   }

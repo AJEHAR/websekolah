@@ -32,7 +32,7 @@ export default function TukarGuruModal({ open, laporan, profiles, onClose, onTuk
 
         <form onSubmit={hantar} className="space-y-4">
           <div>
-            <label htmlFor="tukarGuruEmel" className="block text-sm font-medium text-ink mb-1">Nama Guru Baru</label>
+            <label htmlFor="tukarGuruEmel" className="block text-sm font-medium text-ink mb-1">Nama Guru Baru <span className="text-brand-red">*</span></label>
             <select
               id="tukarGuruEmel"
               required

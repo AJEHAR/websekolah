@@ -6,8 +6,10 @@ import { useLogKeberadaan, kemaskiniKeberadaan, padamKeberadaan } from '../../ho
 import { todayISO } from '../../lib/dateUtils.js'
 import KeberadaanCard from './KeberadaanCard.jsx'
 import BorangModal from './BorangModal.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function Log() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { isSuperAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
@@ -37,7 +39,7 @@ export default function Log() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam rekod keberadaan ini?')) return
+    if (!(await konfirm('Padam rekod keberadaan ini?', { bahaya: true }))) return
     await padamKeberadaan(id)
     muatSemula()
   }

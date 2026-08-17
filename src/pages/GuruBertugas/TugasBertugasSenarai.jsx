@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, Check, X } from 'lucide-react'
 import { useTugasBertugas, tambahTugas, kemaskiniTugas, padamTugas } from '../../hooks/useTugasBertugas.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function TugasBertugasSenarai({ isAdmin }) {
+  const { konfirm } = useDialog()
   const { senarai, loading, muatSemula } = useTugasBertugas()
   const [teksBaru, setTeksBaru] = useState('')
   const [idEdit, setIdEdit] = useState(null)
@@ -30,7 +32,7 @@ export default function TugasBertugasSenarai({ isAdmin }) {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam tugasan ini?')) return
+    if (!(await konfirm('Padam tugasan ini?', { bahaya: true }))) return
     await padamTugas(id)
     muatSemula()
   }
@@ -96,10 +98,10 @@ export default function TugasBertugasSenarai({ isAdmin }) {
                   {isAdmin && (
                     <div className="flex items-center gap-0.5 shrink-0">
                       <button onClick={() => pindah(i, -1)} disabled={i === 0} aria-label="Naik" className="p-1.5 rounded-card hover:bg-base text-inkmuted disabled:opacity-30">
-                        <ChevronUp size={15} />
+                        <ChevronUp size={16} />
                       </button>
                       <button onClick={() => pindah(i, 1)} disabled={i === senarai.length - 1} aria-label="Turun" className="p-1.5 rounded-card hover:bg-base text-inkmuted disabled:opacity-30">
-                        <ChevronDown size={15} />
+                        <ChevronDown size={16} />
                       </button>
                       <button onClick={() => mulaEdit(t)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
                         <Pencil size={14} />

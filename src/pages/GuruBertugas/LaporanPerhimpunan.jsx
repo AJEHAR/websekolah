@@ -12,8 +12,10 @@ import {
 import LaporanPerhimpunanModal from './LaporanPerhimpunanModal.jsx'
 import LaporanPerhimpunanDetailModal from './LaporanPerhimpunanDetailModal.jsx'
 import CetakLaporanPerhimpunan from './CetakLaporanPerhimpunan.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function LaporanPerhimpunan() {
+  const { konfirm, amaran } = useDialog()
   const { user } = useOutletContext()
   const { senarai, loading, muatSemula } = useLaporanPerhimpunan()
   const { profiles } = useProfilesList()
@@ -49,7 +51,7 @@ export default function LaporanPerhimpunan() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam laporan perhimpunan ini?')) return
+    if (!(await konfirm('Padam laporan perhimpunan ini?', { bahaya: true }))) return
     await padamLaporanPerhimpunan(id)
     muatSemula()
   }
@@ -58,14 +60,14 @@ export default function LaporanPerhimpunan() {
     setDataCetak([laporan])
   }
 
-  function cetakJulat() {
+  async function cetakJulat() {
     const ditapis = senarai.filter((l) => {
       if (dariTarikh && l.tarikh < dariTarikh) return false
       if (hinggaTarikh && l.tarikh > hinggaTarikh) return false
       return true
     })
     if (ditapis.length === 0) {
-      window.alert('Tiada laporan dalam julat tarikh tu.')
+      await amaran('Tiada laporan dalam julat tarikh tu.')
       return
     }
     // susun ikut tarikh menaik untuk cetakan (kronologi)

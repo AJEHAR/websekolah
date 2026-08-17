@@ -51,7 +51,7 @@ export default function SideDrawer({ open, onClose, links, user, onLogin, onDaft
         <div className="flex items-center justify-between gap-3 h-16 px-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/logo.png" alt="" className="h-8 w-8 object-contain shrink-0" />
-            <span className="text-sm font-semibold text-ink truncate">SK Pendidikan Khas Kuantan</span>
+            <span className="text-xs font-semibold text-ink leading-tight">SK Pendidikan Khas Kuantan</span>
           </div>
           <button
             onClick={onClose}

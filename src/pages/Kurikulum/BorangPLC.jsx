@@ -12,8 +12,10 @@ import {
 import LaporanPLCModal from './LaporanPLCModal.jsx'
 import LaporanPLCDetailModal from './LaporanPLCDetailModal.jsx'
 import CetakLaporanPLC from './CetakLaporanPLC.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function BorangPLC() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { senarai, loading, muatSemula } = useLaporanPLC()
   const { profiles } = useProfilesList()
@@ -47,7 +49,7 @@ export default function BorangPLC() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam laporan PLC ini?')) return
+    if (!(await konfirm('Padam laporan PLC ini?', { bahaya: true }))) return
     await padamLaporanPLC(id)
     muatSemula()
   }

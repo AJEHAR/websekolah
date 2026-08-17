@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { usePanitiaRPT, tambahPanitia, padamPanitia } from '../../hooks/usePanitiaRPT.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import AdminSeksyenGate from './AdminSeksyenGate.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function PanitiaRPTPage() {
   const { user } = useOutletContext()
@@ -16,6 +17,7 @@ export default function PanitiaRPTPage() {
 }
 
 function Isi() {
+  const { konfirm } = useDialog()
   const { senarai, loading, muatSemula } = usePanitiaRPT()
   const [nama, setNama] = useState('')
   const [ralat, setRalat] = useState(null)
@@ -42,7 +44,7 @@ function Isi() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam panitia ini? Laporan RPT sedia ada yang guna panitia ni tak akan terjejas, cuma tak boleh pilih untuk laporan baru.')) return
+    if (!(await konfirm('Padam panitia ini? Laporan RPT sedia ada yang guna panitia ni tak akan terjejas, cuma tak boleh pilih untuk laporan baru.', { bahaya: true }))) return
     await padamPanitia(id)
     muatSemula()
   }
@@ -55,7 +57,7 @@ function Isi() {
 
       <form onSubmit={tambah} className="flex flex-wrap items-end gap-2 mb-5">
         <div>
-          <label htmlFor="namaPanitia" className="block text-xs font-medium text-ink mb-1">Nama Panitia</label>
+          <label htmlFor="namaPanitia" className="block text-xs font-medium text-ink mb-1">Nama Panitia <span className="text-brand-red">*</span></label>
           <input
             id="namaPanitia"
             type="text"

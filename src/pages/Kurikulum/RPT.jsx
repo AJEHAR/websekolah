@@ -12,6 +12,7 @@ import {
 } from '../../hooks/useLaporanRPT.js'
 import RPTModal from './RPTModal.jsx'
 import TukarGuruModal from './TukarGuruModal.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 // Pautan muat turun terus (bukan pautan pratonton) - dibina daripada fileId,
 // tak perlu ubah Apps Script (yang pulangkan 'url' berformat thumbnail
@@ -22,6 +23,7 @@ function pautanMuatTurun(fail) {
 }
 
 export default function RPT() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { senarai, loading, muatSemula } = useLaporanRPT()
   const { profiles } = useProfilesList()
@@ -64,7 +66,7 @@ export default function RPT() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam laporan RPT ini? Fail dalam Google Drive TIDAK dipadam automatik, cuma rekod dalam sistem.')) return
+    if (!(await konfirm('Padam laporan RPT ini? Fail dalam Google Drive TIDAK dipadam automatik, cuma rekod dalam sistem.', { bahaya: true }))) return
     await padamLaporanRPT(id)
     muatSemula()
   }

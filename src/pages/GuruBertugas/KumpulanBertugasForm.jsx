@@ -41,7 +41,7 @@ export default function KumpulanBertugasForm({ kumpulan, profiles, onSimpan, onB
   return (
     <form onSubmit={hantar} className="space-y-5">
       <div>
-        <label htmlFor="namaKumpulan" className="block text-sm font-medium text-ink mb-1">Nama Kumpulan</label>
+        <label htmlFor="namaKumpulan" className="block text-sm font-medium text-ink mb-1">Nama Kumpulan <span className="text-brand-red">*</span></label>
         <input
           id="namaKumpulan"
           type="text"

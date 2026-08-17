@@ -54,7 +54,7 @@ export default function PrasidangModal({ open, prasidang, senaraiMurid, onClose,
 
         <form onSubmit={hantar} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Nama Murid</label>
+            <label className="block text-sm font-medium text-ink mb-1">Nama Murid <span className="text-brand-red">*</span></label>
             <PemilihMurid senaraiMurid={senaraiMurid} muridDipilih={muridDipilih} onPilih={pilihMurid} />
           </div>
 

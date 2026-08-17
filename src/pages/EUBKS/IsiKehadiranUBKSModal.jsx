@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { X, Check, XCircle, Star } from 'lucide-react'
 import { simpanKehadiranUBKS } from '../../hooks/useKehadiranUBKS.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function IsiKehadiranUBKSModal({ unit, rekod, tahunSesi, perjumpaan, tarikh, user, onClose, onSelesai }) {
+  const { konfirm } = useDialog()
   const [kehadiran, setKehadiran] = useState(() => {
     const peta = {}
     if (rekod) {
@@ -27,11 +29,12 @@ export default function IsiKehadiranUBKSModal({ unit, rekod, tahunSesi, perjumpa
 
   if (!unit) return null
 
-  function toggl(m) {
+  async function toggl(m) {
     const sedangHadir = kehadiran[m.idMurid] ?? true
     if (m.adalahLF && sedangHadir) {
-      const ok = window.confirm(
-        `${m.nama} murid Kefungsian Rendah (LF) - biasanya SENTIASA hadir.\n\nAnda pasti nak tanda TAK HADIR?`
+      const ok = await konfirm(
+        `${m.nama} murid Kefungsian Rendah (LF) - biasanya SENTIASA hadir.\n\nAnda pasti nak tanda TAK HADIR?`,
+        { bahaya: true }
       )
       if (!ok) return
     }

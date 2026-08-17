@@ -130,7 +130,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
   return (
     <form onSubmit={hantar} className="space-y-5">
       <div>
-        <label htmlFor="nama" className="block text-sm font-medium text-ink mb-1">Nama</label>
+        <label htmlFor="nama" className="block text-sm font-medium text-ink mb-1">Nama <span className="text-brand-red">*</span></label>
         <select
           id="nama"
           required
@@ -168,7 +168,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
       {senaraiJenis.length > 0 && (
         <div>
           <label htmlFor="jenis" className="block text-sm font-medium text-ink mb-1">
-            Jenis {data.urusan}
+            Jenis {data.urusan} <span className="text-brand-red">*</span>
           </label>
           <select
             id="jenis"
@@ -187,7 +187,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
 
       {data.jenis === 'Lain-lain (nyatakan)' && (
         <div>
-          <label htmlFor="jenisLain" className="block text-sm font-medium text-ink mb-1">Nyatakan</label>
+          <label htmlFor="jenisLain" className="block text-sm font-medium text-ink mb-1">Nyatakan <span className="text-brand-red">*</span></label>
           <input
             id="jenisLain"
             type="text"
@@ -202,7 +202,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
       {!isKWB && (
         <div>
           <label htmlFor="catatan" className="block text-sm font-medium text-ink mb-1">
-            {data.urusan === 'Rasmi' ? 'Catatan (Nama Urusan Rasmi)' : 'Catatan (Sebab Cuti)'}
+            {data.urusan === 'Rasmi' ? 'Catatan (Nama Urusan Rasmi)' : 'Catatan (Sebab Cuti)'} <span className="text-brand-red">*</span>
           </label>
           <input
             id="catatan"
@@ -219,7 +219,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label htmlFor="tarikhMula" className="block text-sm font-medium text-ink mb-1">
-            {isKWB ? 'Tarikh' : 'Tarikh Mula'}
+            {isKWB ? 'Tarikh' : 'Tarikh Mula'} <span className="text-brand-red">*</span>
           </label>
           <input
             id="tarikhMula"
@@ -233,7 +233,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
 
         {!isKWB && adaJulat && (
           <div>
-            <label htmlFor="tarikhTamat" className="block text-sm font-medium text-ink mb-1">Tarikh Hingga</label>
+            <label htmlFor="tarikhTamat" className="block text-sm font-medium text-ink mb-1">Tarikh Hingga <span className="text-brand-red">*</span></label>
             <input
               id="tarikhTamat"
               type="date"
@@ -262,7 +262,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
       {isKWB && (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="masaKeluar" className="block text-sm font-medium text-ink mb-1">Masa Keluar</label>
+            <label htmlFor="masaKeluar" className="block text-sm font-medium text-ink mb-1">Masa Keluar <span className="text-brand-red">*</span></label>
             <input
               id="masaKeluar"
               type="time"
@@ -273,7 +273,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
             />
           </div>
           <div>
-            <label htmlFor="masaKembali" className="block text-sm font-medium text-ink mb-1">Masa Kembali</label>
+            <label htmlFor="masaKembali" className="block text-sm font-medium text-ink mb-1">Masa Kembali <span className="text-brand-red">*</span></label>
             <input
               id="masaKembali"
               type="time"
@@ -287,7 +287,7 @@ export default function KeberadaanForm({ profiles, rekod, emelSendiri, onSimpan,
       )}
 
       <div>
-        <label htmlFor="tempat" className="block text-sm font-medium text-ink mb-1">Tempat</label>
+        <label htmlFor="tempat" className="block text-sm font-medium text-ink mb-1">Tempat <span className="text-brand-red">*</span></label>
         <input
           id="tempat"
           type="text"

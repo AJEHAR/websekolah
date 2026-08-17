@@ -2,6 +2,7 @@ import { useOutletContext } from 'react-router-dom'
 import { ShieldOff } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useSenaraiSekatan, bukaSekatan } from '../../hooks/useSenaraiSekatan.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 // Format terus dari Date (bukan lalu ISO string) - elak isu toISOString()
 // tukar ke UTC yang boleh anjak tarikh untuk zon Malaysia (rujuk nota di
@@ -28,10 +29,11 @@ export default function SenaraiSekatanPage() {
 }
 
 function Isi() {
+  const { konfirm } = useDialog()
   const { senarai, loading, muatSemula } = useSenaraiSekatan()
 
   async function buka(emel) {
-    if (!window.confirm(`Buka sekatan untuk "${emel}"? Dia akan boleh mendaftar semula.`)) return
+    if (!(await konfirm(`Buka sekatan untuk "${emel}"? Dia akan boleh mendaftar semula.`, { bahaya: true }))) return
     await bukaSekatan(emel)
     muatSemula()
   }

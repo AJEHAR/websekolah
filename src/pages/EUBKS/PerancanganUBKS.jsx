@@ -12,6 +12,7 @@ import {
 import UnitPerancanganCard from './UnitPerancanganCard.jsx'
 import PerancanganModal from './PerancanganModal.jsx'
 import PerancanganDetailModal from './PerancanganDetailModal.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 const TAHUN_SEMASA = new Date().getFullYear()
 const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
@@ -130,6 +131,7 @@ function senaraiKategoriSusun(unitSenarai, kategoriSenarai) {
 }
 
 function JadualPerancangan({ unit, tahunSesi, user }) {
+  const { konfirm } = useDialog()
   const [rekod, setRekod] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tapisStatus, setTapisStatus] = useState('semua')
@@ -155,7 +157,7 @@ function JadualPerancangan({ unit, tahunSesi, user }) {
   }
 
   async function padamBaris(perjumpaan) {
-    if (!window.confirm(`Padam kandungan perancangan Perjumpaan ${perjumpaan}? Ini akan kosongkan semula petak ni.`)) return
+    if (!(await konfirm(`Padam kandungan perancangan Perjumpaan ${perjumpaan}? Ini akan kosongkan semula petak ni.`, { bahaya: true }))) return
     await tukarBaris(perjumpaan - 1, { perancangan: '', tarikh: '', selesai: false, tarikhSelesai: null })
   }
 

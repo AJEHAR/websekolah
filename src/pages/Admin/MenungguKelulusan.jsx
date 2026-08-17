@@ -1,8 +1,10 @@
 import { Check, X, ShieldBan } from 'lucide-react'
 import { luluskanProfile, padamProfileAdmin } from '../../hooks/useAdminProfiles.js'
 import { sekatEmel } from '../../hooks/useSenaraiSekatan.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function MenungguKelulusan({ profiles, loading, onSelesai, admin }) {
+  const { konfirm, soal } = useDialog()
   const senarai = profiles.filter((p) => p.status === 'menunggu')
 
   async function lulus(emel) {
@@ -11,18 +13,18 @@ export default function MenungguKelulusan({ profiles, loading, onSelesai, admin 
   }
 
   async function tolak(emel) {
-    if (!window.confirm('Tolak permohonan ni? Profile akan dipadam dan staff BOLEH mohon semula (cth. kalau maklumat borang tersalah).')) return
+    if (!(await konfirm('Tolak permohonan ni? Profile akan dipadam dan staff BOLEH mohon semula (cth. kalau maklumat borang tersalah).', { bahaya: true }))) return
     await padamProfileAdmin(emel)
     onSelesai()
   }
 
   async function tolakDanSekat(emel) {
-    const sebab = window.prompt(
+    const sebab = await soal(
       `Sekat "${emel}" KEKAL daripada mendaftar semula - guna untuk yang JELAS BUKAN staff sekolah ini.\n\nSebab (pilihan, untuk rekod):`,
       ''
     )
-    if (sebab === null) return // batal prompt
-    if (!window.confirm(`Pasti nak sekat "${emel}" KEKAL? Dia takkan boleh mendaftar semula sehingga admin buka sekatan secara manual.`)) return
+    if (sebab === null) return // batal
+    if (!(await konfirm(`Pasti nak sekat "${emel}" KEKAL? Dia takkan boleh mendaftar semula sehingga admin buka sekatan secara manual.`, { bahaya: true }))) return
     await padamProfileAdmin(emel)
     await sekatEmel(emel, sebab, admin?.email, admin?.displayName || admin?.email)
     onSelesai()

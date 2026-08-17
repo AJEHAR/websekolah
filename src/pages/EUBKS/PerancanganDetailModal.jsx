@@ -49,7 +49,7 @@ export default function PerancanganDetailModal({ baris, onClose, onTandaSelesai,
             </div>
           ) : mintaTarikh ? (
             <form onSubmit={sahkanSelesai} className="space-y-3">
-              <label htmlFor="tarikhSelesai" className="block text-xs font-medium text-ink">Tarikh dilaksanakan</label>
+              <label htmlFor="tarikhSelesai" className="block text-xs font-medium text-ink">Tarikh dilaksanakan <span className="text-brand-red">*</span></label>
               <input
                 id="tarikhSelesai"
                 type="date"

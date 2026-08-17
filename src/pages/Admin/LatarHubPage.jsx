@@ -4,6 +4,7 @@ import { Upload } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useLatarHubSemua, simpanLatarHub } from '../../hooks/useLatarHub.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 const SEKSYEN_SENARAI = [
   { kunci: 'keberadaan', label: 'Keberadaan' },
@@ -52,6 +53,7 @@ function Isi({ user }) {
 }
 
 function SeksyenBaris({ seksyen, latar, user, onSelesai }) {
+  const { amaran } = useDialog()
   const [sedangMuatNaik, setSedangMuatNaik] = useState(null) // 'telefon' | 'desktop' | null
 
   async function pilihFail(e, jenis) {
@@ -64,7 +66,7 @@ function SeksyenBaris({ seksyen, latar, user, onSelesai }) {
       await simpanLatarHub(seksyen.kunci, { [medan]: hasil.url }, user.uid)
       onSelesai()
     } catch (err) {
-      window.alert(err.message || 'Gagal muat naik.')
+      await amaran(err.message || 'Gagal muat naik.')
     } finally {
       setSedangMuatNaik(null)
       e.target.value = ''

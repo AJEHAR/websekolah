@@ -7,11 +7,13 @@ import KeberadaanCardRingkas from '../Keberadaan/KeberadaanCardRingkas.jsx'
 import DetailModal from '../Keberadaan/DetailModal.jsx'
 import KeberadaanForm from '../Keberadaan/KeberadaanForm.jsx'
 import KalendarBulanan from './KalendarBulanan.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 const TAHUN_SEMASA = new Date().getFullYear()
 const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
 
 export default function SenaraiKeberadaanSaya() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { isSuperAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
@@ -30,7 +32,7 @@ export default function SenaraiKeberadaanSaya() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam rekod keberadaan ini?')) return
+    if (!(await konfirm('Padam rekod keberadaan ini?', { bahaya: true }))) return
     await padamKeberadaan(id)
     muatSemula()
   }

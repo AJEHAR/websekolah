@@ -17,6 +17,10 @@ export default {
           gold: '#F2C230',     // aksen kuning emas dari logo
         },
         border: '#E5E5E5',
+        tint: {
+          hujungMinggu: '#F1EFE8', // latar lembut untuk sel hujung minggu (Papan RMT)
+          amaran: '#FCEBEB',       // latar lembut untuk sel/medan kosong perlu perhatian (Semakan Murid)
+        },
       },
       fontFamily: {
         sans: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],

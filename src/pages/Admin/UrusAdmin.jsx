@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { ShieldCheck, X, ChevronDown } from 'lucide-react'
 import { useAdminsList, tambahAdmin, kemaskiniPeranan, buangAdmin } from '../../hooks/useAdmins.js'
 import { SEKSYEN_ADMIN } from './seksyenAdmin.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function UrusAdmin({ profiles, currentUser }) {
+  const { konfirm, amaran } = useDialog()
   const { admins, loading, muatSemula } = useAdminsList()
   const [emelDipilih, setEmelDipilih] = useState('')
   const [peranBaru, setPeranBaru] = useState([]) // [] = super (penuh) secara default
@@ -47,7 +49,7 @@ export default function UrusAdmin({ profiles, currentUser }) {
     // Kalau admin ni 'super', tukar checkbox seksyen akan tukar dia jadi
     // admin seksyen sahaja (buang 'super') - beri amaran dulu.
     if (peranSemasa.includes('super')) {
-      if (!window.confirm(`"${admin.emel}" admin PENUH sekarang. Hadkan kepada seksyen tertentu sahaja?`)) return
+      if (!(await konfirm(`"${admin.emel}" admin PENUH sekarang. Hadkan kepada seksyen tertentu sahaja?`, { bahaya: true }))) return
       await kemaskiniPeranan(admin.emel, [kunci])
     } else {
       const baru = peranSemasa.includes(kunci) ? peranSemasa.filter((k) => k !== kunci) : [...peranSemasa, kunci]
@@ -63,19 +65,19 @@ export default function UrusAdmin({ profiles, currentUser }) {
 
   async function buang(emel) {
     if (emel === currentUser.email) {
-      window.alert('Anda tak boleh buang diri sendiri sebagai admin.')
+      await amaran('Anda tak boleh buang diri sendiri sebagai admin.')
       return
     }
     if (admins.length <= 1) {
-      window.alert('Mesti ada sekurang-kurangnya 1 admin dalam sistem.')
+      await amaran('Mesti ada sekurang-kurangnya 1 admin dalam sistem.')
       return
     }
-    if (!window.confirm(`Buang "${emel}" daripada senarai admin?`)) return
+    if (!(await konfirm(`Buang "${emel}" daripada senarai admin?`, { bahaya: true }))) return
     try {
       await buangAdmin(emel)
       muatSemula()
     } catch (err) {
-      window.alert('Gagal buang admin. Cuba lagi.')
+      await amaran('Gagal buang admin. Cuba lagi.')
       console.error(err)
     }
   }

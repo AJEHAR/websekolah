@@ -92,7 +92,7 @@ export default function SemakanMurid() {
                     <td
                       key={kunci}
                       className={`px-3 py-2 whitespace-nowrap ${
-                        !m[kunci] ? 'bg-[#FCEBEB] text-brand-red font-semibold' : 'text-ink'
+                        !m[kunci] ? 'bg-tint-amaran text-brand-red font-semibold' : 'text-ink'
                       }`}
                     >
                       {m[kunci] || 'TIADA DATA'}

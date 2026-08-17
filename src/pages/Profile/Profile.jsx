@@ -4,11 +4,12 @@ import { useProfile } from '../../hooks/useProfile.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useSekatan } from '../../hooks/useSekatan.js'
 import { useTetapanPendaftaran } from '../../hooks/useTetapanPendaftaran.js'
+import AksesPrompt from '../../components/AksesPrompt.jsx'
 import ProfileForm from './ProfileForm.jsx'
 import ProfileView from './ProfileView.jsx'
 
 export default function Profile() {
-  const { user, loading: loadingAuth, signInWithGoogle, signOutUser } = useAuth()
+  const { user, loading: loadingAuth, signOutUser } = useAuth()
   const { profile, loading: loadingProfile, simpanProfile } = useProfile(user)
   const { isAdmin, loading: loadingAdmin } = useIsAdmin(user)
   const { disekat, sebabSekatan, loading: loadingSekatan } = useSekatan(user)
@@ -24,33 +25,7 @@ export default function Profile() {
   }
 
   if (!user) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 sm:px-6 py-16">
-        <div className="bg-surface border border-border rounded-card shadow-soft p-10 text-center">
-          <h1 className="text-xl font-bold text-ink">Profile</h1>
-          <p className="text-inkmuted mt-2 text-sm">Sila log masuk dengan Google untuk lihat profile anda.</p>
-          <p className="text-xs text-brand-red font-semibold mt-4">
-            Sistem ini KHAS untuk staff SK Pendidikan Khas Kuantan sahaja.
-          </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => signInWithGoogle('login')}
-              className="h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold"
-            >
-              Log Masuk (sudah ada akaun)
-            </button>
-            {pendaftaranDibuka && (
-              <button
-                onClick={() => signInWithGoogle('daftar')}
-                className="h-12 px-6 rounded-card border border-border text-sm font-semibold text-ink"
-              >
-                Daftar (staff baru)
-              </button>
-            )}
-          </div>
-        </div>
-      </main>
-    )
+    return <AksesPrompt namaHalaman="Profil" pendaftaranDibuka={pendaftaranDibuka} />
   }
 
   // Akaun disekat kekal oleh admin - jangan papar borang pendaftaran

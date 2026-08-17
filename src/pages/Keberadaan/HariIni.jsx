@@ -8,8 +8,10 @@ import { KUMPULAN_KEBERADAAN, kumpulanKategori } from './constants.js'
 import KumpulanCard from './KumpulanCard.jsx'
 import BorangModal from './BorangModal.jsx'
 import DetailModal from './DetailModal.jsx'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function HariIni() {
+  const { konfirm } = useDialog()
   const { user } = useOutletContext()
   const { isSuperAdmin } = useIsAdmin(user)
   const { profiles } = useProfilesList()
@@ -36,7 +38,7 @@ export default function HariIni() {
   }
 
   async function padam(id) {
-    if (!window.confirm('Padam rekod keberadaan ini?')) return
+    if (!(await konfirm('Padam rekod keberadaan ini?', { bahaya: true }))) return
     await padamKeberadaan(id)
     muatSemula()
   }

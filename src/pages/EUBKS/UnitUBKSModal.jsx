@@ -4,8 +4,10 @@ import { useMuridList } from '../../hooks/useMurid.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { kemaskiniUnit, padamUnit } from '../../hooks/useUnitUBKS.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai }) {
+  const { konfirm, amaran } = useDialog()
   const { senarai: muridSenarai } = useMuridList()
   const { senarai: kategoriSenarai } = useKategoriUBKS()
   const [namaUnit, setNamaUnit] = useState(unit?.namaUnit ?? '')
@@ -88,7 +90,7 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
       setTimeout(() => onClose(), 600)
     } catch (err) {
       setStatusSimpan(null)
-      window.alert(err.message || 'Gagal simpan. Sila cuba lagi.')
+      await amaran(err.message || 'Gagal simpan. Sila cuba lagi.')
       console.error(err)
     } finally {
       setMenyimpan(false)
@@ -96,7 +98,7 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
   }
 
   async function padam() {
-    if (!window.confirm(`Padam unit "${unit.namaUnit}"? Tindakan ini tidak boleh dibatalkan.`)) return
+    if (!(await konfirm(`Padam unit "${unit.namaUnit}"? Tindakan ini tidak boleh dibatalkan.`, { bahaya: true }))) return
     await padamUnit(unit.id)
     onSelesai()
     onClose()
