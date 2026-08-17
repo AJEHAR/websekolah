@@ -97,15 +97,17 @@ export default function KumpulanBertugasForm({ kumpulan, profiles, onSimpan, onB
             profilDisenarai.map((p) => {
               const dipilih = ahliDipilih.some((a) => a.emel === p.emel)
               return (
-                <label key={p.id} className="flex items-center gap-3 p-2.5 text-sm cursor-pointer hover:bg-base">
+                <label key={p.id} className="flex items-start gap-3 p-2.5 text-sm cursor-pointer hover:bg-base">
                   <input
                     type="checkbox"
                     checked={dipilih}
                     onChange={() => togglAhli(p)}
-                    className="h-4 w-4 shrink-0"
+                    className="h-4 w-4 shrink-0 mt-0.5"
                   />
-                  <span className="text-ink">{p.nama}</span>
-                  <span className="text-xs text-inkmuted">{p.jawatan}</span>
+                  <span className="min-w-0">
+                    <span className="block text-ink leading-snug">{p.nama}</span>
+                    <span className="block text-xs text-inkmuted mt-0.5">{p.jawatan}</span>
+                  </span>
                 </label>
               )
             })

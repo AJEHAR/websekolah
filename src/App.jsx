@@ -76,12 +76,33 @@ import { useAksesStatus } from './hooks/useAksesStatus.js'
 // Admin (status='admin' dari useAksesStatus, walaupun profile sendiri
 // belum 'diluluskan') TIDAK terjejas peraturan ni - admin ditentukan
 // berasingan daripada aliran kelulusan profile staff.
+// Laluan yang tetap terbuka kepada SESIAPA sahaja (tak kira log masuk ke
+// tidak) - Utama + kandungan awam (Berita/Galeri/Hubungi, walaupun tak
+// dipautkan dalam nav sekarang, URL tu masih patut boleh dicapai terus).
+const LALUAN_AWAM = ['/', '/galeri', '/hubungi']
+function adalahLaluanAwam(pathname) {
+  return LALUAN_AWAM.includes(pathname) || pathname.startsWith('/berita')
+}
+
 function PenggeraAksesTerhad({ children }) {
   const { user } = useAuth()
   const { status, loading } = useAksesStatus(user)
   const location = useLocation()
 
-  if (!user || loading) return children
+  // Pengunjung belum log masuk LANGSUNG (bukan status "menunggu" - itu
+  // staff yang DAH log masuk tapi belum lulus, kes lain) - hadkan ke
+  // laluan awam sahaja. Elak dia "jumpa" page dalaman (walaupun cuma
+  // nampak skrin "sila log masuk", bukan data sebenar) sekadar dengan
+  // taip/ikut URL terus - selaras dengan nav yang dah sorok nama page
+  // tu (Navbar.jsx) supaya pengalaman konsisten merentasi kedua-dua.
+  if (!user) {
+    if (!adalahLaluanAwam(location.pathname)) {
+      return <Navigate to="/" replace />
+    }
+    return children
+  }
+
+  if (loading) return children
 
   if (status === 'belum-profile' && location.pathname !== '/profil') {
     return <Navigate to="/profil" replace />

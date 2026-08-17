@@ -12,15 +12,20 @@ export default function Navbar() {
   const { status, isAdmin } = useAksesStatus(user)
   const { dibuka: pendaftaranDibuka } = useTetapanPendaftaran()
 
-  // Staff belum diluluskan admin (atau belum isi profile lagi) - jangan
-  // dedah struktur menu dalaman (nama seksyen/sub-halaman). Cuma "Profil"
-  // ditunjukkan supaya dia boleh semak status/isi maklumat sendiri.
-  // Admin dikecualikan - status 'admin' ditentukan berasingan. PENTING:
-  // semak `user` dulu - useAksesStatus(null) (pengunjung belum log masuk)
-  // turut pulangkan status 'belum-profile' (sebab tiada rekod profile),
-  // tanpa semakan `user` di sini pengunjung AWAM pun tersalah kena sekat.
+  // 3 peringkat penglihatan menu:
+  // 1. Awam (belum log masuk LANGSUNG) - cuma "Utama". Elak dedah nama
+  //    seksyen dalaman (KURI/HEM/KOKU/dll) kepada orang yang tak akan
+  //    pernah boleh akses pun - setiap klik jadi jalan buntu "sila log
+  //    masuk", tak berguna untuk pengunjung yang memang bukan staff.
+  // 2. Staff log masuk tapi belum diluluskan/isi profile - cuma "Profil"
+  //    (perlu untuk semak status/isi maklumat semasa menunggu).
+  // 3. Staff diluluskan (atau admin) - menu penuh.
   const belumLulus = Boolean(user) && (status === 'menunggu' || status === 'belum-profile' || status === 'disekat')
-  const itemAsas = belumLulus ? NAV_ITEMS.filter((l) => l.to === '/profil') : NAV_ITEMS
+  const itemAsas = !user
+    ? NAV_ITEMS.filter((l) => l.to === '/')
+    : belumLulus
+      ? NAV_ITEMS.filter((l) => l.to === '/profil')
+      : NAV_ITEMS
   const links = isAdmin ? [...itemAsas, ADMIN_NAV_ITEM] : itemAsas
   const [drawerOpen, setDrawerOpen] = useState(false)
 

@@ -174,7 +174,7 @@ export default function LaporanPLCModal({ open, laporan, profiles, penggunaSendi
           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Disediakan Oleh</label>
-              <div className="h-11 px-3 rounded-card border border-border bg-base text-sm flex items-center text-inkmuted">
+              <div className="min-h-11 py-2.5 px-3 rounded-card border border-border bg-base text-sm text-inkmuted">
                 {penggunaSendiri.nama}
               </div>
             </div>

@@ -35,7 +35,7 @@ export default function RPIBahagianA({ data, onUbah, senaraiMurid, muridDipilih,
       </div>
 
       <Medan label="3. Nama Sekolah">
-        <div className="h-11 px-3 rounded-card border border-border bg-base text-sm flex items-center text-inkmuted">{NAMA_SEKOLAH}</div>
+        <div className="min-h-11 py-2.5 px-3 rounded-card border border-border bg-base text-sm text-inkmuted">{NAMA_SEKOLAH}</div>
       </Medan>
 
       <Medan label="4. Program Pendidikan Khas">
