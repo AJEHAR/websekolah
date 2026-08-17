@@ -3,25 +3,18 @@
 export const NAV_ITEMS = [
   { label: 'Utama', to: '/' },
   {
-    label: 'Keberadaan',
-    to: '/keberadaan',
+    label: 'KURI',
+    to: '/kurikulum',
     children: [
-      { label: 'Daftar Keberadaan', to: '/keberadaan/daftar' },
-      { label: 'Hari Ini', to: '/keberadaan/hari-ini' },
-      { label: 'Esok', to: '/keberadaan/esok' },
-      { label: 'Log Keberadaan', to: '/keberadaan/log' },
-      { label: 'Rekod Saya', to: '/keberadaan/saya' },
-    ],
-  },
-  {
-    label: 'Guru Bertugas',
-    to: '/guru-bertugas',
-    children: [
-      { label: 'Kumpulan', to: '/guru-bertugas/kumpulan' },
-      { label: 'Laporan 3K', to: '/guru-bertugas/3k' },
-      { label: 'Laporan Banci', to: '/guru-bertugas/banci' },
-      { label: 'Laporan Harian', to: '/guru-bertugas/harian' },
-      { label: 'Laporan Perhimpunan', to: '/guru-bertugas/perhimpunan' },
+      { label: 'Laporan PLC', to: '/kurikulum/borang-plc' },
+      { label: 'RPI', to: '/kurikulum/rpi' },
+      { label: 'RPT', to: '/kurikulum/rpt' },
+      { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja' },
+      { label: 'Koleksi Pekeliling', to: '/kurikulum/koleksi-pekeliling' },
+      { label: 'OPR', to: '/kurikulum/opr' },
+      // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -
+      // update juga kurikulumAksesPantas.js dan TAJUK_SUBPAGE dalam
+      // KurikulumLayout.jsx, + <Route> baru dalam App.jsx.
     ],
   },
   {
@@ -47,18 +40,25 @@ export const NAV_ITEMS = [
     ],
   },
   {
-    label: 'KURI',
-    to: '/kurikulum',
+    label: 'Keberadaan',
+    to: '/keberadaan',
     children: [
-      { label: 'Laporan PLC', to: '/kurikulum/borang-plc' },
-      { label: 'RPI', to: '/kurikulum/rpi' },
-      { label: 'RPT', to: '/kurikulum/rpt' },
-      { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja' },
-      { label: 'Koleksi Pekeliling', to: '/kurikulum/koleksi-pekeliling' },
-      { label: 'OPR', to: '/kurikulum/opr' },
-      // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -
-      // update juga kurikulumAksesPantas.js dan TAJUK_SUBPAGE dalam
-      // KurikulumLayout.jsx, + <Route> baru dalam App.jsx.
+      { label: 'Daftar Keberadaan', to: '/keberadaan/daftar' },
+      { label: 'Hari Ini', to: '/keberadaan/hari-ini' },
+      { label: 'Esok', to: '/keberadaan/esok' },
+      { label: 'Log Keberadaan', to: '/keberadaan/log' },
+      { label: 'Rekod Saya', to: '/keberadaan/saya' },
+    ],
+  },
+  {
+    label: 'Guru Bertugas',
+    to: '/guru-bertugas',
+    children: [
+      { label: 'Kumpulan', to: '/guru-bertugas/kumpulan' },
+      { label: 'Laporan 3K', to: '/guru-bertugas/3k' },
+      { label: 'Laporan Banci', to: '/guru-bertugas/banci' },
+      { label: 'Laporan Harian', to: '/guru-bertugas/harian' },
+      { label: 'Laporan Perhimpunan', to: '/guru-bertugas/perhimpunan' },
     ],
   },
   { label: 'Profil', to: '/profil' },
