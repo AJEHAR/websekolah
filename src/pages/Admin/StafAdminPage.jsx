@@ -59,9 +59,29 @@ function SuisPendaftaran({ user }) {
         disabled={loading || menukar}
         role="switch"
         aria-checked={dibuka}
-        className={`shrink-0 relative h-7 w-12 rounded-full overflow-hidden transition-colors disabled:opacity-60 ${dibuka ? 'bg-green-600' : 'bg-border'}`}
+        aria-label="Suis Pendaftaran Staff Baru"
+        className="shrink-0 relative w-16 h-8 rounded-lg overflow-hidden flex shadow-sm disabled:opacity-60"
       >
-        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${dibuka ? 'translate-x-6' : 'translate-x-1'}`} />
+        <span
+          className="w-8 h-8 flex items-center justify-center text-[13px] font-bold transition-colors"
+          style={dibuka ? { background: '#1A1A1A', color: '#fff' } : { background: '#fff', color: '#1A1A1A' }}
+        >
+          O
+        </span>
+        <span
+          className="w-8 h-8 flex items-center justify-center text-[13px] font-bold transition-colors"
+          style={dibuka ? { background: '#fff', color: '#1A1A1A' } : { background: '#1A1A1A', color: '#fff' }}
+        >
+          I
+        </span>
+        <span
+          className="absolute top-1 h-6 w-6 rounded-full transition-all"
+          style={{
+            left: dibuka ? '36px' : '20px',
+            background: 'linear-gradient(180deg, #fff, #e2e2e2)',
+            boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+          }}
+        />
       </button>
     </div>
   )
