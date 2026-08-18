@@ -12,7 +12,6 @@ const TAJUK_SUBPAGE = {
   '/admin/kategori-rpt': 'Kategori',
   '/admin/panitia-rpt': 'Panitia',
   '/admin/latar-hub': 'Latar Belakang Hub',
-  '/admin/import-perhimpunan': 'Import Laporan Perhimpunan',
   '/admin/reset-data': 'Reset Data Ujian',
 }
 

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Eye, Pencil, Trash2, Printer } from 'lucide-react'
+import { Plus, Eye, Pencil, Trash2, Printer, Upload } from 'lucide-react'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { useCetak } from '../../hooks/useCetak.js'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import {
   useLaporanPerhimpunan,
   tambahLaporanPerhimpunan,
@@ -11,12 +12,14 @@ import {
 } from '../../hooks/useLaporanPerhimpunan.js'
 import LaporanPerhimpunanModal from './LaporanPerhimpunanModal.jsx'
 import LaporanPerhimpunanDetailModal from './LaporanPerhimpunanDetailModal.jsx'
+import ImportLaporanPerhimpunanModal from './ImportLaporanPerhimpunanModal.jsx'
 import CetakLaporanPerhimpunan from './CetakLaporanPerhimpunan.jsx'
 import { useDialog } from '../../context/DialogContext.jsx'
 
 export default function LaporanPerhimpunan() {
   const { konfirm, amaran } = useDialog()
   const { user } = useOutletContext()
+  const { isSuperAdmin } = useIsAdmin(user)
   const { senarai, loading, muatSemula } = useLaporanPerhimpunan()
   const { profiles } = useProfilesList()
   const profilesAktif = profiles.filter((p) => p.status !== 'menunggu')
@@ -26,6 +29,7 @@ export default function LaporanPerhimpunan() {
   const [laporanEdit, setLaporanEdit] = useState(null)
   const [laporanLihat, setLaporanLihat] = useState(null)
   const [tunjukCetakJulat, setTunjukCetakJulat] = useState(false)
+  const [tunjukImport, setTunjukImport] = useState(false)
   const [dariTarikh, setDariTarikh] = useState('')
   const [hinggaTarikh, setHinggaTarikh] = useState('')
 
@@ -79,7 +83,15 @@ export default function LaporanPerhimpunan() {
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <p className="text-xs text-inkmuted">{senarai.length} laporan</p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {isSuperAdmin && (
+            <button
+              onClick={() => setTunjukImport(true)}
+              className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
+            >
+              <Upload size={14} /> Import CSV
+            </button>
+          )}
           <button
             onClick={() => setTunjukCetakJulat((s) => !s)}
             className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
@@ -152,6 +164,16 @@ export default function LaporanPerhimpunan() {
       />
 
       <LaporanPerhimpunanDetailModal laporan={laporanLihat} onClose={() => setLaporanLihat(null)} />
+
+      {isSuperAdmin && (
+        <ImportLaporanPerhimpunanModal
+          open={tunjukImport}
+          onClose={() => setTunjukImport(false)}
+          user={user}
+          profilesAktif={profilesAktif}
+          onSelesai={muatSemula}
+        />
+      )}
 
       {dataCetak && <CetakLaporanPerhimpunan senarai={dataCetak} />}
     </div>

@@ -1,4 +1,4 @@
-import { BarChart3, Table2, LogIn, LogOut, ClipboardCheck, Utensils, Award } from 'lucide-react'
+import { BarChart3, Table2, LogIn, LogOut, ClipboardCheck, Utensils } from 'lucide-react'
 
 export const MAKLUMAT_MURID_AKSES_PANTAS = [
   { label: 'Analisis', to: '/maklumat-murid/analisis', Ikon: BarChart3 },
@@ -7,5 +7,4 @@ export const MAKLUMAT_MURID_AKSES_PANTAS = [
   { label: 'Daftar Keluar Murid', to: '/maklumat-murid/daftar-keluar', Ikon: LogOut },
   { label: 'Kehadiran Murid', to: '/maklumat-murid/kehadiran-murid', Ikon: ClipboardCheck },
   { label: 'Kehadiran RMT', to: '/maklumat-murid/kehadiran-rmt', Ikon: Utensils },
-  { label: 'Sijil Tamat', to: '/maklumat-murid/sijil-tamat', Ikon: Award },
 ]

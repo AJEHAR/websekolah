@@ -12,7 +12,6 @@ const TAJUK_SUBPAGE = {
   '/maklumat-murid/daftar-keluar': 'Daftar Keluar Murid',
   '/maklumat-murid/kehadiran-murid': 'Kehadiran Murid',
   '/maklumat-murid/kehadiran-rmt': 'Kehadiran RMT',
-  '/maklumat-murid/sijil-tamat': 'Sijil Tamat',
 }
 
 export default function MaklumatMuridLayout() {

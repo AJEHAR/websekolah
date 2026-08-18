@@ -25,7 +25,6 @@ import KategoriUBKSPage from './pages/Admin/KategoriUBKSPage.jsx'
 import PanitiaRPTPage from './pages/Admin/PanitiaRPTPage.jsx'
 import KategoriRPTPage from './pages/Admin/KategoriRPTPage.jsx'
 import LatarHubPage from './pages/Admin/LatarHubPage.jsx'
-import ImportLaporanPerhimpunanPage from './pages/Admin/ImportLaporanPerhimpunanPage.jsx'
 import ResetDataPage from './pages/Admin/ResetDataPage.jsx'
 import GuruBertugasLayout from './pages/GuruBertugas/GuruBertugasLayout.jsx'
 import GuruBertugasHub from './pages/GuruBertugas/GuruBertugasHub.jsx'
@@ -42,7 +41,6 @@ import SemakanMurid from './pages/MaklumatMurid/SemakanMurid.jsx'
 import Analisis from './pages/MaklumatMurid/Analisis.jsx'
 import KehadiranMurid from './pages/MaklumatMurid/KehadiranMurid.jsx'
 import KehadiranRMT from './pages/MaklumatMurid/PapanRMT.jsx'
-import SijilTamat from './pages/MaklumatMurid/SijilTamat.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
 import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
 import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
@@ -165,7 +163,6 @@ export default function App() {
             <Route path="panitia-rpt" element={<PanitiaRPTPage />} />
             <Route path="kategori-rpt" element={<KategoriRPTPage />} />
             <Route path="latar-hub" element={<LatarHubPage />} />
-            <Route path="import-perhimpunan" element={<ImportLaporanPerhimpunanPage />} />
             <Route path="reset-data" element={<ResetDataPage />} />
           </Route>
 
@@ -192,7 +189,6 @@ export default function App() {
             <Route path="daftar-keluar" element={<DaftarKeluar />} />
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
             <Route path="kehadiran-rmt" element={<KehadiranRMT />} />
-            <Route path="sijil-tamat" element={<SijilTamat />} />
           </Route>
 
           {/* URL lama "/ebanci/*" (seksyen dah digabung ke HEM) -

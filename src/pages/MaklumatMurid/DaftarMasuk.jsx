@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Printer, Upload } from 'lucide-react'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { useDialog } from '../../context/DialogContext.jsx'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import {
   useDaftarMasukMurid,
   tambahDaftarMasuk,
@@ -16,6 +17,11 @@ import CetakDaftarMasuk from './CetakDaftarMasuk.jsx'
 
 export default function DaftarMasuk() {
   const { user } = useOutletContext()
+  const { isAdmin, adaSeksyen } = useIsAdmin(user)
+  // Import CSV pukal - kesan/risiko lebih besar daripada borang satu-satu,
+  // jadi hadkan kepada admin seksyen 'murid' sahaja. Borang manual biasa
+  // (Tambah satu rekod) kekal terbuka untuk semua staff diluluskan.
+  const bolehImportCSV = isAdmin && adaSeksyen('murid')
   const { konfirm } = useDialog()
   const { senarai: senaraiMurid } = useMuridList()
   const { senarai, loading, muatSemula } = useDaftarMasukMurid()
@@ -68,12 +74,14 @@ export default function DaftarMasuk() {
               <Printer size={14} /> Cetak Semua
             </button>
           )}
-          <button
-            onClick={() => setTunjukImport(true)}
-            className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
-          >
-            <Upload size={14} /> Import CSV
-          </button>
+          {bolehImportCSV && (
+            <button
+              onClick={() => setTunjukImport(true)}
+              className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink"
+            >
+              <Upload size={14} /> Import CSV
+            </button>
+          )}
           <button
             onClick={bukaTambah}
             className="flex items-center gap-1.5 h-11 px-4 rounded-card bg-brand-red text-white text-xs font-semibold"
@@ -131,13 +139,15 @@ export default function DaftarMasuk() {
         onSimpan={simpan}
       />
 
-      <ImportDaftarMasukModal
-        open={tunjukImport}
-        onClose={() => setTunjukImport(false)}
-        user={user}
-        senaraiMurid={senaraiMurid}
-        onSelesai={muatSemula}
-      />
+      {bolehImportCSV && (
+        <ImportDaftarMasukModal
+          open={tunjukImport}
+          onClose={() => setTunjukImport(false)}
+          user={user}
+          senaraiMurid={senaraiMurid}
+          onSelesai={muatSemula}
+        />
+      )}
 
       {dataCetak && <CetakDaftarMasuk senarai={dataCetak} muridById={muridById} />}
     </div>
