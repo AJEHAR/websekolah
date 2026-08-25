@@ -35,10 +35,11 @@ function SuisPendaftaran({ user }) {
   const { dibuka, loading } = useTetapanPendaftaran()
   const [menukar, setMenukar] = useState(false)
 
-  async function togol() {
+  async function ubah(e) {
+    const nilaiBaru = e.target.value === 'buka'
     setMenukar(true)
     try {
-      await tetapkanPendaftaran(!dibuka, user.uid)
+      await tetapkanPendaftaran(nilaiBaru, user.uid)
     } finally {
       setMenukar(false)
     }
@@ -54,35 +55,16 @@ function SuisPendaftaran({ user }) {
             : 'Ditutup — butang "Daftar" disembunyikan. Admin masih boleh pra-daftar staff terus di tab Senarai Staff.'}
         </p>
       </div>
-      <button
-        onClick={togol}
+      <select
+        value={dibuka ? 'buka' : 'tutup'}
+        onChange={ubah}
         disabled={loading || menukar}
-        role="switch"
-        aria-checked={dibuka}
-        aria-label="Suis Pendaftaran Staff Baru"
-        className="shrink-0 relative w-16 h-8 rounded-lg overflow-hidden flex shadow-sm disabled:opacity-60"
+        aria-label="Status Pendaftaran Staff Baru"
+        className="shrink-0 h-11 px-3 rounded-card border border-border bg-surface text-sm font-medium text-ink disabled:opacity-60"
       >
-        <span
-          className="w-8 h-8 flex items-center justify-center text-[13px] font-bold transition-colors"
-          style={dibuka ? { background: '#1A1A1A', color: '#fff' } : { background: '#fff', color: '#1A1A1A' }}
-        >
-          O
-        </span>
-        <span
-          className="w-8 h-8 flex items-center justify-center text-[13px] font-bold transition-colors"
-          style={dibuka ? { background: '#fff', color: '#1A1A1A' } : { background: '#1A1A1A', color: '#fff' }}
-        >
-          I
-        </span>
-        <span
-          className="absolute top-1 h-6 w-6 rounded-full transition-all"
-          style={{
-            left: dibuka ? '36px' : '20px',
-            background: 'linear-gradient(180deg, #fff, #e2e2e2)',
-            boxShadow: '0 1px 3px rgba(0,0,0,.3)',
-          }}
-        />
-      </button>
+        <option value="buka">Buka Pendaftaran</option>
+        <option value="tutup">Tutup Pendaftaran</option>
+      </select>
     </div>
   )
 }

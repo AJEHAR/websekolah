@@ -291,6 +291,46 @@ service cloud.firestore {
       allow write: if isStaffDiluluskan();
     }
 
+    match /koleksiPekeliling/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /kertasKerja/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /mukaDepanTahunan/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /laporanOPR/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /oprUnit/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /oprLatarBelakang/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /takwimUnit/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /takwimAcara/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
     // RPI (Rancangan Pendidikan Individu) & Rumusan Prasidang - mana-mana
     // staff DILULUSKAN boleh isi/kemas kini (data sensitif murid, tapi
     // semua staff Pendidikan Khas perlu akses baca untuk kerja harian).

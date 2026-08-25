@@ -2,6 +2,7 @@
 // dan SideDrawer (mobile, expand/collapse 'children' sebagai accordion).
 export const NAV_ITEMS = [
   { label: 'Utama', to: '/' },
+  { label: 'Takwim', to: '/takwim' },
   {
     label: 'KURI',
     to: '/kurikulum',

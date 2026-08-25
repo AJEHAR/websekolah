@@ -4,6 +4,7 @@ import ButangTerapung from './components/ButangTerapung.jsx'
 import Home from './pages/Home.jsx'
 import Galeri from './pages/Galeri.jsx'
 import Hubungi from './pages/Hubungi.jsx'
+import TetapanHubungiPage from './pages/TetapanHubungiPage.jsx'
 import Profile from './pages/Profile/Profile.jsx'
 import SenaraiKeberadaanSaya from './pages/Profile/SenaraiKeberadaanSaya.jsx'
 import KeberadaanLayout from './pages/Keberadaan/KeberadaanLayout.jsx'
@@ -42,6 +43,8 @@ import Analisis from './pages/MaklumatMurid/Analisis.jsx'
 import KehadiranMurid from './pages/MaklumatMurid/KehadiranMurid.jsx'
 import KehadiranRMT from './pages/MaklumatMurid/PapanRMT.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
+import TakwimLayout from './pages/Takwim/TakwimLayout.jsx'
+import TakwimSekolah from './pages/Takwim/TakwimSekolah.jsx'
 import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
 import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
 import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
@@ -136,6 +139,7 @@ export default function App() {
           </Route>
           <Route path="/galeri" element={<Galeri />} />
           <Route path="/hubungi" element={<Hubungi />} />
+          <Route path="/hubungi/tetapan" element={<TetapanHubungiPage />} />
 
           <Route path="/profil" element={<Profile />} />
 
@@ -198,6 +202,10 @@ export default function App() {
           <Route path="/ebanci/papan-rmt" element={<Navigate to="/maklumat-murid/kehadiran-rmt" replace />} />
 
           {/* KOKU - hub dengan akses pantas, + 4 sub-page */}
+          <Route path="/takwim" element={<TakwimLayout />}>
+            <Route index element={<TakwimSekolah />} />
+          </Route>
+
           <Route path="/eubks" element={<EUBKSLayout />}>
             <Route index element={<EUBKSHub />} />
             <Route path="murid-ubks" element={<MuridUBKS />} />

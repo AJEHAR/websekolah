@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx'
+import { uraiCSVBaris } from '../../lib/csvUtils.js'
 
 const PEMETAAN_LAJUR = {
   'BIL': 'bilangan', 'BILANGAN': 'bilangan',
@@ -28,14 +28,12 @@ const PEMETAAN_LAJUR = {
 // syarat - baris tetap diimport walaupun tiada padanan dijumpai.
 export async function baiFailSijilTamatCsv(fail, senaraiMurid) {
   const teks = await fail.text()
-  const wb = XLSX.read(teks, { type: 'string' })
-  const helaian = wb.Sheets[wb.SheetNames[0]]
-  const semuaBaris = XLSX.utils.sheet_to_json(helaian, { header: 1, defval: null })
+  const semuaBaris = uraiCSVBaris(teks)
 
   if (semuaBaris.length === 0) throw new Error('Fail CSV kosong.')
 
   const headerBaris = semuaBaris[0].map((h) => String(h ?? '').trim().toUpperCase())
-  const barisData = semuaBaris.slice(1).filter((b) => Array.isArray(b) && b.some((c) => c != null && String(c).trim() !== ''))
+  const barisData = semuaBaris.slice(1)
   const lajurTakDikenali = headerBaris.filter((h) => h && !PEMETAAN_LAJUR[h])
 
   const idByNoPengenalan = new Map(senaraiMurid.filter((m) => m.noPengenalan).map((m) => [m.noPengenalan, m]))

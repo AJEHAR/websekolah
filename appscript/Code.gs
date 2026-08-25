@@ -18,6 +18,11 @@
 //      FIREBASE_API_KEY = (sama nilai dengan VITE_FIREBASE_API_KEY dalam .env -
 //      ni BUKAN rahsia, API key Firebase memang reka bentuk untuk didedahkan
 //      awam, dilindungi oleh Firestore Security Rules bukan kerahsiaan)
+//
+//      GROQ_API_KEY = (untuk ciri AI OPR - dapatkan PERCUMA di
+//      console.groq.com -> API Keys -> Create API Key. Key ni RAHSIA
+//      SEBENAR - jangan letak dalam .env/kod React, cuma di sini sahaja,
+//      supaya staff boleh guna AI tanpa perlu key masing-masing.)
 // 4. Deploy -> New deployment -> Type: "Web app"
 //      Execute as: Me
 //      Who has access: Anyone
@@ -33,6 +38,10 @@
 // ============================================================
 
 const FIREBASE_API_KEY = PropertiesService.getScriptProperties().getProperty('FIREBASE_API_KEY')
+// Untuk ciri AI OPR (Jana Kekuatan/Kelemahan/Penambahbaikan) - key GROQ
+// PERCUMA (satu sahaja untuk seluruh sekolah, staff TAK perlu key sendiri).
+// Dapatkan di console.groq.com -> API Keys, letak dalam Script Properties.
+const GROQ_API_KEY = PropertiesService.getScriptProperties().getProperty('GROQ_API_KEY')
 const NAMA_FOLDER_INDUK = 'Laman Web Sekolah - Upload'
 
 // Had saiz & jenis fail dibenarkan ikut subfolder - disemak di SINI (server),
@@ -48,6 +57,16 @@ const JENIS_FAIL_DIBENARKAN = {
   kehadiran: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'],
   unitUBKS: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
   latarHub: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  // Gambar Muka Depan Kertas Kerja (tahunan) - gambar sahaja.
+  kertasKerja: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  // OPR - gambar aktiviti + tandatangan digital (kedua-dua imej sahaja).
+  opr: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  // Koleksi Pekeliling (Kurikulum) - dokumen boleh PDF, gambar, ATAU Word
+  // (.doc/.docx) - pekeliling kadang diedarkan dalam format Word terus.
+  pekeliling: [
+    'application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ],
 }
 
 // Sesetengah sumber (contoh: pemilih fail Android/cloud storage tertentu)
@@ -71,6 +90,9 @@ const SAMBUNGAN_DIBENARKAN = {
   kehadiran: ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.pdf'],
   unitUBKS: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
   latarHub: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  kertasKerja: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  opr: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  pekeliling: ['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.gif', '.doc', '.docx'],
 }
 
 // Had kadar ringkas - elak spam - guna CacheService (bertahan ~ beberapa minit,
@@ -94,7 +116,15 @@ function doPost(e) {
 
     const semakanKadar = semakHadKadar(emel)
     if (!semakanKadar.dibenarkan) {
-      return jsonResponse({ error: 'Terlalu banyak muat naik dalam masa singkat. Sila cuba lagi sebentar.' })
+      return jsonResponse({ error: 'Terlalu banyak permintaan dalam masa singkat. Sila cuba lagi sebentar.' })
+    }
+
+    // Tindakan AI (OPR) - laluan BERASINGAN daripada muat naik fail di
+    // bawah. `action` cuma dihantar untuk permintaan AI; permintaan muat
+    // naik fail sedia ada tak hantar `action` langsung (elak pecahkan
+    // client lama yang belum kemaskini).
+    if (data.action === 'generateAI') {
+      return kendalikanJanaAI(data)
     }
 
     if (!data.base64Data || !data.fileName) {
@@ -149,6 +179,84 @@ function doPost(e) {
     })
   } catch (err) {
     return jsonResponse({ error: err.message })
+  }
+}
+
+// OPR - jana Kekuatan/Kelemahan/Penambahbaikan guna Groq (llama-3.3-70b).
+// Key GROQ_API_KEY disimpan SERVER SAHAJA (Script Properties) - staff
+// tak pernah nampak/pegang key ni, cuma perlu log masuk (sahkan idToken
+// macam biasa, dah dibuat di doPost sebelum sampai sini).
+function kendalikanJanaAI(data) {
+  if (!GROQ_API_KEY) {
+    return jsonResponse({ error: 'AI belum disetup - GROQ_API_KEY tiada dalam Script Properties. Hubungi admin.' })
+  }
+
+  const d = data.payload || {}
+  const prompt =
+    'Anda adalah pembantu penulisan laporan program sekolah yang berfokus kepada analisis yang realistik dan kontekstual dalam Bahasa Melayu formal.\n\n' +
+    'Maklumat program:\n' +
+    '- Unit/Kategori   : ' + (d.unit || '(tiada maklumat)') + '\n' +
+    '- Nama Program    : ' + (d.nama || '(tiada maklumat)') + '\n' +
+    '- Hari            : ' + (d.hari || '(tiada maklumat)') + '\n' +
+    '- Tarikh          : ' + (d.tarikh || '(tiada maklumat)') + '\n' +
+    '- Masa            : ' + (d.masa || '(tiada maklumat)') + '\n' +
+    '- Tempat          : ' + (d.tempat || '(tiada maklumat)') + '\n' +
+    '- Kumpulan Sasaran: ' + (d.sasaran || '(tiada maklumat)') + '\n' +
+    '- Objektif Program: ' + (d.objektif || '(tiada maklumat)') + '\n' +
+    '- Aktiviti        : ' + (d.aktiviti || '(tiada maklumat)') + '\n\n' +
+    'ARAHAN PENTING:\n' +
+    '1. Analisis mesti berdasarkan kandungan AKTIVITI dan OBJEKTIF, bukan ayat umum.\n' +
+    '2. Jika terdapat elemen seperti "ibu bapa", "penjaga", "waris" atau "PIBG" dalam aktiviti, masukkan aspek penglibatan ibu bapa.\n' +
+    '3. Jika tiada elemen tersebut, JANGAN sebut tentang ibu bapa atau komuniti.\n' +
+    '4. Elakkan ayat klise tanpa sebab khusus.\n\n' +
+    'OUTPUT - format JSON SAHAJA:\n' +
+    '{"kekuatan":"...","kelemahan":"...","penambahbaikan":"..."}\n\n' +
+    'PANDUAN:\n' +
+    '- Setiap bahagian TEPAT 2 point: "1. [ayat]\\n2. [ayat]"\n' +
+    '- Setiap point satu ayat pendek (kurang 20 patah perkataan).\n' +
+    '- Bahasa Melayu formal.'
+
+  try {
+    const res = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + GROQ_API_KEY },
+      payload: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'Anda pembantu penulisan laporan sekolah. Balas HANYA JSON sah. Tiada markdown.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.65,
+        max_tokens: 900,
+        response_format: { type: 'json_object' },
+      }),
+      muteHttpExceptions: true,
+    })
+
+    const json = JSON.parse(res.getContentText())
+    if (res.getResponseCode() !== 200) {
+      const mesejRalat = (json && json.error && json.error.message) || ('HTTP ' + res.getResponseCode())
+      return jsonResponse({ error: 'Ralat Groq API: ' + mesejRalat })
+    }
+
+    let kandungan = json.choices[0].message.content.trim()
+    kandungan = kandungan.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
+
+    let hasil
+    try {
+      hasil = JSON.parse(kandungan)
+    } catch (pe) {
+      return jsonResponse({ error: 'Ralat format respons AI. Sila cuba lagi.' })
+    }
+
+    return jsonResponse({
+      kekuatan: hasil.kekuatan || '',
+      kelemahan: hasil.kelemahan || '',
+      penambahbaikan: hasil.penambahbaikan || '',
+    })
+  } catch (err) {
+    return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })
   }
 }
 

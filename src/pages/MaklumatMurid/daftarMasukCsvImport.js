@@ -1,8 +1,6 @@
-import * as XLSX from 'xlsx'
+import { uraiCSVBaris } from '../../lib/csvUtils.js'
 
-// Lajur CSV yang dikenali (header -> kunci medan). "xlsx" (SheetJS) boleh
-// baca fail .csv terus (bukan cuma .xlsx) - reuse pustaka sedia ada, elak
-// tambah dependency baru untuk keperluan sama.
+// Lajur CSV yang dikenali (header -> kunci medan).
 const PEMETAAN_LAJUR = {
   'BILANGAN': 'bilangan',
   'BIL': 'bilangan',
@@ -26,16 +24,14 @@ const PEMETAAN_LAJUR = {
 // automatik, staff boleh betulkan CSV & cuba lagi.
 export async function baiFailDaftarMasukCsv(fail, senaraiMurid) {
   const teks = await fail.text()
-  const wb = XLSX.read(teks, { type: 'string' })
-  const helaian = wb.Sheets[wb.SheetNames[0]]
-  const semuaBaris = XLSX.utils.sheet_to_json(helaian, { header: 1, defval: null })
+  const semuaBaris = uraiCSVBaris(teks)
 
   if (semuaBaris.length === 0) {
     throw new Error('Fail CSV kosong.')
   }
 
   const headerBaris = semuaBaris[0].map((h) => String(h ?? '').trim().toUpperCase())
-  const barisData = semuaBaris.slice(1).filter((b) => Array.isArray(b) && b.some((c) => c != null && String(c).trim() !== ''))
+  const barisData = semuaBaris.slice(1)
 
   const lajurTakDikenali = headerBaris.filter((h) => h && !PEMETAAN_LAJUR[h])
 
