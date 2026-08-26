@@ -1,7 +1,32 @@
 import { useState } from 'react'
-import { X, Upload } from 'lucide-react'
+import { X, Upload, Download } from 'lucide-react'
 import { baiFailOprCsv } from './oprCsvImport.js'
 import { importPukalLaporanOPR } from '../../hooks/useLaporanOPR.js'
+import { muatTurunCSV } from '../../lib/csvUtils.js'
+
+// Header + 1 baris contoh untuk templat CSV boleh muat turun - susunan
+// SEBIJIK sama dengan yang dibaca dalam oprCsvImport.js (ikut KEDUDUKAN
+// lajur, bukan tajuk - lihat nota di fail tu). Lajur "lama" yang tak
+// relevan untuk laporan baru (Timestamp, ID lama, link Google Drive)
+// dikekalkan supaya kedudukan lajur tak tergeser walaupun kosongkan.
+const HEADER_TEMPLAT = [
+  'Timestamp', 'ID (lama - boleh kosong)', 'Unit', 'Nama Program/Aktiviti', 'Hari', 'Tarikh', 'Tempat',
+  'Sasaran', 'Objektif', 'Aktiviti', 'Kekuatan', 'Kelemahan', 'Penambahbaikan',
+  'Nama Disediakan', 'Jawatan Disediakan', 'Pautan Tandatangan Disediakan (Google Drive, jika ada)',
+  'Nama Disahkan', 'Jawatan Disahkan', 'Pautan Tandatangan Disahkan (Google Drive, jika ada)',
+  'Gambar (JSON array pautan Drive, cth ["url1","url2"] - boleh kosong)',
+  'Latar Belakang (pautan Drive, boleh kosong)', 'Masa',
+]
+
+const BARIS_CONTOH = [[
+  '', '', 'Unit Beruniform', 'Perkhemahan Tahunan', 'Sabtu', '14/03/2026', 'Padang Sekolah',
+  '40 orang murid Tingkatan 1-3', 'Memupuk semangat kerjasama dan kepimpinan',
+  'Aktiviti ketahanan, gotong-royong, permainan berpasukan',
+  'Penyertaan aktif murid', 'Cuaca panas menjelang tengahari', 'Sediakan khemah rehat tambahan',
+  'Cikgu Ahmad bin Ali', 'Guru Penasihat', '',
+  'Cikgu Salmah binti Hassan', 'Guru Besar', '',
+  '[]', '', '8:00 pagi - 5:00 petang',
+]]
 
 export default function ImportOPRModal({ open, onClose, user, onSelesai }) {
   const [langkah, setLangkah] = useState('pilih')
@@ -11,6 +36,10 @@ export default function ImportOPRModal({ open, onClose, user, onSelesai }) {
   const [hasilAkhir, setHasilAkhir] = useState(null)
 
   if (!open) return null
+
+  function muatTurunTemplat() {
+    muatTurunCSV('templat-import-opr.csv', HEADER_TEMPLAT, BARIS_CONTOH)
+  }
 
   function tutup() {
     setLangkah('pilih')
@@ -61,11 +90,18 @@ export default function ImportOPRModal({ open, onClose, user, onSelesai }) {
         {langkah === 'pilih' && (
           <div className="text-center py-8">
             <p className="text-sm text-inkmuted mb-2">
-              Muat naik fail CSV yang dieksport TERUS dari Google Sheet lama (File &gt; Download &gt; Comma Separated Values).
+              Muat naik fail CSV data lama (eksport terus dari Google Sheet), atau isi templat baru untuk laporan OPR yang belum ada dalam sistem.
             </p>
             <p className="text-xs text-brand-red mb-5">
               PENTING: Jangan susun semula lajur - sistem baca ikut kedudukan lajur asal (Timestamp, ID, Unit, Nama, Hari...).
             </p>
+            <button
+              onClick={muatTurunTemplat}
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-card border border-border text-ink text-sm font-semibold mb-3"
+            >
+              <Download size={16} /> Muat Turun Templat CSV
+            </button>
+            <br />
             <label className="inline-flex items-center gap-2 h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold cursor-pointer">
               <Upload size={18} /> Pilih Fail CSV
               <input type="file" accept=".csv" onChange={pilihFail} className="hidden" />

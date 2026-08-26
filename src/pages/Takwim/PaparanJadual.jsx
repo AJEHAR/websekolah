@@ -23,12 +23,13 @@ export default function PaparanJadual({ tahun, bulan, senaraiAcara, senaraiUnit,
         </button>
       </div>
 
+      <p className="sm:hidden text-center text-[10px] text-inkmuted py-1.5 px-3 border-b border-border">Jadual penuh lebih sesuai desktop/cetak. Guna mod Hari/Minggu/Bulan untuk paparan ringkas di telefon.</p>
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="bg-base">
-              <th className="text-left px-3 py-2 font-semibold text-ink whitespace-nowrap sticky left-0 bg-base">Tarikh</th>
-              <th className="text-left px-3 py-2 font-semibold text-ink whitespace-nowrap">Hari</th>
+              <th className="text-left px-3 py-2 font-semibold text-ink whitespace-nowrap sticky left-0 z-10 bg-base" style={{ width: 56 }}>Tarikh</th>
+              <th className="text-left px-3 py-2 font-semibold text-ink whitespace-nowrap sticky z-10 bg-base" style={{ left: 56 }}>Hari</th>
               {unitDipaparkan.map((u) => (
                 <th key={u.id} className="text-left px-3 py-2 font-semibold whitespace-nowrap" style={{ color: u.warna }}>
                   {u.namaUnit}
@@ -45,11 +46,17 @@ export default function PaparanJadual({ tahun, bulan, senaraiAcara, senaraiUnit,
                 <tr key={iso} className={isHariIni ? 'bg-[#FCEBEB]' : undefined}>
                   <td
                     onClick={() => onKlikTarikh(iso)}
-                    className={`px-3 py-2 font-medium whitespace-nowrap cursor-pointer sticky left-0 ${isHariIni ? 'bg-[#FCEBEB] text-brand-red' : 'bg-surface text-ink'}`}
+                    className={`px-3 py-2 font-medium whitespace-nowrap cursor-pointer sticky left-0 z-10 ${isHariIni ? 'bg-[#FCEBEB] text-brand-red' : 'bg-surface text-ink'}`}
+                    style={{ width: 56 }}
                   >
                     {Number(hStr)}
                   </td>
-                  <td className="px-3 py-2 text-inkmuted whitespace-nowrap">{namaHari}</td>
+                  <td
+                    className={`px-3 py-2 whitespace-nowrap sticky z-10 ${isHariIni ? 'bg-[#FCEBEB] text-brand-red font-medium' : 'bg-surface text-inkmuted'}`}
+                    style={{ left: 56 }}
+                  >
+                    {namaHari}
+                  </td>
                   {unitDipaparkan.map((u) => {
                     const acaraSel = acaraPadaTarikh(senaraiAcara, iso).filter((a) => a.unitId === u.id)
                     return (

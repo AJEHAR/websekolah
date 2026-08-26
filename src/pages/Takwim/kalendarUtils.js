@@ -73,6 +73,20 @@ export function tambahHari(tarikhIso, delta) {
   return dateKeISO(d)
 }
 
+// Susun senarai unit rata (flat) jadi struktur hierarki Unit induk ->
+// Sub Unit (dulu dipanggil "Panitia"). unitIndukId kosong/null = Unit
+// induk peringkat atas. Sub Unit yang unitIndukId dia tak wujud lagi
+// (induk dah dipadam) jatuh balik ke senarai unit induk sendiri (fallback
+// selamat - tak hilang terus dari paparan).
+export function susunHierarkiUnit(senaraiUnit) {
+  const indukSenarai = senaraiUnit.filter((u) => !u.unitIndukId)
+  const indukId = new Set(indukSenarai.map((u) => u.id))
+  const yatim = senaraiUnit.filter((u) => u.unitIndukId && !indukId.has(u.unitIndukId))
+  return [...indukSenarai, ...yatim].map((induk) => ({
+    ...induk,
+    subUnit: senaraiUnit.filter((u) => u.unitIndukId === induk.id),
+  }))
+}
 // Semua tarikh ISO dalam satu bulan (untuk paparan Jadual) - senarai
 // mudah 1..akhir bulan, tiada hari "bocor" dari bulan lain (tak macam grid).
 export function senaraiTarikhDalamBulan(tahun, bulan) {

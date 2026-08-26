@@ -25,7 +25,10 @@ export default function PaparanMinggu({ tarikhAsas, senaraiAcara, unitAktif, onT
         </button>
       </div>
 
-      <div className="grid grid-cols-7 divide-x divide-border">
+      {/* Mobile: tatal mendatar, setiap hari lebar tetap (110px) supaya teks/chip
+          senang dibaca. Desktop (sm+): 7 lajur sama rata, tiada tatal. */}
+      <p className="sm:hidden text-center text-[10px] text-inkmuted py-1 border-b border-border">← Seret untuk lihat hari lain →</p>
+      <div className="flex overflow-x-auto sm:overflow-visible divide-x divide-border">
         {minggu.map((iso, i) => {
           const [, , hStr] = iso.split('-')
           const acaraHariIni = acaraPadaTarikh(acaraDitapis, iso)
@@ -34,9 +37,9 @@ export default function PaparanMinggu({ tarikhAsas, senaraiAcara, unitAktif, onT
             <button
               key={iso}
               onClick={() => onKlikTarikh(iso)}
-              className="min-h-[140px] sm:min-h-[220px] p-1.5 text-left hover:bg-base align-top"
+              className="flex-none w-[112px] sm:w-auto sm:flex-1 min-h-[160px] sm:min-h-[220px] p-1.5 text-left hover:bg-base align-top"
             >
-              <div className="text-center mb-2">
+              <div className={`text-center mb-2 pb-1.5 rounded-card ${isHariIni ? 'bg-tint-hujungMinggu/40' : ''}`}>
                 <p className="text-[9px] text-inkmuted uppercase font-semibold">{NAMA_HARI_PENDEK[i].slice(0, 3)}</p>
                 <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ${isHariIni ? 'bg-brand-red text-white' : 'text-ink'}`}>
                   {Number(hStr)}
@@ -47,13 +50,16 @@ export default function PaparanMinggu({ tarikhAsas, senaraiAcara, unitAktif, onT
                   <span
                     key={a.id}
                     onClick={(e) => { e.stopPropagation(); onKlikAcara(a) }}
-                    className="text-[9px] sm:text-[10px] leading-tight px-1 py-0.5 rounded text-white truncate"
+                    className="text-[10px] leading-tight px-1.5 py-1 rounded text-white"
                     style={{ backgroundColor: a.warna || '#999' }}
                     title={a.tajuk}
                   >
                     {a.tajuk}
                   </span>
                 ))}
+                {acaraHariIni.length === 0 && (
+                  <span className="text-[9px] text-inkmuted/60">Tiada acara</span>
+                )}
               </div>
             </button>
           )

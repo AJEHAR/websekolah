@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { NAMA_BULAN, NAMA_HARI_PENDEK, acaraPadaTarikh, tambahHari } from './kalendarUtils.js'
 
 const HARI_INI_ISO = new Date().toISOString().slice(0, 10)
@@ -30,21 +30,29 @@ export default function PaparanHari({ tarikh, senaraiAcara, unitAktif, onTukarTa
             Tiada acara pada hari ini — tekan untuk tambah
           </button>
         ) : (
-          <div className="space-y-2">
-            {acaraHariIni.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => onKlikAcara(a)}
-                className="w-full flex items-start gap-3 p-3 rounded-card border border-border hover:bg-base text-left"
-              >
-                <span className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: a.warna }} />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-ink">{a.tajuk}</p>
-                  <p className="text-xs text-inkmuted mt-0.5">{[a.unitNama, a.masa].filter(Boolean).join(' · ')}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="space-y-2 mb-3">
+              {acaraHariIni.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => onKlikAcara(a)}
+                  className="w-full flex items-start gap-3 p-3 rounded-card border border-border hover:bg-base text-left"
+                >
+                  <span className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: a.warna }} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{a.tajuk}</p>
+                    <p className="text-xs text-inkmuted mt-0.5">{[a.unitNama, a.masa].filter(Boolean).join(' · ')}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => onKlikTarikh(tarikh)}
+              className="w-full flex items-center justify-center gap-1.5 h-11 rounded-card border border-dashed border-border text-sm font-semibold text-inkmuted hover:text-ink hover:border-ink"
+            >
+              <Plus size={15} /> Tambah Acara Lain Pada Hari Ni
+            </button>
+          </>
         )}
       </div>
     </div>

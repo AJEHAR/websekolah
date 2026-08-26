@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Printer, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, Printer, Upload, Search } from 'lucide-react'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { useDaftarMasukMurid } from '../../hooks/useDaftarMasukMurid.js'
 import { useCetak } from '../../hooks/useCetak.js'
@@ -10,6 +10,21 @@ import { useSijilTamat, tambahSijilTamat, kemaskiniSijilTamat, padamSijilTamat }
 import SijilTamatModal from './SijilTamatModal.jsx'
 import ImportSijilTamatModal from './ImportSijilTamatModal.jsx'
 import CetakSijilTamat from './CetakSijilTamat.jsx'
+
+// Semua lajur papan (SNAPSHOT terus dari rekod, sama corak dengan Daftar
+// Masuk/Papan RMT/Semakan Murid) - Tahun Tamat diletak awal sebab tu kunci
+// carian utama untuk sijil, No. Pendaftaran = No. Bilangan dari Daftar
+// Masuk (lihat autoIsiSijil di sijilTamatUtils.js).
+const LAJUR = [
+  ['Tahun Tamat', 'tahunTamat'], ['No. KP', 'noKP'], ['Kelas', 'kelas'], ['Darjah', 'darjah'],
+  ['Tarikh Masuk Sekolah', 'tarikhMasukSekolah'], ['Tarikh Lahir', 'tarikhLahir'],
+  ['Nama Penjaga', 'namaPenjaga'], ['No. Pendaftaran', 'noPendaftaran'], ['No. Surat Beranak', 'noSuratBeranak'],
+  ['Unit Beruniform', 'unitBeruniform'], ['Kelab', 'kelab'], ['Sukan', 'sukan'],
+  ['Tarikh Keluar Sekolah', 'tarikhKeluarSekolah'], ['Sebab Berhenti', 'sebabBerhenti'],
+  ['Kelakuan', 'kelakuan'], ['Jumlah Kehadiran', 'jumlahKehadiran'],
+]
+
+const LEBAR = { bil: 44, nama: 170 }
 
 // "Daftar Keluar Murid" - rekod murid yang tamat/berhenti persekolahan.
 // Setiap rekod = satu Sijil Tamat (dokumen formal boleh dicetak terus) -
@@ -28,6 +43,9 @@ export default function DaftarKeluar() {
   const [tunjukBorang, setTunjukBorang] = useState(false)
   const [tunjukImport, setTunjukImport] = useState(false)
   const [rekodEdit, setRekodEdit] = useState(null)
+  const [carian, setCarian] = useState('')
+
+  const disenarai = senarai.filter((r) => (r.nama ?? '').toLowerCase().includes(carian.toLowerCase()))
 
   function bukaTambah() {
     setRekodEdit(null)
@@ -79,28 +97,47 @@ export default function DaftarKeluar() {
         </div>
       </div>
 
+      {senarai.length > 0 && (
+        <div className="relative mb-4 max-w-sm">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-inkmuted" />
+          <input
+            type="text"
+            value={carian}
+            onChange={(e) => setCarian(e.target.value)}
+            placeholder="Cari nama…"
+            className="w-full h-11 pl-9 pr-3 rounded-card border border-border bg-surface text-sm"
+          />
+        </div>
+      )}
+
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
       ) : senarai.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada rekod daftar keluar lagi.</p>
+      ) : disenarai.length === 0 ? (
+        <p className="text-sm text-inkmuted">Tiada rekod sepadan dengan carian.</p>
       ) : (
-        <div className="rounded-card border border-border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-ink text-white">
+        <div className="overflow-auto border border-border rounded-card max-h-[75vh]">
+          <table className="text-xs border-collapse w-full">
+            <thead className="sticky top-0 z-20 bg-ink text-white">
               <tr>
-                <th className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide w-14">Bil.</th>
-                <th className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide">Nama</th>
-                <th className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide hidden sm:table-cell">Tahun Tamat</th>
-                <th className="w-28"></th>
+                <th className="sticky z-30 bg-ink text-left px-2.5 py-2.5 font-semibold uppercase tracking-wide border-r border-white/10" style={{ left: 0, width: LEBAR.bil }}>Bil.</th>
+                <th className="sticky z-30 bg-ink text-left px-2.5 py-2.5 font-semibold uppercase tracking-wide border-r border-white/10" style={{ left: LEBAR.bil, width: LEBAR.nama }}>Nama</th>
+                {LAJUR.map(([label]) => (
+                  <th key={label} className="text-left px-2.5 py-2.5 font-semibold uppercase tracking-wide whitespace-nowrap">{label}</th>
+                ))}
+                <th className="text-right px-2.5 py-2.5 w-28 whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="bg-surface divide-y divide-border">
-              {senarai.map((r) => (
-                <tr key={r.id}>
-                  <td className="px-3 py-2.5 text-inkmuted">{r.bilangan}</td>
-                  <td className="px-3 py-2.5 text-ink font-medium">{r.nama}</td>
-                  <td className="px-3 py-2.5 text-inkmuted hidden sm:table-cell">{r.tahunTamat}</td>
-                  <td className="px-3 py-2.5">
+              {disenarai.map((r) => (
+                <tr key={r.id} className="hover:bg-base/60">
+                  <td className="sticky z-10 bg-surface px-2.5 py-2 border-r border-border text-inkmuted" style={{ left: 0, width: LEBAR.bil }}>{r.bilangan}</td>
+                  <td className="sticky z-10 bg-surface px-2.5 py-2 border-r border-border text-ink font-medium whitespace-nowrap" style={{ left: LEBAR.bil, width: LEBAR.nama }}>{r.nama}</td>
+                  {LAJUR.map(([label, kunci]) => (
+                    <td key={kunci} className="px-2.5 py-2 text-ink whitespace-nowrap">{r[kunci] || '-'}</td>
+                  ))}
+                  <td className="px-2.5 py-2">
                     <div className="flex items-center gap-1 justify-end">
                       <button onClick={() => setDataCetak([r])} aria-label="Cetak Sijil" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
                         <Printer size={15} />

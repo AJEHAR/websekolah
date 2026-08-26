@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { susunHierarkiUnit } from './kalendarUtils.js'
 
 export default function TakwimAcaraModal({ open, acara, tarikhAwal, senaraiUnit, onClose, onSimpan, onPadam }) {
+  const hierarki = susunHierarkiUnit(senaraiUnit)
   const [tajuk, setTajuk] = useState(acara?.tajuk ?? '')
   const [unitId, setUnitId] = useState(acara?.unitId ?? senaraiUnit[0]?.id ?? '')
   const [tarikhMula, setTarikhMula] = useState(acara?.tarikhMula ?? tarikhAwal ?? '')
@@ -64,12 +66,25 @@ export default function TakwimAcaraModal({ open, acara, tarikhAwal, senaraiUnit,
           </div>
 
           <div>
-            <label htmlFor="unitAcara" className="block text-sm font-medium text-ink mb-1">Unit / Panitia <span className="text-brand-red">*</span></label>
-            <select id="unitAcara" value={unitId} onChange={(e) => setUnitId(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm">
-              {senaraiUnit.map((u) => (
-                <option key={u.id} value={u.id}>{u.namaUnit}</option>
-              ))}
-            </select>
+            <label htmlFor="unitAcara" className="block text-sm font-medium text-ink mb-1">Unit / Sub Unit <span className="text-brand-red">*</span></label>
+            {senaraiUnit.length === 0 ? (
+              <p className="text-xs text-brand-red">Tiada Unit lagi. Tutup borang ni, tekan ikon gear di atas untuk tambah Unit dahulu.</p>
+            ) : (
+              <select id="unitAcara" value={unitId} onChange={(e) => setUnitId(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm">
+                {hierarki.map((u) =>
+                  u.subUnit.length === 0 ? (
+                    <option key={u.id} value={u.id}>{u.namaUnit}</option>
+                  ) : (
+                    <optgroup key={u.id} label={u.namaUnit}>
+                      <option value={u.id}>{u.namaUnit} (Am)</option>
+                      {u.subUnit.map((s) => (
+                        <option key={s.id} value={s.id}>{s.namaUnit}</option>
+                      ))}
+                    </optgroup>
+                  )
+                )}
+              </select>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
