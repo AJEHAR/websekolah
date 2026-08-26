@@ -25,10 +25,15 @@ const PEMETAAN_LAJUR = {
   'PEKERJAAN': 'pekerjaan',
   'ALAMAT': 'alamat',
   'SEKOLAH DAHULU': 'sekolahDahulu',
-  // TARIKH KELUAR / LULUS DARJAH / SEBAB MENINGGALKAN SEKOLAH SENGAJA tak
-  // dipetakan di sini - medan tu untuk "Daftar Keluar Murid"/Sijil Tamat,
-  // bukan Daftar Masuk (kalau ada dalam fail sama, ia akan tersenarai
-  // sebagai "lajur tak dikenali", itu memang betul/dijangka).
+  // TARIKH KELUAR / LULUS DARJAH / SEBAB MENINGGALKAN SEKOLAH DIKENALI
+  // (supaya boleh eksport terus dari Excel "BUKU DAFTAR" penuh - 20 lajur -
+  // tanpa amaran "lajur tak dikenali"), tapi SENGAJA diabaikan (bukan
+  // disimpan) di sini - medan tu untuk "Daftar Keluar Murid"/Sijil Tamat,
+  // bukan Daftar Masuk. '_abai' = kunci khas, lihat gelung penguraian di
+  // bawah (sama macam 'idMurid', bukan medan data sebenar).
+  'TARIKH KELUAR': '_abai',
+  'LULUS DARJAH': '_abai',
+  'SEBAB MENINGGALKAN SEKOLAH': '_abai',
 }
 
 // Baca fail CSV Daftar Masuk Murid (data lama) - SEMUA baris DIIMPORT
@@ -56,7 +61,7 @@ export async function baiFailDaftarMasukCsv(fail, senaraiMurid) {
     const data = {}
     headerBaris.forEach((h, idx) => {
       const kunci = PEMETAAN_LAJUR[h]
-      if (!kunci || kunci === 'idMurid') return
+      if (!kunci || kunci === 'idMurid' || kunci === '_abai') return
       const nilai = baris[idx]
       data[kunci] = nilai == null ? '' : String(nilai).trim()
     })

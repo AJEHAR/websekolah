@@ -4,16 +4,26 @@ import { baiFailDaftarMasukCsv } from './daftarMasukCsvImport.js'
 import { importPukalDaftarMasuk } from '../../hooks/useDaftarMasukMurid.js'
 import { muatTurunCSV } from '../../lib/csvUtils.js'
 
+// Templat penuh 20 lajur - sebijik sama dengan susunan sheet "BUKU DAFTAR"
+// Excel sekolah (termasuk 3 lajur "keluar" di hujung), supaya boleh eksport
+// terus dari Excel/Google Sheet tanpa perlu buang lajur dulu. 3 lajur
+// terakhir (TARIKH KELUAR, LULUS DARJAH, SEBAB MENINGGALKAN SEKOLAH) DITERIMA
+// (tak jadi "lajur tak dikenali") tapi SENGAJA DIABAIKAN semasa import -
+// data tu untuk borang "Daftar Keluar Murid"/Sijil Tamat yang berasingan,
+// bukan Daftar Masuk. Kekalkan kosong/isi terus dari Excel, sistem akan
+// abaikan sendiri.
 const HEADER_TEMPLAT = [
   'BILANGAN', 'TARIKH MASUK', 'NAMA', 'JANTINA', 'BANGSA', 'AGAMA', 'NO KAD PENGENALAN',
   'TARIKH DIPERANAKKAN', 'BILANGAN SURAT BERANAK', 'TEMPAT DIPERANAKKAN', 'DARJAH',
   'NO. KEBENARAN', 'NAMA PENJAGA', 'PERSAUDARAAN', 'PEKERJAAN', 'ALAMAT', 'SEKOLAH DAHULU',
+  'TARIKH KELUAR', 'LULUS DARJAH', 'SEBAB MENINGGALKAN SEKOLAH',
 ]
 
 const BARIS_CONTOH = [[
   '1', '05/01/2020', 'Ahmad bin Ali', 'L', 'Melayu', 'Islam', '120101010101',
   '01/01/2013', 'B12345', 'Kuantan', '1', 'K001', 'Puan Aminah binti Hassan',
   'Ibu', 'Suri Rumah', 'No 1, Jalan Contoh, 25200 Kuantan, Pahang', 'SK Contoh (kosongkan kalau bukan pindahan)',
+  '', '', '', // TARIKH KELUAR / LULUS DARJAH / SEBAB MENINGGALKAN - kosongkan (murid masih di sekolah); diabaikan oleh sistem walaupun diisi
 ]]
 
 export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMurid, onSelesai }) {
@@ -86,6 +96,7 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
             </p>
             <p className="text-xs text-inkmuted mb-5">
               Semua baris diimport terus sebagai rekod (SNAPSHOT sejarah kemasukan). Padanan dengan Murid semasa (ikut No.KP) cuma bonus rujukan - tak wajib, sesuai untuk murid yang dah tamat/keluar sekolah.
+              <br />Templat ada 20 lajur (sebijik sama dengan Excel "BUKU DAFTAR") - 3 lajur terakhir (Tarikh Keluar, Lulus Darjah, Sebab Meninggalkan) sengaja diabaikan semasa import sini, sebab tu data untuk "Daftar Keluar Murid".
             </p>
             <button
               onClick={muatTurunTemplat}
