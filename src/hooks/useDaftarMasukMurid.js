@@ -74,13 +74,8 @@ export async function importPukalDaftarMasuk(baris, uid, onProgress) {
     kumpulan.forEach((b) => {
       const ref = doc(collection(db, KOLEKSI))
       batch.set(ref, {
-        muridId: b.murid.id,
-        muridNama: b.murid.nama,
-        bilangan: b.mentah.bilangan ? Number(b.mentah.bilangan) : null,
-        bilanganSuratBeranak: b.mentah.bilanganSuratBeranak || '',
-        tempatDiperanakkan: b.mentah.tempatDiperanakkan || '',
-        noKebenaran: b.mentah.noKebenaran || '',
-        sekolahDahulu: b.mentah.sekolahDahulu || '',
+        ...b.data,
+        bilangan: b.data.bilangan ? Number(b.data.bilangan) : null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         updatedBy: uid,

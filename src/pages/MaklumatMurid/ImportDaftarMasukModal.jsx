@@ -1,16 +1,23 @@
 import { useState } from 'react'
-import { X, Upload, Download, AlertTriangle } from 'lucide-react'
+import { X, Upload, Download } from 'lucide-react'
 import { baiFailDaftarMasukCsv } from './daftarMasukCsvImport.js'
 import { importPukalDaftarMasuk } from '../../hooks/useDaftarMasukMurid.js'
 import { muatTurunCSV } from '../../lib/csvUtils.js'
 
 const HEADER_TEMPLAT = [
-  'BILANGAN', 'ID MURID', 'NO KAD PENGENALAN', 'NAMA',
-  'BILANGAN SURAT BERANAK', 'TEMPAT DIPERANAKKAN', 'NO KEBENARAN', 'SEKOLAH DAHULU',
+  'BILANGAN', 'TARIKH MASUK', 'NAMA', 'JANTINA', 'BANGSA', 'AGAMA', 'NO KAD PENGENALAN',
+  'TARIKH DIPERANAKKAN', 'BILANGAN SURAT BERANAK', 'TEMPAT DIPERANAKKAN', 'DARJAH',
+  'NO. KEBENARAN', 'NAMA PENJAGA', 'PERSAUDARAAN', 'PEKERJAAN', 'ALAMAT', 'SEKOLAH DAHULU',
 ]
 
+const BARIS_CONTOH = [[
+  '1', '05/01/2020', 'Ahmad bin Ali', 'L', 'Melayu', 'Islam', '120101010101',
+  '01/01/2013', 'B12345', 'Kuantan', '1', 'K001', 'Puan Aminah binti Hassan',
+  'Ibu', 'Suri Rumah', 'No 1, Jalan Contoh, 25200 Kuantan, Pahang', 'SK Contoh (kosongkan kalau bukan pindahan)',
+]]
+
 export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMurid, onSelesai }) {
-  const [langkah, setLangkah] = useState('pilih') // pilih | pratonton | mengimport | selesai
+  const [langkah, setLangkah] = useState('pilih')
   const [baris, setBaris] = useState([])
   const [lajurTakDikenali, setLajurTakDikenali] = useState([])
   const [ralat, setRalat] = useState(null)
@@ -19,18 +26,10 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
 
   if (!open) return null
 
-  const sepadan = baris.filter((b) => b.sepadan)
-  const takSepadan = baris.filter((b) => !b.sepadan)
+  const bilanganSepadan = baris.filter((b) => b.sepadan).length
 
   function muatTurunTemplat() {
-    // Baris contoh guna murid SEBENAR pertama dalam senarai (kalau ada) -
-    // tunjuk macam mana ID MURID/Nama sebenar nampak, senang staff faham
-    // bukan sekadar teks placeholder kosong.
-    const contoh = senaraiMurid[0]
-    const barisContoh = contoh
-      ? [['1', contoh.id, contoh.noPengenalan || '', contoh.nama || '', 'B12345', 'Kuantan', 'K001', 'SK Contoh (kosongkan kalau bukan pindahan)']]
-      : [['1', 'M00123', '120101010101', 'Ahmad bin Ali', 'B12345', 'Kuantan', 'K001', 'SK Contoh (kosongkan kalau bukan pindahan)']]
-    muatTurunCSV('templat-daftar-masuk-murid.csv', HEADER_TEMPLAT, barisContoh)
+    muatTurunCSV('templat-daftar-masuk-murid.csv', HEADER_TEMPLAT, BARIS_CONTOH)
   }
 
   function tutup() {
@@ -60,7 +59,7 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
     setLangkah('mengimport')
     setRalat(null)
     try {
-      const hasil = await importPukalDaftarMasuk(sepadan, user.uid, (selesai, jumlah) => setProgres({ selesai, jumlah }))
+      const hasil = await importPukalDaftarMasuk(baris, user.uid, (selesai, jumlah) => setProgres({ selesai, jumlah }))
       setHasilAkhir(hasil)
       setLangkah('selesai')
       onSelesai?.()
@@ -83,13 +82,10 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
         {langkah === 'pilih' && (
           <div className="text-center py-8">
             <p className="text-sm text-inkmuted mb-2">
-              Muat naik fail CSV data Daftar Masuk Murid yang sedia ada (rekod lama).
+              Muat naik fail CSV Buku Daftar Masuk Murid sedia ada (rekod lama).
             </p>
-            <p className="text-xs text-inkmuted mb-1">
-              Lajur dikenali: BILANGAN, ID MURID (atau NO KAD PENGENALAN), BILANGAN SURAT BERANAK, TEMPAT DIPERANAKKAN, NO KEBENARAN, SEKOLAH DAHULU.
-            </p>
-            <p className="text-xs text-brand-red mb-5">
-              Setiap baris kena sepadan dengan rekod Murid sedia ada (ikut ID MURID/No.KP) - baris tak sepadan akan diabaikan.
+            <p className="text-xs text-inkmuted mb-5">
+              Semua baris diimport terus sebagai rekod (SNAPSHOT sejarah kemasukan). Padanan dengan Murid semasa (ikut No.KP) cuma bonus rujukan - tak wajib, sesuai untuk murid yang dah tamat/keluar sekolah.
             </p>
             <button
               onClick={muatTurunTemplat}
@@ -108,68 +104,43 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
 
         {langkah === 'pratonton' && (
           <div>
-            <p className="text-sm text-ink font-medium mb-1">{baris.length} baris dijumpai dalam fail.</p>
+            <p className="text-sm text-ink font-medium mb-1">{baris.length} rekod dijumpai dalam fail.</p>
             {lajurTakDikenali.length > 0 && (
               <p className="text-xs text-inkmuted mb-3">Lajur tak dikenali (diabaikan): {lajurTakDikenali.join(', ')}</p>
             )}
-
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="p-3 rounded-card bg-base text-center">
-                <p className="text-lg font-bold text-ink">{sepadan.length}</p>
-                <p className="text-xs text-inkmuted">Sepadan (akan diimport)</p>
-              </div>
-              <div className="p-3 rounded-card bg-base text-center">
-                <p className="text-lg font-bold text-brand-red">{takSepadan.length}</p>
-                <p className="text-xs text-inkmuted">Tiada Padanan (diabaikan)</p>
-              </div>
-            </div>
-
-            {takSepadan.length > 0 && (
-              <div className="flex items-start gap-2 p-3 rounded-card bg-base border border-brand-red mb-4">
-                <AlertTriangle size={16} className="text-brand-red shrink-0 mt-0.5" />
-                <div className="text-xs text-ink">
-                  <p className="mb-1"><strong>{takSepadan.length} baris</strong> tak jumpa murid sepadan (ID MURID/No.KP tak wujud dalam data Murid) - TAK akan diimport:</p>
-                  <ul className="list-disc list-inside space-y-0.5 max-h-24 overflow-y-auto">
-                    {takSepadan.slice(0, 8).map((b) => (
-                      <li key={b.barisKe}>Baris {b.barisKe}: {b.mentah.namaRujukan || b.mentah.idMurid || b.mentah.noPengenalan || '(tiada rujukan)'}</li>
-                    ))}
-                  </ul>
-                  {takSepadan.length > 8 && <p className="mt-1">...dan {takSepadan.length - 8} lagi</p>}
-                </div>
-              </div>
-            )}
+            <p className="text-xs text-inkmuted mb-4">
+              {bilanganSepadan} daripada {baris.length} rekod berjaya dikaitkan dengan Murid semasa (ikut No.KP) - selebihnya tetap diimport, cuma tiada pautan rujukan.
+            </p>
 
             <div className="border border-border rounded-card overflow-x-auto max-h-64 mb-4">
               <table className="text-xs w-full">
                 <thead className="bg-base sticky top-0">
                   <tr>
                     <th className="text-left px-3 py-2 font-semibold text-ink">Bil.</th>
-                    <th className="text-left px-3 py-2 font-semibold text-ink">Nama (Murid Sepadan)</th>
+                    <th className="text-left px-3 py-2 font-semibold text-ink">Nama</th>
+                    <th className="text-left px-3 py-2 font-semibold text-ink">Darjah</th>
                     <th className="text-left px-3 py-2 font-semibold text-ink">Sekolah Dahulu</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {sepadan.slice(0, 10).map((b) => (
+                  {baris.slice(0, 10).map((b) => (
                     <tr key={b.barisKe}>
-                      <td className="px-3 py-2 text-inkmuted">{b.mentah.bilangan || '-'}</td>
-                      <td className="px-3 py-2 text-ink">{b.murid.nama}</td>
-                      <td className="px-3 py-2 text-inkmuted">{b.mentah.sekolahDahulu || '-'}</td>
+                      <td className="px-3 py-2 text-inkmuted">{b.data.bilangan || '-'}</td>
+                      <td className="px-3 py-2 text-ink">{b.data.nama}</td>
+                      <td className="px-3 py-2 text-inkmuted">{b.data.darjah || '-'}</td>
+                      <td className="px-3 py-2 text-inkmuted">{b.data.sekolahDahulu || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {sepadan.length > 10 && <p className="text-xs text-inkmuted text-center py-2">...dan {sepadan.length - 10} lagi</p>}
+              {baris.length > 10 && <p className="text-xs text-inkmuted text-center py-2">...dan {baris.length - 10} lagi</p>}
             </div>
 
             {ralat && <p className="text-sm text-brand-red mb-4">{ralat}</p>}
 
             <div className="flex gap-3">
-              <button
-                onClick={sahkanImport}
-                disabled={sepadan.length === 0}
-                className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-40"
-              >
-                Import {sepadan.length} Rekod
+              <button onClick={sahkanImport} className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold">
+                Import {baris.length} Rekod
               </button>
               <button onClick={tutup} className="h-12 px-5 rounded-card border border-border text-sm font-medium text-ink">
                 Batal

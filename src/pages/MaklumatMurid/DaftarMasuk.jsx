@@ -31,8 +31,6 @@ export default function DaftarMasuk() {
   const [tunjukImport, setTunjukImport] = useState(false)
   const [rekodEdit, setRekodEdit] = useState(null)
 
-  const muridById = Object.fromEntries(senaraiMurid.map((m) => [m.id, m]))
-
   function bukaTambah() {
     setRekodEdit(null)
     setTunjukBorang(true)
@@ -110,10 +108,8 @@ export default function DaftarMasuk() {
               {senarai.map((r) => (
                 <tr key={r.id}>
                   <td className="px-3 py-2.5 text-inkmuted">{r.bilangan}</td>
-                  <td className="px-3 py-2.5 text-ink font-medium">{r.muridNama}</td>
-                  <td className="px-3 py-2.5 text-inkmuted hidden sm:table-cell">
-                    {muridById[r.muridId]?.namaKelas || muridById[r.muridId]?.tahunTingkatan || '-'}
-                  </td>
+                  <td className="px-3 py-2.5 text-ink font-medium">{r.nama}</td>
+                  <td className="px-3 py-2.5 text-inkmuted hidden sm:table-cell">{r.darjah || '-'}</td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-1 justify-end">
                       <button onClick={() => bukaEdit(r)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
@@ -149,7 +145,7 @@ export default function DaftarMasuk() {
         />
       )}
 
-      {dataCetak && <CetakDaftarMasuk senarai={dataCetak} muridById={muridById} />}
+      {dataCetak && <CetakDaftarMasuk senarai={dataCetak} />}
     </div>
   )
 }

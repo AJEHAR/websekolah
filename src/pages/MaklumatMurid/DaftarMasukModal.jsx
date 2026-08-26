@@ -3,48 +3,77 @@ import { X } from 'lucide-react'
 import PemilihMurid from '../../components/PemilihMurid.jsx'
 import { gabungAlamat, darjahMurid } from './daftarMasukUtils.js'
 
-function MedanAuto({ label, nilai }) {
+function Medan({ label, value, onChange, placeholder }) {
   return (
     <div>
-      <p className="text-xs text-inkmuted mb-0.5">{label}</p>
-      <p className="text-sm text-ink font-medium">{nilai || '-'}</p>
+      <label className="block text-xs font-medium text-ink mb-1">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full h-10 px-3 rounded-card border border-border bg-surface text-sm"
+      />
     </div>
   )
 }
 
-// Borang Daftar Masuk Murid - staff PILIH murid sedia ada (bukan taip
-// semula 12 medan yang dah wujud dalam data APDM import - elak data tak
-// sepadan antara dua tempat). Cuma 4 medan BAHARU (tiada dalam APDM) yang
-// staff perlu taip sendiri. "Bilangan" (lajur pertama buku daftar) auto
-// ikut turutan sistem - tak perlu/tak boleh diisi manual di sini.
+const MEDAN_KOSONG = {
+  tarikhMasuk: '', nama: '', jantina: '', bangsa: '', agama: '', noPengenalan: '',
+  tarikhLahir: '', bilanganSuratBeranak: '', tempatDiperanakkan: '', darjah: '',
+  noKebenaran: '', namaPenjaga: '', persaudaraan: '', pekerjaan: '', alamat: '', sekolahDahulu: '',
+}
+
+// Borang Daftar Masuk Murid - SNAPSHOT sepenuhnya (semua medan disimpan
+// terus, BUKAN diambil langsung dari rekod Murid semasa). Sengaja begini
+// (bukan corak Kertas Kerja/Daftar Keluar yang ambil langsung) sebab ni
+// BUKU DAFTAR - rekod SEJARAH kemasukan (cth. "Darjah 1" masa masuk 2020)
+// - kalau ambil terus dari Murid semasa, darjah akan tunjuk darjah
+// SEKARANG (cth. "Darjah 6" tahun 2026), BUKAN darjah semasa didaftarkan.
+//
+// Pilih murid (pilihan, bukan wajib) cuma untuk AUTO-ISI pantas (jimat
+// taip) - staff tetap boleh taip semua manual terus tanpa pilih murid
+// (untuk rekod lama yang muridnya dah tiada dalam senarai Murid semasa).
 export default function DaftarMasukModal({ open, rekod, senaraiMurid, onClose, onSimpan }) {
-  const [muridDipilih, setMuridDipilih] = useState(
-    rekod?.muridId ? senaraiMurid.find((m) => m.id === rekod.muridId) ?? null : null
-  )
-  const [bilanganSuratBeranak, setBilanganSuratBeranak] = useState(rekod?.bilanganSuratBeranak ?? '')
-  const [tempatDiperanakkan, setTempatDiperanakkan] = useState(rekod?.tempatDiperanakkan ?? '')
-  const [noKebenaran, setNoKebenaran] = useState(rekod?.noKebenaran ?? '')
-  const [sekolahDahulu, setSekolahDahulu] = useState(rekod?.sekolahDahulu ?? '')
+  const [muridDipilih, setMuridDipilih] = useState(null)
+  const [medan, setMedan] = useState({ ...MEDAN_KOSONG, ...rekod })
   const [ralat, setRalat] = useState(null)
   const [menyimpan, setMenyimpan] = useState(false)
 
   if (!open) return null
 
+  function u(kunci, nilai) {
+    setMedan((m) => ({ ...m, [kunci]: nilai }))
+  }
+
+  function pilihMurid(m) {
+    setMuridDipilih(m)
+    if (!m) return
+    setMedan((med) => ({
+      ...med,
+      tarikhMasuk: m.tarikhMasukSekolah || med.tarikhMasuk,
+      nama: m.nama || med.nama,
+      jantina: m.jantina || med.jantina,
+      bangsa: m.kaum || med.bangsa,
+      agama: m.agama || med.agama,
+      noPengenalan: m.noPengenalan || med.noPengenalan,
+      tarikhLahir: m.tarikhLahir || med.tarikhLahir,
+      darjah: darjahMurid(m) || med.darjah,
+      namaPenjaga: m.penjaga1Nama || med.namaPenjaga,
+      persaudaraan: m.penjaga1Hubungan || med.persaudaraan,
+      pekerjaan: m.penjaga1Pekerjaan || med.pekerjaan,
+      alamat: gabungAlamat(m) || med.alamat,
+    }))
+  }
+
   async function hantar(e) {
     e.preventDefault()
     setRalat(null)
-    if (!muridDipilih) return setRalat('Sila pilih murid.')
+    if (!medan.nama.trim()) return setRalat('Sila isi Nama.')
 
     setMenyimpan(true)
     try {
-      await onSimpan({
-        muridId: muridDipilih.id,
-        muridNama: muridDipilih.nama,
-        bilanganSuratBeranak: bilanganSuratBeranak.trim(),
-        tempatDiperanakkan: tempatDiperanakkan.trim(),
-        noKebenaran: noKebenaran.trim(),
-        sekolahDahulu: sekolahDahulu.trim(),
-      })
+      await onSimpan({ ...medan, muridId: muridDipilih?.id ?? rekod?.muridId ?? null })
     } catch (err) {
       setRalat(err.message || 'Gagal simpan rekod.')
     } finally {
@@ -64,75 +93,30 @@ export default function DaftarMasukModal({ open, rekod, senaraiMurid, onClose, o
 
         <form onSubmit={hantar} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Nama Murid</label>
-            <PemilihMurid senaraiMurid={senaraiMurid} muridDipilih={muridDipilih} onPilih={setMuridDipilih} />
+            <label className="block text-sm font-medium text-ink mb-1">Auto-isi dari rekod Murid (pilihan)</label>
+            <PemilihMurid senaraiMurid={senaraiMurid} muridDipilih={muridDipilih} onPilih={pilihMurid} />
+            <p className="text-[11px] text-inkmuted mt-1">Pilih untuk auto-isi pantas, atau biar kosong dan taip semua manual (untuk rekod lama yang murid dah tiada dalam senarai semasa).</p>
           </div>
 
-          {muridDipilih && (
-            <div className="p-3 rounded-card border border-border bg-base grid grid-cols-2 gap-3">
-              <MedanAuto label="Tarikh Masuk" nilai={muridDipilih.tarikhMasukSekolah} />
-              <MedanAuto label="Jantina" nilai={muridDipilih.jantina} />
-              <MedanAuto label="Bangsa" nilai={muridDipilih.kaum} />
-              <MedanAuto label="Agama" nilai={muridDipilih.agama} />
-              <MedanAuto label="No. Kad Pengenalan" nilai={muridDipilih.noPengenalan} />
-              <MedanAuto label="Tarikh Diperanakkan" nilai={muridDipilih.tarikhLahir} />
-              <MedanAuto label="Darjah" nilai={darjahMurid(muridDipilih)} />
-              <MedanAuto label="Nama Penjaga" nilai={muridDipilih.penjaga1Nama} />
-              <MedanAuto label="Persaudaraan" nilai={muridDipilih.penjaga1Hubungan} />
-              <MedanAuto label="Pekerjaan" nilai={muridDipilih.penjaga1Pekerjaan} />
-              <div className="col-span-2">
-                <MedanAuto label="Alamat" nilai={gabungAlamat(muridDipilih)} />
-              </div>
-              <p className="col-span-2 text-[11px] text-inkmuted italic">
-                12 medan di atas diambil terus dari data Murid (import APDM) - tak boleh diubah di sini. Kemaskini di HEM &gt; Import kalau tersilap.
-              </p>
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="bilanganSurat" className="block text-sm font-medium text-ink mb-1">Bilangan Surat Beranak</label>
-            <input
-              id="bilanganSurat"
-              type="text"
-              value={bilanganSuratBeranak}
-              onChange={(e) => setBilanganSuratBeranak(e.target.value)}
-              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <Medan label="Tarikh Masuk" value={medan.tarikhMasuk} onChange={(v) => u('tarikhMasuk', v)} />
+            <Medan label="Nama" value={medan.nama} onChange={(v) => u('nama', v)} />
+            <Medan label="Jantina" value={medan.jantina} onChange={(v) => u('jantina', v)} />
+            <Medan label="Bangsa" value={medan.bangsa} onChange={(v) => u('bangsa', v)} />
+            <Medan label="Agama" value={medan.agama} onChange={(v) => u('agama', v)} />
+            <Medan label="No. Kad Pengenalan" value={medan.noPengenalan} onChange={(v) => u('noPengenalan', v)} />
+            <Medan label="Tarikh Lahir (Diperanakkan)" value={medan.tarikhLahir} onChange={(v) => u('tarikhLahir', v)} />
+            <Medan label="Bilangan Surat Beranak" value={medan.bilanganSuratBeranak} onChange={(v) => u('bilanganSuratBeranak', v)} />
+            <Medan label="Tempat Diperanakkan" value={medan.tempatDiperanakkan} onChange={(v) => u('tempatDiperanakkan', v)} />
+            <Medan label="Darjah" value={medan.darjah} onChange={(v) => u('darjah', v)} placeholder="Darjah SEMASA didaftarkan" />
+            <Medan label="No. Kebenaran" value={medan.noKebenaran} onChange={(v) => u('noKebenaran', v)} />
+            <Medan label="Nama Penjaga" value={medan.namaPenjaga} onChange={(v) => u('namaPenjaga', v)} />
+            <Medan label="Persaudaraan" value={medan.persaudaraan} onChange={(v) => u('persaudaraan', v)} />
+            <Medan label="Pekerjaan" value={medan.pekerjaan} onChange={(v) => u('pekerjaan', v)} />
           </div>
 
-          <div>
-            <label htmlFor="tempatDiperanakkan" className="block text-sm font-medium text-ink mb-1">Tempat Diperanakkan</label>
-            <input
-              id="tempatDiperanakkan"
-              type="text"
-              value={tempatDiperanakkan}
-              onChange={(e) => setTempatDiperanakkan(e.target.value)}
-              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="noKebenaran" className="block text-sm font-medium text-ink mb-1">No. Kebenaran</label>
-            <input
-              id="noKebenaran"
-              type="text"
-              value={noKebenaran}
-              onChange={(e) => setNoKebenaran(e.target.value)}
-              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="sekolahDahulu" className="block text-sm font-medium text-ink mb-1">Sekolah Dahulu</label>
-            <input
-              id="sekolahDahulu"
-              type="text"
-              value={sekolahDahulu}
-              onChange={(e) => setSekolahDahulu(e.target.value)}
-              placeholder="Kosongkan kalau murid baharu (bukan pindahan)"
-              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm"
-            />
-          </div>
+          <Medan label="Alamat" value={medan.alamat} onChange={(v) => u('alamat', v)} />
+          <Medan label="Sekolah Dahulu" value={medan.sekolahDahulu} onChange={(v) => u('sekolahDahulu', v)} placeholder="Kosongkan kalau bukan pindahan" />
 
           {ralat && <p className="text-sm text-brand-red">{ralat}</p>}
 

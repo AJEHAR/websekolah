@@ -1,6 +1,5 @@
 import KepalaSuratCetak from '../../components/cetak/KepalaSuratCetak.jsx'
 import PrintArea from '../../components/cetak/PrintArea.jsx'
-import { gabungAlamat, darjahMurid } from './daftarMasukUtils.js'
 
 const LAJUR = [
   'Bil.', 'Tarikh Masuk', 'Nama', 'Jantina', 'Bangsa', 'Agama', 'No. Kad Pengenalan',
@@ -8,10 +7,9 @@ const LAJUR = [
   'No. Kebenaran', 'Nama Penjaga', 'Persaudaraan', 'Pekerjaan', 'Alamat', 'Sekolah Dahulu',
 ]
 
-// Cetakan landskap - satu jadual besar semua rekod (bukan satu murid satu
-// muka surat macam RPI/PLC) - ikut format tradisional "Buku Daftar Masuk
-// Murid" (satu baris = satu murid, semua lajur kelihatan sekali gus).
-export default function CetakDaftarMasuk({ senarai, muridById }) {
+// Cetakan landskap - satu jadual besar semua rekod (SEMUA medan SNAPSHOT
+// terus dari rekod - tiada lagi pergantungan pada rekod Murid semasa).
+export default function CetakDaftarMasuk({ senarai }) {
   return (
     <PrintArea>
       <div className="cetak-landskap p-8 text-black">
@@ -25,30 +23,27 @@ export default function CetakDaftarMasuk({ senarai, muridById }) {
             </tr>
           </thead>
           <tbody>
-            {senarai.map((r) => {
-              const m = muridById[r.muridId] ?? {}
-              return (
-                <tr key={r.id}>
-                  <td className="border border-black px-1.5 py-1 text-center">{r.bilangan}</td>
-                  <td className="border border-black px-1.5 py-1 whitespace-nowrap">{m.tarikhMasukSekolah || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{r.muridNama}</td>
-                  <td className="border border-black px-1.5 py-1">{m.jantina || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{m.kaum || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{m.agama || '-'}</td>
-                  <td className="border border-black px-1.5 py-1 whitespace-nowrap">{m.noPengenalan || '-'}</td>
-                  <td className="border border-black px-1.5 py-1 whitespace-nowrap">{m.tarikhLahir || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{r.bilanganSuratBeranak || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{r.tempatDiperanakkan || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{darjahMurid(m)}</td>
-                  <td className="border border-black px-1.5 py-1">{r.noKebenaran || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{m.penjaga1Nama || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{m.penjaga1Hubungan || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{m.penjaga1Pekerjaan || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{gabungAlamat(m) || '-'}</td>
-                  <td className="border border-black px-1.5 py-1">{r.sekolahDahulu || '-'}</td>
-                </tr>
-              )
-            })}
+            {senarai.map((r) => (
+              <tr key={r.id}>
+                <td className="border border-black px-1.5 py-1 text-center">{r.bilangan}</td>
+                <td className="border border-black px-1.5 py-1 whitespace-nowrap">{r.tarikhMasuk || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.nama}</td>
+                <td className="border border-black px-1.5 py-1">{r.jantina || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.bangsa || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.agama || '-'}</td>
+                <td className="border border-black px-1.5 py-1 whitespace-nowrap">{r.noPengenalan || '-'}</td>
+                <td className="border border-black px-1.5 py-1 whitespace-nowrap">{r.tarikhLahir || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.bilanganSuratBeranak || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.tempatDiperanakkan || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.darjah || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.noKebenaran || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.namaPenjaga || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.persaudaraan || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.pekerjaan || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.alamat || '-'}</td>
+                <td className="border border-black px-1.5 py-1">{r.sekolahDahulu || '-'}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
