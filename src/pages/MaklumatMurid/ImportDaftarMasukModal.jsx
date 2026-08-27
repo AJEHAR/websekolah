@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { X, Upload, Download } from 'lucide-react'
+import { X, Upload, Download, FileSpreadsheet } from 'lucide-react'
 import { baiFailDaftarMasukCsv } from './daftarMasukCsvImport.js'
+import { baiFailDaftarMasukXlsx } from './daftarMasukXlsxImport.js'
 import { importPukalDaftarMasuk } from '../../hooks/useDaftarMasukMurid.js'
 import { muatTurunCSV } from '../../lib/csvUtils.js'
 
@@ -30,6 +31,7 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
   const [langkah, setLangkah] = useState('pilih')
   const [baris, setBaris] = useState([])
   const [lajurTakDikenali, setLajurTakDikenali] = useState([])
+  const [bilanganIcRosak, setBilanganIcRosak] = useState(0)
   const [ralat, setRalat] = useState(null)
   const [progres, setProgres] = useState({ selesai: 0, jumlah: 0 })
   const [hasilAkhir, setHasilAkhir] = useState(null)
@@ -45,6 +47,8 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
   function tutup() {
     setLangkah('pilih')
     setBaris([])
+    setLajurTakDikenali([])
+    setBilanganIcRosak(0)
     setRalat(null)
     setHasilAkhir(null)
     onClose()
@@ -55,12 +59,16 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
     if (!fail) return
     setRalat(null)
     try {
-      const hasil = await baiFailDaftarMasukCsv(fail, senaraiMurid)
+      const namaLower = fail.name.toLowerCase()
+      const hasil = namaLower.endsWith('.xlsx') || namaLower.endsWith('.xls')
+        ? await baiFailDaftarMasukXlsx(fail, senaraiMurid)
+        : await baiFailDaftarMasukCsv(fail, senaraiMurid)
       setBaris(hasil.hasil)
       setLajurTakDikenali(hasil.lajurTakDikenali)
+      setBilanganIcRosak(hasil.bilanganIcRosak)
       setLangkah('pratonton')
     } catch (err) {
-      setRalat(err.message || 'Gagal baca fail. Pastikan fail .csv yang betul.')
+      setRalat(err.message || 'Gagal baca fail. Pastikan fail .xlsx atau .csv yang betul.')
     }
     e.target.value = ''
   }
@@ -92,11 +100,15 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
         {langkah === 'pilih' && (
           <div className="text-center py-8">
             <p className="text-sm text-inkmuted mb-2">
-              Muat naik fail CSV Buku Daftar Masuk Murid sedia ada (rekod lama).
+              Muat naik fail Buku Daftar Masuk Murid sedia ada (rekod lama).
             </p>
+            <div className="text-xs bg-[#0F6E561A] border border-[#0F6E56]/30 rounded-card p-3 mb-4 text-left">
+              <p className="font-semibold text-[#0F6E56] mb-1">✓ Disyorkan: muat naik fail .xlsx (Excel) terus</p>
+              <p className="text-inkmuted">Sistem baca nilai nombor ASAL terus dari fail Excel (No. Kad Pengenalan, dll) - elak sepenuhnya masalah Excel tukar nombor panjang jadi format saintifik ("1.40913E+11") semasa eksport CSV, yang buat digit sebenar hilang. Guna .csv hanya kalau awak dah pasti semua lajur nombor panjang (IC) diformat Teks dalam Excel dulu.</p>
+            </div>
             <p className="text-xs text-inkmuted mb-5">
               Semua baris diimport terus sebagai rekod (SNAPSHOT sejarah kemasukan). Padanan dengan Murid semasa (ikut No.KP) cuma bonus rujukan - tak wajib, sesuai untuk murid yang dah tamat/keluar sekolah.
-              <br />Templat ada 20 lajur (sebijik sama dengan Excel "BUKU DAFTAR") - 3 lajur terakhir (Tarikh Keluar, Lulus Darjah, Sebab Meninggalkan) sengaja diabaikan semasa import sini, sebab tu data untuk "Daftar Keluar Murid".
+              <br />Templat CSV ada 20 lajur (sebijik sama dengan Excel "BUKU DAFTAR") - 3 lajur terakhir (Tarikh Keluar, Lulus Darjah, Sebab Meninggalkan) sengaja diabaikan semasa import sini, sebab tu data untuk "Daftar Keluar Murid". Fail .xlsx terus - sistem cari sendiri helaian yang sepadan (tak perlu susun/buang helaian lain dulu).
             </p>
             <button
               onClick={muatTurunTemplat}
@@ -105,8 +117,13 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
               <Download size={16} /> Muat Turun Templat CSV
             </button>
             <br />
-            <label className="inline-flex items-center gap-2 h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold cursor-pointer">
-              <Upload size={18} /> Pilih Fail CSV
+            <label className="inline-flex items-center gap-2 h-12 px-6 rounded-card bg-brand-red text-white text-sm font-semibold cursor-pointer mb-2">
+              <FileSpreadsheet size={18} /> Pilih Fail .xlsx (Disyorkan)
+              <input type="file" accept=".xlsx,.xls" onChange={pilihFail} className="hidden" />
+            </label>
+            <br />
+            <label className="inline-flex items-center gap-2 h-10 px-5 rounded-card border border-border text-ink text-xs font-medium cursor-pointer">
+              <Upload size={14} /> Atau pilih fail .csv
               <input type="file" accept=".csv" onChange={pilihFail} className="hidden" />
             </label>
             {ralat && <p className="text-sm text-brand-red mt-4">{ralat}</p>}
@@ -116,6 +133,12 @@ export default function ImportDaftarMasukModal({ open, onClose, user, senaraiMur
         {langkah === 'pratonton' && (
           <div>
             <p className="text-sm text-ink font-medium mb-1">{baris.length} rekod dijumpai dalam fail.</p>
+            {bilanganIcRosak > 0 && (
+              <div className="text-xs bg-[#FCEBEB] border border-brand-red/30 text-brand-red rounded-card p-3 mb-3">
+                <p className="font-semibold mb-1">⚠ {bilanganIcRosak} rekod No. Kad Pengenalan nampak format saintifik Excel (cth. "1.40913E+11") - digit sebenar dah hilang dalam fail CSV ni.</p>
+                <p>Punca: lajur IC dalam Excel sumber diformat Nombor (bukan Teks) sebelum eksport CSV. Cadangan: BATAL import ni, betulkan format lajur IC jadi Teks dalam Excel asal (klik kanan lajur → Format Cells → Text), eksport CSV semula, baru import. Kalau teruskan sekarang, rekod ni akan tersimpan dengan IC rosak dan staff kena betulkan manual satu-satu lepas ni.</p>
+              </div>
+            )}
             {lajurTakDikenali.length > 0 && (
               <p className="text-xs text-inkmuted mb-3">Lajur tak dikenali (diabaikan): {lajurTakDikenali.join(', ')}</p>
             )}

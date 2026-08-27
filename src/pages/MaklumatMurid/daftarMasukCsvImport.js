@@ -1,8 +1,10 @@
 import { uraiCSVBaris } from '../../lib/csvUtils.js'
 
-// Lajur CSV yang dikenali (header -> kunci medan) - padan header sebenar
-// Buku Daftar sekolah (BILANGAN, TARIKH MASUK, NAMA, JANTINA, dst).
-const PEMETAAN_LAJUR = {
+// Lajur CSV/Excel yang dikenali (header -> kunci medan) - padan header
+// sebenar Buku Daftar sekolah (BILANGAN, TARIKH MASUK, NAMA, JANTINA, dst).
+// Dikongsi antara import CSV (daftarMasukCsvImport.js) dan import Excel
+// terus (daftarMasukXlsxImport.js) - SATU sumber kebenaran untuk pemetaan.
+export const PEMETAAN_LAJUR = {
   'BILANGAN': 'bilangan',
   'BIL': 'bilangan',
   'BIL.': 'bilangan',
@@ -36,6 +38,35 @@ const PEMETAAN_LAJUR = {
   'SEBAB MENINGGALKAN SEKOLAH': '_abai',
 }
 
+// Kesan format saintifik Excel (cth. "1.40913E+11") pada No. Kad
+// Pengenalan - berlaku bila lajur IC dalam Excel SUMBER diformat sebagai
+// Nombor/General (bukan Teks) sebelum eksport CSV. Bila ni jadi, DIGIT
+// SEBENAR DAH HILANG dalam teks CSV tu sendiri (bukan boleh dipulihkan
+// oleh parser) - kena EXPORT SEMULA dari Excel dengan lajur IC diformat
+// Teks dulu, ATAU (lebih selamat) muat naik fail .xlsx terus - lihat
+// daftarMasukXlsxImport.js, yang terus elak isu ni sepenuhnya sebab baca
+// nilai NOMBOR ASAL dari fail Excel, bukan teks yang Excel dah "paparkan".
+const POLA_SAINTIFIK = /^\d(\.\d+)?E\+\d+$/i
+
+// Padankan satu baris data (idMurid mentah dari lajur "ID MURID" kalau ada,
+// atau noPengenalan) dengan rekod Murid semasa. Dikongsi CSV & Excel import.
+export function padankanMurid(data, idMuridMentah, idById, idByNoPengenalan) {
+  if (idMuridMentah && idById.has(idMuridMentah)) return idById.get(idMuridMentah)
+  if (data.noPengenalan && idByNoPengenalan.has(data.noPengenalan)) return idByNoPengenalan.get(data.noPengenalan)
+  return null
+}
+
+export function binaPetaMurid(senaraiMurid) {
+  return {
+    idById: new Map(senaraiMurid.map((m) => [m.id, m])),
+    idByNoPengenalan: new Map(senaraiMurid.filter((m) => m.noPengenalan).map((m) => [m.noPengenalan, m])),
+  }
+}
+
+export function kesanIcRosak(nilai) {
+  return POLA_SAINTIFIK.test(nilai ?? '')
+}
+
 // Baca fail CSV Daftar Masuk Murid (data lama) - SEMUA baris DIIMPORT
 // terus sebagai SNAPSHOT (bukan wajib padan dengan rekod Murid semasa -
 // ramai rekod BUKU DAFTAR lama melibatkan murid yang DAH TAMAT/keluar
@@ -54,8 +85,7 @@ export async function baiFailDaftarMasukCsv(fail, senaraiMurid) {
   const barisData = semuaBaris.slice(1)
   const lajurTakDikenali = headerBaris.filter((h) => h && !PEMETAAN_LAJUR[h])
 
-  const idById = new Map(senaraiMurid.map((m) => [m.id, m]))
-  const idByNoPengenalan = new Map(senaraiMurid.filter((m) => m.noPengenalan).map((m) => [m.noPengenalan, m]))
+  const { idById, idByNoPengenalan } = binaPetaMurid(senaraiMurid)
 
   const hasil = barisData.map((baris, i) => {
     const data = {}
@@ -67,16 +97,17 @@ export async function baiFailDaftarMasukCsv(fail, senaraiMurid) {
     })
 
     const idMuridMentah = headerBaris.includes('ID MURID') ? String(baris[headerBaris.indexOf('ID MURID')] ?? '').trim() : ''
-    let murid = null
-    if (idMuridMentah && idById.has(idMuridMentah)) murid = idById.get(idMuridMentah)
-    else if (data.noPengenalan && idByNoPengenalan.has(data.noPengenalan)) murid = idByNoPengenalan.get(data.noPengenalan)
+    const murid = padankanMurid(data, idMuridMentah, idById, idByNoPengenalan)
 
     return {
       barisKe: i + 2,
       sepadan: Boolean(murid),
+      icRosak: kesanIcRosak(data.noPengenalan),
       data: { ...data, muridId: murid?.id ?? null },
     }
   })
 
-  return { hasil, lajurTakDikenali }
+  const bilanganIcRosak = hasil.filter((h) => h.icRosak).length
+
+  return { hasil, lajurTakDikenali, bilanganIcRosak }
 }

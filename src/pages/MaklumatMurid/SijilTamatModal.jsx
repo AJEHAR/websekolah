@@ -69,18 +69,16 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
 
   // Tahun Tamat diubah (borang TAMBAH sahaja) -> cari semula unit UBKS
   // untuk tahun baru, kemaskini 3 medan kokurikulum sahaja (bukan overwrite
-  // medan lain yang mungkin staff dah edit).
-  function ubahTahunTamat(nilai) {
-    setTahunTamat(nilai)
-  }
+  // medan lain yang mungkin staff dah edit). DEPS betul: muridDipilih +
+  // tahunTamat + unitTahunIni SEMUA - sebelum ni cuma [unitTahunIni] jadi
+  // effect boleh terlepas kemaskini kalau tahunTamat tukar tapi unitTahunIni
+  // punya rujukan array belum berubah lagi (race condition halus).
   useEffect(() => {
-    if (!rekod && muridDipilih && tahunTamat) {
-      const rekodDaftarMasuk = senaraiDaftarMasuk.find((d) => d.muridId === muridDipilih.id) ?? null
-      const auto = autoIsiSijil(muridDipilih, rekodDaftarMasuk, tahunTamat, unitTahunIni, senaraiKategoriUBKS)
-      setMedan((med) => ({ ...med, unitBeruniform: auto.unitBeruniform, kelab: auto.kelab, sukan: auto.sukan }))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unitTahunIni])
+    if (rekod || !muridDipilih || !tahunTamat) return
+    const rekodDaftarMasuk = senaraiDaftarMasuk.find((d) => d.muridId === muridDipilih.id) ?? null
+    const auto = autoIsiSijil(muridDipilih, rekodDaftarMasuk, tahunTamat, unitTahunIni, senaraiKategoriUBKS)
+    setMedan((med) => ({ ...med, unitBeruniform: auto.unitBeruniform, kelab: auto.kelab, sukan: auto.sukan }))
+  }, [rekod, muridDipilih, tahunTamat, unitTahunIni, senaraiDaftarMasuk, senaraiKategoriUBKS])
 
   if (!open) return null
 
@@ -125,7 +123,7 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
             <input
               type="text"
               value={tahunTamat}
-              onChange={(e) => ubahTahunTamat(e.target.value)}
+              onChange={(e) => setTahunTamat(e.target.value)}
               placeholder="cth. 2026"
               className="w-full h-10 px-3 rounded-card border border-border bg-surface text-sm max-w-[160px]"
             />
@@ -165,6 +163,13 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
                   <Medan label="Kelab" value={medan.kelab} onChange={(v) => u('kelab', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
                   <Medan label="Sukan" value={medan.sukan} onChange={(v) => u('sukan', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
                 </div>
+                {tahunTamat && !medan.unitBeruniform && !medan.kelab && !medan.sukan && (
+                  <p className="text-xs text-inkmuted mt-2">
+                    {unitTahunIni.filter((un) => un.ahli?.some((a) => a.idMurid === muridDipilih?.id)).length > 0
+                      ? `Nota: murid ni ahli unit UBKS tahun ${tahunTamat}, tapi kategori unit tu tak sepadan Unit Beruniform/Kelab/Sukan - semak nama Kategori di Panel Admin.`
+                      : `Nota: tiada rekod keahlian UBKS dijumpai untuk murid ni pada tahun ${tahunTamat} (unit UBKS tahun ${tahunTamat} yang wujud: ${unitTahunIni.length}). Taip manual kalau perlu.`}
+                  </p>
+                )}
               </div>
 
               <div>
