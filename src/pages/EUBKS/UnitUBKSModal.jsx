@@ -5,6 +5,7 @@ import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { kemaskiniUnit, padamUnit } from '../../hooks/useUnitUBKS.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { useDialog } from '../../context/DialogContext.jsx'
+import ProfilMuridUBKSModal from './ProfilMuridUBKSModal.jsx'
 
 export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai }) {
   const { konfirm, amaran } = useDialog()
@@ -21,6 +22,7 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
   const [menyimpan, setMenyimpan] = useState(false)
   const [statusSimpan, setStatusSimpan] = useState(null)
   const [gambarGagal, setGambarGagal] = useState(false)
+  const [profilDibuka, setProfilDibuka] = useState(null)
 
   const senaraiTahun = useMemo(() => {
     const set = new Set()
@@ -248,14 +250,22 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
                     <div className="border border-border rounded-card divide-y divide-border">
                       {senaraiAhli.map((m) => (
                         <div key={m.idMurid} className="flex items-center justify-between px-3 py-2 text-sm">
-                          <span className="text-ink flex items-center gap-1.5">
+                          <button
+                            onClick={() => setProfilDibuka({ idMurid: m.idMurid, nama: m.nama })}
+                            className="text-ink flex items-center gap-1.5 hover:text-brand-red hover:underline text-left"
+                          >
                             {m.nama}
                             {m.adalahLF && (
                               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#F2C230', color: '#1A1A1A' }}>
                                 LF
                               </span>
                             )}
-                          </span>
+                            {m.jawatan?.trim() && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand-red/10 text-brand-red">
+                                {m.jawatan}
+                              </span>
+                            )}
+                          </button>
                           {isAdmin && (
                             <div className="flex items-center gap-1">
                               <button
@@ -295,6 +305,13 @@ export default function UnitUBKSModal({ unit, isAdmin, user, onClose, onSelesai 
           </div>
         )}
       </div>
+
+      <ProfilMuridUBKSModal
+        open={Boolean(profilDibuka)}
+        idMurid={profilDibuka?.idMurid}
+        nama={profilDibuka?.nama}
+        onClose={() => setProfilDibuka(null)}
+      />
     </div>
   )
 }

@@ -33,6 +33,16 @@ export function useUnitUBKSTahun(tahunSesi) {
   return { senarai, loading, muatSemula }
 }
 
+// Semua unit UBKS SEMUA tahun (bukan hook - fungsi sekali panggil) - untuk
+// Profil Murid UBKS (perlu tengok sejarah keahlian merentasi tahun, bukan
+// satu sesi sahaja). Kos bacaan cuma bila profil dibuka, bukan setiap
+// muat page.
+export async function ambilSemuaUnitUBKS() {
+  if (!isFirebaseConfigured) return []
+  const snap = await getDocs(collection(db, KOLEKSI))
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
 export async function tambahUnit(tahunSesi, namaUnit, kategoriUnit, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await addDoc(collection(db, KOLEKSI), {

@@ -88,7 +88,9 @@ export default function DaftarMasuk() {
   const [rekodLihat, setRekodLihat] = useState(null)
   const [carian, setCarian] = useState('')
 
-  const disenarai = senarai.filter((r) => (r.nama ?? '').toLowerCase().includes(carian.toLowerCase()))
+  const disenarai = senarai
+    .filter((r) => (r.nama ?? '').toLowerCase().includes(carian.toLowerCase()))
+    .sort((a, b) => (b.bilangan ?? 0) - (a.bilangan ?? 0)) // lalai: bilangan besar atas, kecil bawah
 
   function bukaTambah() {
     setRekodEdit(null)

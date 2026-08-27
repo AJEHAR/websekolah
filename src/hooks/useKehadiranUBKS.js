@@ -36,6 +36,14 @@ export function useKehadiranUBKSTahun(tahunSesi) {
   return { senarai, loading, muatSemula }
 }
 
+// Rekod kehadiran untuk SATU unit sahaja (semua tahun/perjumpaan) - untuk
+// Profil Murid UBKS kira peratus kehadiran dia dalam unit tu.
+export async function ambilKehadiranUnit(unitId) {
+  if (!isFirebaseConfigured || !unitId) return []
+  const q = query(collection(db, KOLEKSI), where('unitId', '==', unitId))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
 // senaraiKehadiran: [{ idMurid, nama, hadir: bool, adalahLF: bool }, ...]
 export async function simpanKehadiranUBKS(tahunSesi, unit, perjumpaan, tarikh, senaraiKehadiran, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')

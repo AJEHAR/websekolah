@@ -7,6 +7,8 @@ import { useTetapanPendaftaran } from '../../hooks/useTetapanPendaftaran.js'
 
 const TAJUK_SUBPAGE = {
   '/eubks/murid-ubks': 'Murid UBKS',
+  '/eubks/profil-murid': 'Profil Murid',
+  '/eubks/jawatankuasa-ubks': 'Jawatankuasa UBKS',
   '/eubks/kehadiran-ubks': 'Kehadiran UBKS',
   '/eubks/laporan-ubks': 'Laporan UBKS',
   '/eubks/perancangan-ubks': 'Perancangan UBKS',
