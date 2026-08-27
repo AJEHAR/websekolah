@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { CalendarCheck, Plus } from 'lucide-react'
-import StatistikKeberadaan from './StatistikKeberadaan.jsx'
 
 export default function ProfileView({ profile, onEdit }) {
   return (
@@ -54,8 +53,6 @@ export default function ProfileView({ profile, onEdit }) {
           </div>
         </div>
       </div>
-
-      <StatistikKeberadaan emel={profile.emel} />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import PemilihMurid from '../../components/PemilihMurid.jsx'
 import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
+import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { autoIsiSijil } from './sijilTamatUtils.js'
 
 function Medan({ label, value, onChange, placeholder, autoLabel }) {
@@ -41,6 +42,7 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
   const [menyimpan, setMenyimpan] = useState(false)
 
   const { senarai: unitTahunIni } = useUnitUBKSTahun(tahunTamat)
+  const { senarai: senaraiKategoriUBKS } = useKategoriUBKS()
 
   // Mula edit rekod sedia ada - isi semula semua medan dari rekod (bukan
   // auto-isi semula, sebab nilai yang DISIMPAN itulah yang muktamad).
@@ -61,7 +63,7 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
     setMuridDipilih(m)
     if (!rekod) {
       const rekodDaftarMasuk = senaraiDaftarMasuk.find((d) => d.muridId === m.id) ?? null
-      setMedan((med) => ({ ...med, ...autoIsiSijil(m, rekodDaftarMasuk, tahunTamat, unitTahunIni) }))
+      setMedan((med) => ({ ...med, ...autoIsiSijil(m, rekodDaftarMasuk, tahunTamat, unitTahunIni, senaraiKategoriUBKS) }))
     }
   }
 
@@ -74,7 +76,7 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
   useEffect(() => {
     if (!rekod && muridDipilih && tahunTamat) {
       const rekodDaftarMasuk = senaraiDaftarMasuk.find((d) => d.muridId === muridDipilih.id) ?? null
-      const auto = autoIsiSijil(muridDipilih, rekodDaftarMasuk, tahunTamat, unitTahunIni)
+      const auto = autoIsiSijil(muridDipilih, rekodDaftarMasuk, tahunTamat, unitTahunIni, senaraiKategoriUBKS)
       setMedan((med) => ({ ...med, unitBeruniform: auto.unitBeruniform, kelab: auto.kelab, sukan: auto.sukan }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,9 +161,9 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
               <div>
                 <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">Kokurikulum (ikut Tahun Tamat)</p>
                 <div className="grid grid-cols-1 gap-3">
-                  <Medan label="Unit Beruniform" value={medan.unitBeruniform} onChange={(v) => u('unitBeruniform', v)} autoLabel />
-                  <Medan label="Kelab" value={medan.kelab} onChange={(v) => u('kelab', v)} autoLabel />
-                  <Medan label="Sukan" value={medan.sukan} onChange={(v) => u('sukan', v)} autoLabel />
+                  <Medan label="Unit Beruniform" value={medan.unitBeruniform} onChange={(v) => u('unitBeruniform', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
+                  <Medan label="Kelab" value={medan.kelab} onChange={(v) => u('kelab', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
+                  <Medan label="Sukan" value={medan.sukan} onChange={(v) => u('sukan', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
                 </div>
               </div>
 

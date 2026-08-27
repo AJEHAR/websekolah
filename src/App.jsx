@@ -43,8 +43,6 @@ import Analisis from './pages/MaklumatMurid/Analisis.jsx'
 import KehadiranMurid from './pages/MaklumatMurid/KehadiranMurid.jsx'
 import KehadiranRMT from './pages/MaklumatMurid/PapanRMT.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
-import TakwimLayout from './pages/Takwim/TakwimLayout.jsx'
-import TakwimSekolah from './pages/Takwim/TakwimSekolah.jsx'
 import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
 import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
 import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
@@ -200,11 +198,6 @@ export default function App() {
           <Route path="/ebanci" element={<Navigate to="/maklumat-murid" replace />} />
           <Route path="/ebanci/kehadiran-murid" element={<Navigate to="/maklumat-murid/kehadiran-murid" replace />} />
           <Route path="/ebanci/papan-rmt" element={<Navigate to="/maklumat-murid/kehadiran-rmt" replace />} />
-
-          {/* KOKU - hub dengan akses pantas, + 4 sub-page */}
-          <Route path="/takwim" element={<TakwimLayout />}>
-            <Route index element={<TakwimSekolah />} />
-          </Route>
 
           <Route path="/eubks" element={<EUBKSLayout />}>
             <Route index element={<EUBKSHub />} />

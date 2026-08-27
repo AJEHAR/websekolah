@@ -7,17 +7,28 @@ export function darjahDariKelas(namaKelas) {
 }
 
 // Cari unit UBKS yang murid sertai pada tahun tertentu, kumpul ikut
-// kategori. Padanan kategori guna carian SEBAHAGIAN (bukan tepat) sebab
-// admin urus nama kategori sendiri (cth. "Unit Beruniform", "Beruniform",
-// "Uniform" semua patut sepadan) - hasil cuma CADANGAN, staff sahkan/edit.
-export function cariUnitUBKS(muridId, tahunTamat, senaraiUnitUBKS) {
+// kategori. PENTING: unit.kategoriUnit simpan KOD ringkas (cth. "UB"),
+// bukan nama penuh - kena selesaikan ke NAMA kategori dulu (guna
+// senaraiKategori dari useKategoriUBKS) sebelum padan kata kunci, kalau
+// tidak padanan sentiasa gagal senyap (kod pendek jarang mengandungi
+// "uniform"/"kelab"/"sukan"). Padanan kata kunci pada NAMA guna carian
+// SEBAHAGIAN (bukan tepat) sebab admin urus nama kategori sendiri (cth.
+// "Unit Beruniform", "Badan Beruniform", "Uniform" semua patut sepadan)
+// - hasil cuma CADANGAN, staff sahkan/edit.
+export function cariUnitUBKS(muridId, tahunTamat, senaraiUnitUBKS, senaraiKategori = []) {
+  const namaKategoriIkutKod = {}
+  senaraiKategori.forEach((k) => { namaKategoriIkutKod[k.kod] = k.nama })
+
   const unitTahunIni = senaraiUnitUBKS.filter(
     (u) => String(u.tahunSesi) === String(tahunTamat) && u.ahli?.some((a) => a.idMurid === muridId)
   )
 
   function kumpulIkutKataKunci(kataKunci) {
     return unitTahunIni
-      .filter((u) => (u.kategoriUnit ?? '').toLowerCase().includes(kataKunci))
+      .filter((u) => {
+        const namaKategori = namaKategoriIkutKod[u.kategoriUnit] ?? u.kategoriUnit ?? ''
+        return namaKategori.toLowerCase().includes(kataKunci)
+      })
       .map((u) => u.namaUnit)
       .join(', ')
   }
@@ -32,8 +43,8 @@ export function cariUnitUBKS(muridId, tahunTamat, senaraiUnitUBKS) {
 // Auto-isi PENUH semasa cipta rekod baru - gabung data Murid + Daftar
 // Masuk (kalau ada) + UBKS (kalau tahun tamat diisi). Pulangkan objek
 // medan siap untuk diletak dalam borang (staff boleh edit semua terus).
-export function autoIsiSijil(murid, rekodDaftarMasuk, tahunTamat, senaraiUnitUBKS) {
-  const ubks = tahunTamat ? cariUnitUBKS(murid.id, tahunTamat, senaraiUnitUBKS) : { unitBeruniform: '', kelab: '', sukan: '' }
+export function autoIsiSijil(murid, rekodDaftarMasuk, tahunTamat, senaraiUnitUBKS, senaraiKategori = []) {
+  const ubks = tahunTamat ? cariUnitUBKS(murid.id, tahunTamat, senaraiUnitUBKS, senaraiKategori) : { unitBeruniform: '', kelab: '', sukan: '' }
   return {
     noKP: murid.noPengenalan || '',
     nama: murid.nama || '',

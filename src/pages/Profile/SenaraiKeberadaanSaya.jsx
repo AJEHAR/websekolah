@@ -7,6 +7,7 @@ import KeberadaanCardRingkas from '../Keberadaan/KeberadaanCardRingkas.jsx'
 import DetailModal from '../Keberadaan/DetailModal.jsx'
 import KeberadaanForm from '../Keberadaan/KeberadaanForm.jsx'
 import KalendarBulanan from './KalendarBulanan.jsx'
+import StatistikKeberadaan from './StatistikKeberadaan.jsx'
 import { useDialog } from '../../context/DialogContext.jsx'
 
 const TAHUN_SEMASA = new Date().getFullYear()
@@ -53,7 +54,7 @@ export default function SenaraiKeberadaanSaya() {
 
   return (
     <div>
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5 flex-wrap">
         <button
           onClick={() => setTab('senarai')}
           className="px-4 py-2 rounded-full text-xs font-medium border border-border"
@@ -68,43 +69,55 @@ export default function SenaraiKeberadaanSaya() {
         >
           Kalendar Bulanan
         </button>
+        <button
+          onClick={() => setTab('analisis')}
+          className="px-4 py-2 rounded-full text-xs font-medium border border-border"
+          style={tab === 'analisis' ? { backgroundColor: '#1A1A1A', color: '#fff', borderColor: '#1A1A1A' } : { color: '#5C5C5C' }}
+        >
+          Analisis
+        </button>
       </div>
 
-      {tab === 'senarai' ? (
-        <>
-          <div className="mb-4">
-            <label htmlFor="tahunTapis" className="block text-xs font-medium text-ink mb-1">Tahun</label>
-            <select
-              id="tahunTapis"
-              value={tahunTapis}
-              onChange={(e) => setTahunTapis(Number(e.target.value))}
-              className="h-10 px-3 rounded-card border border-border bg-surface text-sm"
-            >
-              {PILIHAN_TAHUN.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
+      {(tab === 'senarai' || tab === 'analisis') && (
+        <div className="mb-4">
+          <label htmlFor="tahunTapis" className="block text-xs font-medium text-ink mb-1">Tahun</label>
+          <select
+            id="tahunTapis"
+            value={tahunTapis}
+            onChange={(e) => setTahunTapis(Number(e.target.value))}
+            className="h-10 px-3 rounded-card border border-border bg-surface text-sm"
+          >
+            {PILIHAN_TAHUN.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
-          {loading ? (
-            <p className="text-sm text-inkmuted">Memuatkan…</p>
-          ) : senaraiDitapis.length === 0 ? (
-            <p className="text-sm text-inkmuted">Tiada rekod keberadaan untuk tahun {tahunTapis}.</p>
-          ) : (
-            <div className="space-y-2">
-              {senaraiDitapis.map((r) => (
-                <KeberadaanCardRingkas
-                  key={r.id}
-                  rekod={r}
-                  bolehUrus={isSuperAdmin || r.profilEmel === user.email}
-                  onLihat={setRekodLihat}
-                  onEdit={setRekodEdit}
-                  onPadam={padam}
-                />
-              ))}
-            </div>
-          )}
-        </>
+      {tab === 'senarai' ? (
+        loading ? (
+          <p className="text-sm text-inkmuted">Memuatkan…</p>
+        ) : senaraiDitapis.length === 0 ? (
+          <p className="text-sm text-inkmuted">Tiada rekod keberadaan untuk tahun {tahunTapis}.</p>
+        ) : (
+          <div className="space-y-2">
+            {senaraiDitapis.map((r) => (
+              <KeberadaanCardRingkas
+                key={r.id}
+                rekod={r}
+                bolehUrus={isSuperAdmin || r.profilEmel === user.email}
+                onLihat={setRekodLihat}
+                onEdit={setRekodEdit}
+                onPadam={padam}
+              />
+            ))}
+          </div>
+        )
+      ) : tab === 'analisis' ? (
+        <div className="max-w-md">
+          <h2 className="text-sm font-semibold text-ink mb-4">Analisis Keberadaan {tahunTapis}</h2>
+          <StatistikKeberadaan senarai={senarai} tahun={tahunTapis} loading={loading} />
+        </div>
       ) : (
         <KalendarBulanan senarai={senarai} />
       )}

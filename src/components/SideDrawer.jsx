@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
-  X, Home, Newspaper, Image, Phone, CalendarCheck, CalendarDays, Users,
+  X, Home, Newspaper, Image, Phone, CalendarCheck, Users,
   User, ShieldCheck, LogIn, LogOut, ChevronDown, GraduationCap, ClipboardList, Award,
 } from 'lucide-react'
 
@@ -10,7 +10,6 @@ const IKON = {
   '/berita': Newspaper,
   '/galeri': Image,
   '/hubungi': Phone,
-  '/takwim': CalendarDays,
   '/keberadaan': CalendarCheck,
   '/guru-bertugas': Users,
   '/maklumat-murid': GraduationCap,
