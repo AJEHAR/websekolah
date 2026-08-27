@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Upload, Trash2, Plus, Star, Check, Search } from 'lucide-react'
+import { ArrowLeft, Camera, Trash2, Plus, Star, Check, Search, Users, Award, Pencil } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
@@ -20,12 +20,31 @@ function Tersimpan({ tunjuk }) {
   )
 }
 
-// Halaman detail SATU unit UBKS - gantikan UnitUBKSModal lama. Prinsip
-// reka bentuk: "satu tindakan, satu simpan" - Maklumat (nama/kategori/
-// gambar) dan Ahli (tambah/buang/LF/jawatan) adalah DUA bahagian
-// SEPENUHNYA berasingan, setiap satu simpan terus ke Firestore bila
-// diubah (bukan satu butang "Simpan Perubahan" besar di hujung yang
-// senang terlepas pandang & boleh hilangkan kerja kalau tak sempat tekan).
+// Warna pill kategori - padan kata kunci pada NAMA kategori (sama corak
+// dengan sijilTamatUtils.js) supaya unit uniform/kelab/sukan terus dapat
+// identiti warna sendiri tanpa admin kena tetapkan warna manual.
+function warnaKategori(namaKategori) {
+  const n = (namaKategori ?? '').toLowerCase()
+  if (n.includes('uniform')) return { bg: '#E1F5EE', fg: '#0F6E56' }
+  if (n.includes('kelab')) return { bg: '#EEEDFE', fg: '#534AB7' }
+  if (n.includes('sukan')) return { bg: '#FAEEDA', fg: '#854F0B' }
+  return { bg: '#F1EFE8', fg: '#5F5E5A' }
+}
+
+function Avatar({ nama }) {
+  const inisial = (nama ?? '?').trim().charAt(0).toUpperCase()
+  return (
+    <div className="h-8 w-8 rounded-full bg-base border border-border flex items-center justify-center shrink-0 text-xs font-semibold text-inkmuted">
+      {inisial}
+    </div>
+  )
+}
+
+// Halaman detail SATU unit UBKS. Prinsip reka bentuk: "satu tindakan,
+// satu simpan" (Maklumat & Ahli simpan berasingan, terus ke Firestore
+// bila diubah) DAN gaya paparan INFOGRAFIK (kad hero berpusat + kad
+// statistik ringkas + pill berwarna) konsisten dengan Profil Murid UBKS &
+// Analisis Keberadaan - bukan borang input panjang lagi.
 export default function UnitUBKSDetail() {
   const { unitId } = useParams()
   const { user } = useOutletContext()
@@ -39,13 +58,14 @@ export default function UnitUBKSDetail() {
 
   const [profilDibuka, setProfilDibuka] = useState(null)
 
-  // --- Bahagian 1: Maklumat (nama/kategori/gambar) - setiap medan simpan sendiri ---
+  // --- Maklumat (nama/kategori/gambar) - paparan pasif, klik pensel untuk edit ---
   const [namaUnit, setNamaUnit] = useState('')
+  const [editNama, setEditNama] = useState(false)
   const [kategoriUnit, setKategoriUnit] = useState('')
+  const [editKategori, setEditKategori] = useState(false)
   const [gambarGagal, setGambarGagal] = useState(false)
   const [memuatNaikGambar, setMemuatNaikGambar] = useState(false)
-  const [menyimpanNama, setMenyimpanNama] = useState(false)
-  const [tersimpanApa, setTersimpanApa] = useState(null) // 'nama' | 'kategori' | 'gambar' | null
+  const [tersimpanApa, setTersimpanApa] = useState(null)
 
   useEffect(() => {
     if (unit) {
@@ -60,19 +80,16 @@ export default function UnitUBKSDetail() {
   }
 
   async function simpanNama() {
-    if (!unit || namaUnit.trim() === unit.namaUnit || !namaUnit.trim()) return
-    setMenyimpanNama(true)
-    try {
-      await kemaskiniUnit(unit.id, { namaUnit: namaUnit.trim() }, user.uid)
-      kilasTersimpan('nama')
-      muatSemula()
-    } finally {
-      setMenyimpanNama(false)
-    }
+    setEditNama(false)
+    if (!unit || !namaUnit.trim() || namaUnit.trim() === unit.namaUnit) return
+    await kemaskiniUnit(unit.id, { namaUnit: namaUnit.trim() }, user.uid)
+    kilasTersimpan('nama')
+    muatSemula()
   }
 
   async function ubahKategori(kod) {
     setKategoriUnit(kod)
+    setEditKategori(false)
     if (!unit || kod === unit.kategoriUnit) return
     await kemaskiniUnit(unit.id, { kategoriUnit: kod }, user.uid)
     kilasTersimpan('kategori')
@@ -97,7 +114,7 @@ export default function UnitUBKSDetail() {
     }
   }
 
-  // --- Bahagian 2: Ahli - setiap tindakan (tambah/buang/LF/jawatan) simpan terus ---
+  // --- Ahli - setiap tindakan simpan terus ---
   const [tahunDipilih, setTahunDipilih] = useState('')
   const [carian, setCarian] = useState('')
   const [dipilihSementara, setDipilihSementara] = useState(new Set())
@@ -173,88 +190,122 @@ export default function UnitUBKSDetail() {
     )
   }
 
+  const namaKategoriPenuh = kategoriSenarai.find((k) => k.kod === unit.kategoriUnit)?.nama ?? unit.kategoriUnit
+  const wKategori = warnaKategori(namaKategoriPenuh)
+  const jumlahLF = ahli.filter((a) => a.adalahLF).length
+  const jumlahJawatan = ahli.filter((a) => a.jawatan?.trim()).length
+
   return (
     <div className="max-w-2xl">
       <Link to="/eubks/murid-ubks" className="inline-flex items-center gap-1.5 text-xs text-inkmuted hover:text-ink mb-4">
         <ArrowLeft size={14} /> Murid UBKS
       </Link>
 
-      {/* Bahagian 1: Maklumat */}
-      <div className="p-4 sm:p-5 rounded-card border border-border bg-surface mb-4">
-        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-4">Maklumat</p>
-
-        <div className="flex flex-col items-center gap-3 mb-5">
-          <div className="h-24 w-24 rounded-card bg-base border border-border overflow-hidden flex items-center justify-center">
+      {/* Kad hero - infografik identiti unit */}
+      <div className="rounded-card border border-border bg-surface p-6 mb-4 text-center">
+        <div className="relative inline-block mb-3">
+          <div className="h-24 w-24 rounded-full bg-base border border-border overflow-hidden flex items-center justify-center mx-auto">
             {unit.gambarUnit && !gambarGagal ? (
               <img src={unit.gambarUnit} alt="" className="h-full w-full object-cover" onError={() => setGambarGagal(true)} />
             ) : (
-              <span className="text-xs text-inkmuted">Tiada gambar</span>
+              <Users size={26} className="text-inkmuted" />
             )}
           </div>
           {isAdmin && (
-            <label className="text-sm font-medium text-brand-red cursor-pointer flex items-center gap-2">
+            <label className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-ink flex items-center justify-center cursor-pointer border-2 border-surface">
               {memuatNaikGambar ? (
-                <span className="text-inkmuted">Memuat naik…</span>
+                <span className="h-3 w-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
-                <>
-                  <Upload size={14} /> Tukar gambar unit
-                  <input type="file" accept="image/*" onChange={pilihGambar} className="hidden" disabled={memuatNaikGambar} />
-                </>
+                <Camera size={14} className="text-white" />
               )}
-              <Tersimpan tunjuk={tersimpanApa === 'gambar'} />
+              <input type="file" accept="image/*" onChange={pilihGambar} className="hidden" disabled={memuatNaikGambar} />
             </label>
           )}
         </div>
+        <Tersimpan tunjuk={tersimpanApa === 'gambar'} />
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="namaUnit" className="flex items-center gap-2 text-sm font-medium text-ink mb-1">
-              Nama Unit <Tersimpan tunjuk={tersimpanApa === 'nama'} />
-            </label>
-            <input
-              id="namaUnit"
-              type="text"
-              disabled={!isAdmin}
-              value={namaUnit}
-              onChange={(e) => setNamaUnit(e.target.value)}
-              onBlur={simpanNama}
-              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm disabled:opacity-60"
-            />
-          </div>
-          <div>
-            <label htmlFor="kategoriUnit" className="flex items-center gap-2 text-sm font-medium text-ink mb-1">
-              Kategori <Tersimpan tunjuk={tersimpanApa === 'kategori'} />
-            </label>
+        {editNama && isAdmin ? (
+          <input
+            autoFocus
+            type="text"
+            value={namaUnit}
+            onChange={(e) => setNamaUnit(e.target.value)}
+            onBlur={simpanNama}
+            onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+            className="text-lg font-bold text-ink text-center bg-transparent border-b-2 border-brand-red focus:outline-none mb-1 w-full max-w-xs mx-auto block"
+          />
+        ) : (
+          <button
+            onClick={() => isAdmin && setEditNama(true)}
+            className="flex items-center gap-1.5 mx-auto mb-1 group"
+            disabled={!isAdmin}
+          >
+            <h1 className="text-lg font-bold text-ink">{unit.namaUnit}</h1>
+            {isAdmin && <Pencil size={13} className="text-inkmuted opacity-0 group-hover:opacity-100" />}
+          </button>
+        )}
+        <Tersimpan tunjuk={tersimpanApa === 'nama'} />
+
+        <div className="mt-2">
+          {editKategori && isAdmin ? (
             <select
-              id="kategoriUnit"
-              disabled={!isAdmin}
+              autoFocus
               value={kategoriUnit}
               onChange={(e) => ubahKategori(e.target.value)}
-              className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm disabled:opacity-60"
+              onBlur={() => setEditKategori(false)}
+              className="h-8 px-2 rounded-full border border-border bg-surface text-xs mx-auto"
             >
               <option value="">-- Pilih --</option>
               {kategoriSenarai.map((k) => (
                 <option key={k.id} value={k.kod}>{k.nama}</option>
               ))}
             </select>
-          </div>
-        </div>
-        {isAdmin && <p className="text-[11px] text-inkmuted mt-2">Nama unit simpan bila awak klik keluar dari kotak tu. Kategori & gambar simpan serta-merta.</p>}
-      </div>
-
-      {/* Bahagian 2: Ahli */}
-      <div className="p-4 sm:p-5 rounded-card border border-border bg-surface mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs font-bold text-inkmuted uppercase tracking-wide">Ahli ({ahli.length})</p>
-          {isAdmin && (
-            <p className="text-[10px] text-inkmuted flex items-center gap-1">
-              <Star size={11} className="fill-current" style={{ color: '#F2C230' }} /> = Kefungsian Rendah (LF)
-            </p>
+          ) : (
+            <button
+              onClick={() => isAdmin && setEditKategori(true)}
+              disabled={!isAdmin}
+              className="text-xs font-semibold px-3 py-1 rounded-full"
+              style={{ backgroundColor: wKategori.bg, color: wKategori.fg }}
+            >
+              {namaKategoriPenuh || 'Tiada kategori'}
+            </button>
           )}
         </div>
+        <Tersimpan tunjuk={tersimpanApa === 'kategori'} />
+        <p className="text-[11px] text-inkmuted mt-2">Tahun sesi {unit.tahunSesi}</p>
+      </div>
+
+      {/* Kad statistik - infografik ringkasan ahli */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="rounded-card p-3.5 text-center" style={{ backgroundColor: '#E1F5EE' }}>
+          <div className="h-8 w-8 rounded-full bg-[#0F6E56] flex items-center justify-center mx-auto mb-1.5">
+            <Users size={14} className="text-white" />
+          </div>
+          <p className="text-lg font-bold text-ink leading-none">{ahli.length}</p>
+          <p className="text-[10px] text-inkmuted mt-1">Ahli</p>
+        </div>
+        <div className="rounded-card p-3.5 text-center" style={{ backgroundColor: '#FAEEDA' }}>
+          <div className="h-8 w-8 rounded-full bg-[#BA7517] flex items-center justify-center mx-auto mb-1.5">
+            <Star size={14} className="text-white fill-current" />
+          </div>
+          <p className="text-lg font-bold text-ink leading-none">{jumlahLF}</p>
+          <p className="text-[10px] text-inkmuted mt-1">LF</p>
+        </div>
+        <div className="rounded-card p-3.5 text-center" style={{ backgroundColor: '#FCEBEB' }}>
+          <div className="h-8 w-8 rounded-full bg-brand-red flex items-center justify-center mx-auto mb-1.5">
+            <Award size={14} className="text-white" />
+          </div>
+          <p className="text-lg font-bold text-ink leading-none">{jumlahJawatan}</p>
+          <p className="text-[10px] text-inkmuted mt-1">Jawatankuasa</p>
+        </div>
+      </div>
+
+      {/* Ahli */}
+      <div className="p-4 sm:p-5 rounded-card border border-border bg-surface mb-4">
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-4">Senarai Ahli</p>
 
         {isAdmin && (
-          <div className="mb-5 p-3 rounded-card border border-border bg-base">
+          <div className="mb-5 p-3 rounded-card bg-base">
             <p className="text-xs font-semibold text-ink mb-2">Tambah ahli baru</p>
             <div className="flex gap-2 mb-2 flex-wrap">
               <select
@@ -301,7 +352,7 @@ export default function UnitUBKSDetail() {
                   disabled={dipilihSementara.size === 0 || menyimpanAhli}
                   className="flex items-center gap-1.5 h-9 px-3 rounded-card bg-ink text-white text-xs font-semibold disabled:opacity-40"
                 >
-                  <Plus size={14} /> {menyimpanAhli ? 'Menyimpan…' : `Tambah ${dipilihSementara.size > 0 ? `(${dipilihSementara.size})` : ''} ke Unit - Simpan Terus`}
+                  <Plus size={14} /> {menyimpanAhli ? 'Menyimpan…' : `Tambah ${dipilihSementara.size > 0 ? `(${dipilihSementara.size})` : ''} ke Unit`}
                 </button>
               </>
             )}
@@ -311,29 +362,30 @@ export default function UnitUBKSDetail() {
         {Object.keys(ahliIkutTahun).length === 0 ? (
           <p className="text-xs text-inkmuted">Tiada ahli lagi.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {Object.entries(ahliIkutTahun)
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([tahun, senaraiAhli]) => (
                 <div key={tahun}>
-                  <h4 className="text-[11px] font-semibold text-inkmuted uppercase tracking-wide mb-1">{tahun} ({senaraiAhli.length})</h4>
-                  <div className="border border-border rounded-card divide-y divide-border">
+                  <h4 className="text-[11px] font-semibold text-inkmuted uppercase tracking-wide mb-1.5">{tahun} ({senaraiAhli.length})</h4>
+                  <div className="space-y-1.5">
                     {senaraiAhli.map((m) => (
-                      <div key={m.idMurid} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <div key={m.idMurid} className="flex items-center gap-2.5 px-3 py-2 rounded-card border border-border hover:bg-base">
+                        <Avatar nama={m.nama} />
                         <button
                           onClick={() => setProfilDibuka({ idMurid: m.idMurid, nama: m.nama })}
-                          className="text-ink flex items-center gap-1.5 hover:text-brand-red hover:underline text-left"
+                          className="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap text-left hover:text-brand-red"
                         >
-                          {m.nama}
+                          <span className="text-sm text-ink truncate">{m.nama}</span>
                           {m.adalahLF && (
-                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#F2C230', color: '#1A1A1A' }}>LF</span>
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#FAEEDA', color: '#854F0B' }}>LF</span>
                           )}
                           {m.jawatan?.trim() && (
                             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand-red/10 text-brand-red">{m.jawatan}</span>
                           )}
                         </button>
                         {isAdmin && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 shrink-0">
                             <button onClick={() => togglLF(m.idMurid)} aria-label={m.adalahLF ? 'Buang tag LF' : 'Tag sebagai LF'} className="p-1 rounded-card hover:bg-base" style={{ color: m.adalahLF ? '#F2C230' : '#B4B2A9' }}>
                               <Star size={14} className={m.adalahLF ? 'fill-current' : ''} />
                             </button>
@@ -351,7 +403,6 @@ export default function UnitUBKSDetail() {
         )}
       </div>
 
-      {/* Zon bahaya */}
       {isAdmin && (
         <button onClick={padamUnitIni} className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-brand-red/30 text-brand-red text-sm font-semibold">
           <Trash2 size={15} /> Padam Unit Ini

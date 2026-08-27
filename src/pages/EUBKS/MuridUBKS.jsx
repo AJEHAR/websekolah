@@ -8,7 +8,7 @@ import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 function AvatarUnit({ gambarUnit }) {
   const [gagal, setGagal] = useState(false)
   return (
-    <div className="h-12 w-12 rounded-card bg-base border border-border overflow-hidden flex items-center justify-center shrink-0">
+    <div className="h-12 w-12 rounded-full bg-base border border-border overflow-hidden flex items-center justify-center shrink-0">
       {gambarUnit && !gagal ? (
         <img src={gambarUnit} alt="" className="h-full w-full object-cover" onError={() => setGagal(true)} />
       ) : (
@@ -16,6 +16,17 @@ function AvatarUnit({ gambarUnit }) {
       )}
     </div>
   )
+}
+
+// Warna pill kategori - padan kata kunci pada nama (sama corak dengan
+// UnitUBKSDetail.jsx & sijilTamatUtils.js) supaya kad senarai unit terus
+// dapat identiti warna sepadan, tanpa admin kena tetapkan warna manual.
+function warnaKategori(namaKategori) {
+  const n = (namaKategori ?? '').toLowerCase()
+  if (n.includes('uniform')) return { bg: '#E1F5EE', fg: '#0F6E56' }
+  if (n.includes('kelab')) return { bg: '#EEEDFE', fg: '#534AB7' }
+  if (n.includes('sukan')) return { bg: '#FAEEDA', fg: '#854F0B' }
+  return { bg: '#F1EFE8', fg: '#5F5E5A' }
 }
 
 const TAHUN_SEMASA = new Date().getFullYear()
@@ -138,19 +149,28 @@ export default function MuridUBKS() {
         <p className="text-sm text-inkmuted">Tiada unit untuk tahun {tahunSesi} lagi.</p>
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
-          {unitDitapis.map((u) => (
-            <button
-              key={u.id}
-              onClick={() => navigate(`/eubks/murid-ubks/${u.id}`)}
-              className="text-left p-4 rounded-card border border-border bg-surface hover:border-brand-red transition-colors flex items-center gap-3"
-            >
-              <AvatarUnit gambarUnit={u.gambarUnit} />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink truncate">{u.namaUnit}</p>
-                <p className="text-xs text-inkmuted truncate">{labelKategori(u.kategoriUnit)} · {(u.ahli ?? []).length} ahli</p>
-              </div>
-            </button>
-          ))}
+          {unitDitapis.map((u) => {
+            const namaKategori = labelKategori(u.kategoriUnit)
+            const w = warnaKategori(namaKategori)
+            return (
+              <button
+                key={u.id}
+                onClick={() => navigate(`/eubks/murid-ubks/${u.id}`)}
+                className="text-left p-4 rounded-card border border-border bg-surface hover:border-brand-red transition-colors flex items-center gap-3"
+              >
+                <AvatarUnit gambarUnit={u.gambarUnit} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink truncate">{u.namaUnit}</p>
+                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.fg }}>
+                      {namaKategori}
+                    </span>
+                    <span className="text-xs text-inkmuted">{(u.ahli ?? []).length} ahli</span>
+                  </div>
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
