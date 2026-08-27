@@ -1,8 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'kategoriUBKS'
+
+// jenis: 'beruniform' | 'kelab' | 'sukan' | 'lain' - PILIHAN TETAP (bukan
+// teka daripada teks "Nama Kategori" bebas yang admin taip). Sijil Tamat
+// (autoIsiSijil/cariUnitUBKS di sijilTamatUtils.js) padan medan NI SAHAJA
+// untuk isi Unit Beruniform/Kelab/Sukan - kalau kategori tiada jenis
+// ditetapkan, auto-isi untuk kategori tu TAK akan berfungsi (staff kena
+// taip manual sehingga admin tetapkan Jenis di Panel Admin > Kategori UBKS).
+export const JENIS_KATEGORI = [
+  { nilai: 'beruniform', label: 'Unit Beruniform' },
+  { nilai: 'kelab', label: 'Kelab' },
+  { nilai: 'sukan', label: 'Sukan' },
+  { nilai: 'lain', label: 'Lain-lain (bukan 3 di atas)' },
+]
 
 export function useKategoriUBKS() {
   const [senarai, setSenarai] = useState([])
@@ -32,9 +45,14 @@ export function useKategoriUBKS() {
   return { senarai, loading, muatSemula }
 }
 
-export async function tambahKategori(nama, kod, turutan) {
+export async function tambahKategori(nama, kod, turutan, jenis) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
-  await addDoc(collection(db, KOLEKSI), { nama, kod, turutan, createdAt: serverTimestamp() })
+  await addDoc(collection(db, KOLEKSI), { nama, kod, turutan, jenis: jenis || null, createdAt: serverTimestamp() })
+}
+
+export async function kemaskiniKategori(id, data) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  await updateDoc(doc(db, KOLEKSI, id), data)
 }
 
 export async function padamKategori(id) {

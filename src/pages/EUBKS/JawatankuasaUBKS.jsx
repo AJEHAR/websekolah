@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { ChevronDown, Users, Save } from 'lucide-react'
+import { ChevronDown, Users, Save, Pencil } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useUnitUBKSTahun, kemaskiniUnit } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
@@ -13,10 +13,80 @@ const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
 // teks bebas, bukan dikunci kepada senarai ni).
 const CADANGAN_JAWATAN = ['Ketua', 'Naib Ketua', 'Setiausaha', 'Penolong Setiausaha', 'Bendahari', 'AJK']
 
-// Sub-page BERASINGAN daripada "Murid UBKS" (senarai unit + ahli) - fokus
-// KHUSUS untuk lantik jawatankuasa (Ketua/Setiausaha/dll) bagi ahli
-// sesuatu unit. Jawatan disimpan terus dalam ahli.jawatan (medan sama
-// yang dipaparkan di Profil Murid UBKS & senarai Ahli Unit).
+// Susun ahli jadi 5 peringkat carta organisasi (padan kata kunci pada
+// teks jawatan bebas - bukan senarai tetap, supaya jawatan apa-apa pun
+// admin taip masih terkumpul secara munasabah). Peringkat lebih tinggi =
+// lebih atas dalam carta.
+function peringkatJawatan(jawatan) {
+  const j = (jawatan ?? '').toLowerCase().trim()
+  if (!j) return 4 // ahli biasa
+  if (j.includes('naib') || j.includes('timbalan')) return 1
+  if (j.includes('ketua') || j.includes('pengerusi')) return 0
+  if (j.includes('setiausaha') || j.includes('bendahari')) return 2
+  return 3 // AJK/jawatan lain
+}
+
+const LABEL_PERINGKAT = ['Ketua', 'Naib Ketua', 'Setiausaha & Bendahari', 'AJK & Jawatan Lain', 'Ahli Biasa']
+
+function NodAhli({ ahli, onKlik }) {
+  const inisial = (ahli.nama ?? '?').trim().charAt(0).toUpperCase()
+  return (
+    <button onClick={() => onKlik(ahli)} className="flex flex-col items-center gap-1.5 w-24 group">
+      <div className="h-11 w-11 rounded-full bg-base border-2 border-border group-hover:border-brand-red flex items-center justify-center text-sm font-semibold text-inkmuted transition-colors">
+        {inisial}
+      </div>
+      <span className="text-[11px] text-ink text-center leading-tight line-clamp-2">{ahli.nama}</span>
+    </button>
+  )
+}
+
+// Carta organisasi ringkas (bukan SVG - susunan CSS bertingkat) - Ketua di
+// atas, turun ke Naib Ketua, Setiausaha/Bendahari, AJK, dan "Ahli Biasa"
+// dipaparkan sebagai satu kiraan sahaja (elak carta jadi terlalu panjang
+// kalau unit ada 20-30 ahli biasa tanpa jawatan).
+function CartaOrganisasi({ ahli, onKlikAhli }) {
+  const peringkat = [[], [], [], [], []]
+  ahli.forEach((a) => peringkat[peringkatJawatan(a.jawatan)].push(a))
+  const adaJawatan = peringkat[0].length + peringkat[1].length + peringkat[2].length + peringkat[3].length > 0
+
+  if (!adaJawatan) {
+    return <p className="text-xs text-inkmuted text-center py-6">Belum ada jawatankuasa dilantik untuk unit ni lagi.</p>
+  }
+
+  return (
+    <div className="py-4 overflow-x-auto">
+      <div className="flex flex-col items-center gap-1 min-w-fit px-2">
+        {peringkat.slice(0, 4).map((kumpulan, i) => {
+          if (kumpulan.length === 0) return null
+          return (
+            <div key={i} className="flex flex-col items-center">
+              {i > 0 && <div className="h-5 w-px bg-border" />}
+              <p className="text-[10px] font-semibold text-inkmuted uppercase tracking-wide mb-2">{LABEL_PERINGKAT[i]}</p>
+              <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 mb-1">
+                {kumpulan.map((a) => (
+                  <NodAhli key={a.idMurid} ahli={a} onKlik={onKlikAhli} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+        {peringkat[4].length > 0 && (
+          <>
+            <div className="h-5 w-px bg-border" />
+            <p className="text-[11px] text-inkmuted">+ {peringkat[4].length} ahli biasa (tiada jawatan)</p>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Sub-page BERASINGAN daripada "Murid UBKS" - fokus KHUSUS lantik
+// jawatankuasa bagi ahli sesuatu unit, dipaparkan sebagai CARTA ORGANISASI
+// (bukan senarai rata) supaya struktur (Ketua > Naib Ketua > Setiausaha/
+// Bendahari > AJK > Ahli) senang dibaca sekali pandang. Edit jawatan
+// kekal ada, disorok dalam suis "Edit" berasingan supaya carta kekal
+// bersih untuk sekadar rujuk.
 export default function JawatankuasaUBKS() {
   const { user } = useOutletContext()
   const { adaSeksyen } = useIsAdmin(user)
@@ -25,9 +95,10 @@ export default function JawatankuasaUBKS() {
   const { senarai: unitSenarai, loading, muatSemula } = useUnitUBKSTahun(tahunSesi)
   const { senarai: kategoriSenarai } = useKategoriUBKS()
 
-  const [unitDibuka, setUnitDibuka] = useState(null) // id unit yang dikembangkan
-  const [draf, setDraf] = useState({}) // { [unitId]: { [idMurid]: jawatan } } - perubahan belum simpan
-  const [menyimpan, setMenyimpan] = useState(null) // unitId sedang disimpan
+  const [unitDibuka, setUnitDibuka] = useState(null)
+  const [modEdit, setModEdit] = useState({}) // { [unitId]: bool }
+  const [draf, setDraf] = useState({})
+  const [menyimpan, setMenyimpan] = useState(null)
   const [profilDibuka, setProfilDibuka] = useState(null)
 
   function labelKategori(kod) {
@@ -45,7 +116,7 @@ export default function JawatankuasaUBKS() {
 
   async function simpanUnit(unit) {
     const perubahan = draf[unit.id]
-    if (!perubahan) return
+    if (!perubahan) { setModEdit((m) => ({ ...m, [unit.id]: false })); return }
     setMenyimpan(unit.id)
     try {
       const ahliBaru = unit.ahli.map((a) =>
@@ -53,6 +124,7 @@ export default function JawatankuasaUBKS() {
       )
       await kemaskiniUnit(unit.id, { ahli: ahliBaru }, user.uid)
       setDraf((d) => { const s = { ...d }; delete s[unit.id]; return s })
+      setModEdit((m) => ({ ...m, [unit.id]: false }))
       muatSemula()
     } finally {
       setMenyimpan(null)
@@ -76,7 +148,7 @@ export default function JawatankuasaUBKS() {
       </div>
 
       {!isAdmin && (
-        <p className="text-xs text-inkmuted mb-4">Awak boleh lihat jawatankuasa sedia ada. Hanya admin UBKS boleh lantik/tukar jawatan.</p>
+        <p className="text-xs text-inkmuted mb-4">Awak boleh lihat carta jawatankuasa sedia ada. Hanya admin UBKS boleh lantik/tukar jawatan.</p>
       )}
 
       {loading ? (
@@ -87,6 +159,7 @@ export default function JawatankuasaUBKS() {
         <div className="space-y-2.5">
           {unitSenarai.map((unit) => {
             const dibuka = unitDibuka === unit.id
+            const editing = Boolean(modEdit[unit.id])
             const bilanganJawatan = unit.ahli.filter((a) => a.jawatan?.trim()).length
             const adaDraf = Boolean(draf[unit.id] && Object.keys(draf[unit.id]).length > 0)
             return (
@@ -104,20 +177,34 @@ export default function JawatankuasaUBKS() {
                 </button>
 
                 {dibuka && (
-                  <div className="border-t border-border p-3.5">
+                  <div className="border-t border-border">
                     {unit.ahli.length === 0 ? (
-                      <p className="text-xs text-inkmuted">Tiada ahli dalam unit ni lagi.</p>
-                    ) : (
-                      <div className="space-y-2 mb-3">
-                        {unit.ahli.map((a) => (
-                          <div key={a.idMurid} className="flex items-center gap-2">
+                      <p className="text-xs text-inkmuted p-3.5">Tiada ahli dalam unit ni lagi.</p>
+                    ) : !editing ? (
+                      <>
+                        <CartaOrganisasi ahli={unit.ahli} onKlikAhli={(a) => setProfilDibuka({ idMurid: a.idMurid, nama: a.nama })} />
+                        {isAdmin && (
+                          <div className="p-3.5 pt-0">
                             <button
-                              onClick={() => setProfilDibuka({ idMurid: a.idMurid, nama: a.nama })}
-                              className="text-sm text-ink flex-1 min-w-0 truncate text-left hover:text-brand-red hover:underline"
+                              onClick={() => setModEdit((m) => ({ ...m, [unit.id]: true }))}
+                              className="flex items-center gap-1.5 h-9 px-3 rounded-card border border-border text-xs font-semibold text-ink"
                             >
-                              {a.nama}
+                              <Pencil size={13} /> Edit Jawatankuasa
                             </button>
-                            {isAdmin ? (
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="p-3.5">
+                        <div className="space-y-2 mb-3">
+                          {unit.ahli.map((a) => (
+                            <div key={a.idMurid} className="flex items-center gap-2">
+                              <button
+                                onClick={() => setProfilDibuka({ idMurid: a.idMurid, nama: a.nama })}
+                                className="text-sm text-ink flex-1 min-w-0 truncate text-left hover:text-brand-red hover:underline"
+                              >
+                                {a.nama}
+                              </button>
                               <input
                                 type="text"
                                 list="cadangan-jawatan-ubks"
@@ -126,21 +213,27 @@ export default function JawatankuasaUBKS() {
                                 placeholder="Tiada jawatan"
                                 className="h-9 w-40 px-2.5 rounded-card border border-border bg-surface text-xs shrink-0"
                               />
-                            ) : (
-                              <span className="text-xs text-inkmuted shrink-0">{a.jawatan?.trim() || '—'}</span>
-                            )}
-                          </div>
-                        ))}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => simpanUnit(unit)}
+                            disabled={menyimpan === unit.id}
+                            className="flex items-center gap-1.5 h-10 px-4 rounded-card bg-brand-red text-white text-xs font-semibold disabled:opacity-40"
+                          >
+                            <Save size={14} /> {menyimpan === unit.id ? 'Menyimpan…' : 'Simpan & Tutup Edit'}
+                          </button>
+                          {adaDraf && (
+                            <button
+                              onClick={() => { setDraf((d) => { const s = { ...d }; delete s[unit.id]; return s }); setModEdit((m) => ({ ...m, [unit.id]: false })) }}
+                              className="h-10 px-4 rounded-card border border-border text-xs font-semibold text-inkmuted"
+                            >
+                              Batal
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    {isAdmin && (
-                      <button
-                        onClick={() => simpanUnit(unit)}
-                        disabled={!adaDraf || menyimpan === unit.id}
-                        className="flex items-center gap-1.5 h-10 px-4 rounded-card bg-brand-red text-white text-xs font-semibold disabled:opacity-40"
-                      >
-                        <Save size={14} /> {menyimpan === unit.id ? 'Menyimpan…' : 'Simpan Jawatankuasa'}
-                      </button>
                     )}
                   </div>
                 )}

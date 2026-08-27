@@ -5,7 +5,7 @@ import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { autoIsiSijil } from './sijilTamatUtils.js'
 
-function Medan({ label, value, onChange, placeholder, autoLabel }) {
+function Medan({ label, value, onChange, placeholder, autoLabel, list }) {
   return (
     <div>
       <label className="block text-xs font-medium text-ink mb-1">
@@ -17,6 +17,7 @@ function Medan({ label, value, onChange, placeholder, autoLabel }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        list={list}
         className="w-full h-10 px-3 rounded-card border border-border bg-surface text-sm"
       />
     </div>
@@ -159,17 +160,47 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
               <div>
                 <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">Kokurikulum (ikut Tahun Tamat)</p>
                 <div className="grid grid-cols-1 gap-3">
-                  <Medan label="Unit Beruniform" value={medan.unitBeruniform} onChange={(v) => u('unitBeruniform', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
-                  <Medan label="Kelab" value={medan.kelab} onChange={(v) => u('kelab', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
-                  <Medan label="Sukan" value={medan.sukan} onChange={(v) => u('sukan', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" />
+                  <Medan label="Unit Beruniform" value={medan.unitBeruniform} onChange={(v) => u('unitBeruniform', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" list="cadangan-unit-ubks" />
+                  <Medan label="Kelab" value={medan.kelab} onChange={(v) => u('kelab', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" list="cadangan-unit-ubks" />
+                  <Medan label="Sukan" value={medan.sukan} onChange={(v) => u('sukan', v)} autoLabel placeholder="Dari UBKS (kalau murid ahli tahun ni)" list="cadangan-unit-ubks" />
                 </div>
-                {tahunTamat && !medan.unitBeruniform && !medan.kelab && !medan.sukan && (
-                  <p className="text-xs text-inkmuted mt-2">
-                    {unitTahunIni.filter((un) => un.ahli?.some((a) => a.idMurid === muridDipilih?.id)).length > 0
-                      ? `Nota: murid ni ahli unit UBKS tahun ${tahunTamat}, tapi kategori unit tu tak sepadan Unit Beruniform/Kelab/Sukan - semak nama Kategori di Panel Admin.`
-                      : `Nota: tiada rekod keahlian UBKS dijumpai untuk murid ni pada tahun ${tahunTamat} (unit UBKS tahun ${tahunTamat} yang wujud: ${unitTahunIni.length}). Taip manual kalau perlu.`}
-                  </p>
-                )}
+                {/* Cadangan mentaip - SEMUA unit UBKS tahun ni yang murid
+                    tu ahli (tak kira kategori), supaya walaupun heuristik
+                    kategori tersasar, staff senang pilih terus tanpa taip
+                    penuh. Datalist = cadangan sahaja, medan kekal teks
+                    bebas (boleh taip apa-apa pun). */}
+                <datalist id="cadangan-unit-ubks">
+                  {unitTahunIni
+                    .filter((un) => un.ahli?.some((a) => a.idMurid === muridDipilih?.id))
+                    .map((un) => (
+                      <option key={un.id} value={un.namaUnit} />
+                    ))}
+                </datalist>
+                {tahunTamat && !medan.unitBeruniform && !medan.kelab && !medan.sukan && (() => {
+                  const unitAhliDia = unitTahunIni.filter((un) => un.ahli?.some((a) => a.idMurid === muridDipilih?.id))
+                  if (unitAhliDia.length === 0) {
+                    return (
+                      <p className="text-xs text-brand-red mt-2 font-medium">
+                        ⚠ Tiada rekod keahlian UBKS dijumpai untuk murid ni pada tahun {tahunTamat} (unit UBKS tahun {tahunTamat} yang wujud: {unitTahunIni.length}). Taip manual kalau perlu.
+                      </p>
+                    )
+                  }
+                  const kategoriTiadaJenis = unitAhliDia
+                    .map((un) => senaraiKategoriUBKS.find((k) => k.kod === un.kategoriUnit))
+                    .filter((k) => k && !k.jenis)
+                  if (kategoriTiadaJenis.length > 0) {
+                    return (
+                      <p className="text-xs text-brand-red mt-2 font-medium">
+                        ⚠ Murid ni ahli "{unitAhliDia[0].namaUnit}" (kategori "{kategoriTiadaJenis[0].nama}") tapi kategori tu <strong>belum ditetapkan Jenis</strong> - pergi Panel Admin → Kategori UBKS, pilih "Jenis" (Unit Beruniform/Kelab/Sukan) untuk kategori tu, baru auto-isi ni berfungsi. Buat sekali sahaja, semua murid kategori sama akan terus berfungsi lepas tu.
+                      </p>
+                    )
+                  }
+                  return (
+                    <p className="text-xs text-inkmuted mt-2">
+                      Murid ni ahli unit UBKS tahun {tahunTamat}, tapi jenis kategori tu bukan Unit Beruniform/Kelab/Sukan (cth. ditetapkan "Lain-lain"). Cuba taip terus (cadangan akan muncul) kalau perlu masukkan juga.
+                    </p>
+                  )
+                })()}
               </div>
 
               <div>

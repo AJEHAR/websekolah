@@ -34,6 +34,8 @@ export const NAV_ITEMS = [
     to: '/eubks',
     children: [
       { label: 'Murid UBKS', to: '/eubks/murid-ubks' },
+      { label: 'Profil Murid', to: '/eubks/profil-murid' },
+      { label: 'Jawatankuasa UBKS', to: '/eubks/jawatankuasa-ubks' },
       { label: 'Kehadiran UBKS', to: '/eubks/kehadiran-ubks' },
       { label: 'Laporan UBKS', to: '/eubks/laporan-ubks' },
       { label: 'Perancangan UBKS', to: '/eubks/perancangan-ubks' },
