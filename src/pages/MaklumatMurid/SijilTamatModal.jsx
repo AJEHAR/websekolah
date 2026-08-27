@@ -30,6 +30,8 @@ const MEDAN_KOSONG = {
   tarikhKeluarSekolah: '', sebabBerhenti: '', kelakuan: '', jumlahKehadiran: '',
 }
 
+const TAHUN_SEMASA = String(new Date().getFullYear())
+
 // Borang Sijil Tamat - pilih murid + tahun tamat -> sistem AUTO-ISI apa
 // yang boleh (Maklumat Murid, Daftar Masuk, UBKS ikut tahun) - SEMUA medan
 // kekal BOLEH EDIT (bukan read-only) sebab staff kena boleh betulkan kalau
@@ -37,7 +39,12 @@ const MEDAN_KOSONG = {
 // Kehadiran, Tarikh Keluar, Sebab Berhenti) kosong, staff taip terus.
 export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaftarMasuk, onClose, onSimpan }) {
   const [muridDipilih, setMuridDipilih] = useState(null)
-  const [tahunTamat, setTahunTamat] = useState(rekod?.tahunTamat ?? '')
+  // Lalai ke TAHUN SEMASA (bukan kosong) untuk rekod BARU - "Tahun Tamat"
+  // kosong buat auto-isi UBKS senyap tak keluar apa-apa (sebab carian unit
+  // UBKS perlukan tahun yang sah) tapi tiada penanda "wajib" pada medan
+  // ni, jadi staff senang tertinggal isi. Rekod SEDIA ADA (edit) kekal
+  // guna nilai tersimpan, tak diubah paksa.
+  const [tahunTamat, setTahunTamat] = useState(rekod?.tahunTamat ?? TAHUN_SEMASA)
   const [medan, setMedan] = useState(MEDAN_KOSONG)
   const [ralat, setRalat] = useState(null)
   const [menyimpan, setMenyimpan] = useState(false)
@@ -54,7 +61,7 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
       setMedan({ ...MEDAN_KOSONG, ...rekod })
     } else if (open && !rekod) {
       setMuridDipilih(null)
-      setTahunTamat('')
+      setTahunTamat(TAHUN_SEMASA)
       setMedan(MEDAN_KOSONG)
     }
   }, [open, rekod, senaraiMurid])
@@ -120,7 +127,9 @@ export default function SijilTamatModal({ open, rekod, senaraiMurid, senaraiDaft
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-ink mb-1">Tahun Tamat</label>
+            <label className="block text-xs font-medium text-ink mb-1">
+              Tahun Tamat <span className="text-inkmuted font-normal">(auto tahun semasa, boleh tukar)</span>
+            </label>
             <input
               type="text"
               value={tahunTamat}
