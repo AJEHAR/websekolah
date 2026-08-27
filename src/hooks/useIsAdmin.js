@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
+import { useAdminMode } from '../context/AdminModeContext.jsx'
 
 // peranan: null = belum semak, [] = bukan admin, ['super'] = admin penuh,
 // ['ubks'] / ['murid'] / ['guru-bertugas'] = admin seksyen tertentu sahaja.
@@ -51,10 +52,22 @@ export function useIsAdmin(user) {
   }, [user])
 
   const senaraiPeranan = peranan ?? []
-  const isSuperAdmin = senaraiPeranan.includes('super')
-  const isAdmin = senaraiPeranan.length > 0 // sebarang jenis admin (super ATAU seksyen)
-  const adaSeksyen = (seksyen) => isSuperAdmin || senaraiPeranan.includes(seksyen)
+  const { dijeda } = useAdminMode()
+  // "Sebenar" (tak kira status jeda) - guna untuk logik ACCESS/ROUTING
+  // sahaja (useAksesStatus.js) supaya admin tanpa profile staff (rujuk
+  // AuthContext.jsx) tak tersalah "redirect isi profile" masa mod admin
+  // dijeda. JANGAN guna versi ni untuk papar/sorok butang UI.
+  const isSuperAdminSebenar = senaraiPeranan.includes('super')
+  const isAdminSebenar = senaraiPeranan.length > 0
+  // Versi "berkesan" (respect jeda) - guna ni untuk SEMUA papar/sorok
+  // butang & panel admin di seluruh sistem (majoriti pemanggil useIsAdmin).
+  const isSuperAdmin = isSuperAdminSebenar && !dijeda
+  const isAdmin = isAdminSebenar && !dijeda
+  const adaSeksyen = (seksyen) => !dijeda && (isSuperAdminSebenar || senaraiPeranan.includes(seksyen))
   const sedangDimuatkan = loading || emelDimuatkan !== (user?.email ?? null)
 
-  return { isAdmin, isSuperAdmin, peranan: senaraiPeranan, adaSeksyen, loading: sedangDimuatkan }
+  return {
+    isAdmin, isSuperAdmin, peranan: senaraiPeranan, adaSeksyen, loading: sedangDimuatkan,
+    isAdminSebenar, isSuperAdminSebenar, dijeda,
+  }
 }

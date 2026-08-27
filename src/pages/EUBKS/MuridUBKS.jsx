@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, Users, Search } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useUnitUBKSTahun, tambahUnit } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
-import UnitUBKSModal from './UnitUBKSModal.jsx'
 
 function AvatarUnit({ gambarUnit }) {
   const [gagal, setGagal] = useState(false)
@@ -22,8 +21,14 @@ function AvatarUnit({ gambarUnit }) {
 const TAHUN_SEMASA = new Date().getFullYear()
 const PILIHAN_TAHUN = [TAHUN_SEMASA, TAHUN_SEMASA - 1, TAHUN_SEMASA - 2]
 
+// Senarai unit UBKS - tekan kad untuk pergi ke HALAMAN DETAIL unit
+// (subpage /eubks/murid-ubks/:id, lihat UnitUBKSDetail.jsx), bukan modal
+// lagi. "Cipta Unit" di sini kekal ringkas (nama+kategori sahaja) - lepas
+// cipta terus dibawa ke halaman detail unit baru tu untuk sambung isi
+// gambar/ahli, langkah demi langkah.
 export default function MuridUBKS() {
   const { user } = useOutletContext()
+  const navigate = useNavigate()
   const { adaSeksyen } = useIsAdmin(user)
   const [tahunSesi, setTahunSesi] = useState(TAHUN_SEMASA)
   const { senarai: unitSenarai, loading, muatSemula } = useUnitUBKSTahun(tahunSesi)
@@ -32,7 +37,6 @@ export default function MuridUBKS() {
   const [tunjukTambah, setTunjukTambah] = useState(false)
   const [namaBaru, setNamaBaru] = useState('')
   const [kategoriBaru, setKategoriBaru] = useState('')
-  const [unitDipilih, setUnitDipilih] = useState(null)
   const [menyimpan, setMenyimpan] = useState(false)
   const [ralat, setRalat] = useState(null)
   const [carian, setCarian] = useState('')
@@ -52,14 +56,10 @@ export default function MuridUBKS() {
     }
     setMenyimpan(true)
     try {
-      await tambahUnit(tahunSesi, namaBaru.trim(), kategoriBaru, user.uid)
-      setNamaBaru('')
-      setKategoriBaru('')
-      setTunjukTambah(false)
-      muatSemula()
+      const idBaru = await tambahUnit(tahunSesi, namaBaru.trim(), kategoriBaru, user.uid)
+      navigate(`/eubks/murid-ubks/${idBaru}`)
     } catch (err) {
       setRalat(err.message || 'Gagal cipta unit.')
-    } finally {
       setMenyimpan(false)
     }
   }
@@ -126,7 +126,7 @@ export default function MuridUBKS() {
             ))}
           </select>
           <button type="submit" disabled={menyimpan} className="h-11 px-4 rounded-card bg-ink text-white text-sm font-semibold disabled:opacity-60">
-            {menyimpan ? '…' : 'Cipta'}
+            {menyimpan ? '…' : 'Cipta & Sambung'}
           </button>
           {ralat && <p className="text-xs text-brand-red w-full">{ralat}</p>}
         </form>
@@ -141,7 +141,7 @@ export default function MuridUBKS() {
           {unitDitapis.map((u) => (
             <button
               key={u.id}
-              onClick={() => setUnitDipilih(u)}
+              onClick={() => navigate(`/eubks/murid-ubks/${u.id}`)}
               className="text-left p-4 rounded-card border border-border bg-surface hover:border-brand-red transition-colors flex items-center gap-3"
             >
               <AvatarUnit gambarUnit={u.gambarUnit} />
@@ -153,15 +153,6 @@ export default function MuridUBKS() {
           ))}
         </div>
       )}
-
-      <UnitUBKSModal
-        key={unitDipilih?.id ?? 'kosong'}
-        unit={unitDipilih}
-        isAdmin={adaSeksyen('ubks')}
-        user={user}
-        onClose={() => setUnitDipilih(null)}
-        onSelesai={muatSemula}
-      />
     </div>
   )
 }

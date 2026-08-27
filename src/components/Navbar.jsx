@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu, ChevronDown } from 'lucide-react'
+import { Menu, ChevronDown, ShieldCheck, ShieldOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useAksesStatus } from '../hooks/useAksesStatus.js'
+import { useIsAdmin } from '../hooks/useIsAdmin.js'
+import { useAdminMode } from '../context/AdminModeContext.jsx'
 import { useTetapanPendaftaran } from '../hooks/useTetapanPendaftaran.js'
 import { NAV_ITEMS, ADMIN_NAV_ITEM } from '../lib/navConfig.js'
 import SideDrawer from './SideDrawer.jsx'
@@ -10,6 +12,8 @@ import SideDrawer from './SideDrawer.jsx'
 export default function Navbar() {
   const { user, signOutUser } = useAuth()
   const { status, isAdmin } = useAksesStatus(user)
+  const { isAdminSebenar } = useIsAdmin(user)
+  const { dijeda, togol } = useAdminMode()
   const { dibuka: pendaftaranDibuka } = useTetapanPendaftaran()
 
   // 3 peringkat penglihatan menu:
@@ -51,6 +55,19 @@ export default function Navbar() {
                 </span>
               </Link>
             </div>
+
+            {/* Ikon mod admin - mobile sahaja (desktop guna badge teks dalam nav kanan) */}
+            {isAdminSebenar && (
+              <button
+                onClick={togol}
+                aria-label={dijeda ? 'Sambung sebagai Admin' : 'Jeda sebagai Admin'}
+                title={dijeda ? 'Sambung sebagai Admin' : 'Jeda sebagai Admin'}
+                className="lg:hidden flex items-center justify-center h-10 w-10 rounded-card hover:bg-white/10 shrink-0"
+                style={{ color: dijeda ? 'rgba(255,255,255,0.5)' : '#F2C230' }}
+              >
+                {dijeda ? <ShieldOff size={19} /> : <ShieldCheck size={19} />}
+              </button>
+            )}
 
             {/* Group kanan: nav penuh + login - desktop sahaja */}
             <nav className="hidden lg:flex items-center gap-1">
@@ -94,6 +111,20 @@ export default function Navbar() {
                     {link.label}
                   </NavLink>
                 )
+              )}
+
+              {isAdminSebenar && (
+                <button
+                  onClick={togol}
+                  title={dijeda ? 'Sambung sebagai Admin' : 'Jeda sebagai Admin'}
+                  className="ml-2 flex items-center gap-1.5 px-3 py-2 rounded-card text-xs font-semibold border transition-colors"
+                  style={dijeda
+                    ? { borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.6)' }
+                    : { borderColor: '#F2C230', backgroundColor: '#F2C23026', color: '#F2C230' }}
+                >
+                  {dijeda ? <ShieldOff size={13} /> : <ShieldCheck size={13} />}
+                  {dijeda ? 'Admin Dijeda' : 'Mod Admin'}
+                </button>
               )}
 
               {user ? (

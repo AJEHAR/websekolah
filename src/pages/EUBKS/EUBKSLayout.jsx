@@ -35,7 +35,7 @@ export default function EUBKSLayout() {
           </Link>
           <h1 className="text-xl sm:text-2xl font-bold text-ink">KOKU</h1>
           <p className="text-xs text-inkmuted mt-1 mb-5">
-            {TAJUK_SUBPAGE[location.pathname] ?? ''}
+            {TAJUK_SUBPAGE[location.pathname] ?? (location.pathname.startsWith('/eubks/murid-ubks/') ? 'Murid UBKS' : '')}
           </p>
           <Outlet context={{ user }} />
         </div>

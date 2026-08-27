@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { DialogProvider } from './context/DialogContext.jsx'
+import { AdminModeProvider } from './context/AdminModeContext.jsx'
 import App from './App.jsx'
 import './index.css'
 
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <DialogProvider>
         <AuthProvider>
-          <App />
+          <AdminModeProvider>
+            <App />
+          </AdminModeProvider>
         </AuthProvider>
       </DialogProvider>
     </BrowserRouter>

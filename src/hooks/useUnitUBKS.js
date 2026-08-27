@@ -1,8 +1,36 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'unitUBKS'
+
+// Satu unit ikut ID - untuk halaman detail unit (subpage
+// /eubks/murid-ubks/:unitId), bukan senarai ikut tahun.
+export function useUnitUBKSSatu(unitId) {
+  const [unit, setUnit] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const muatSemula = useCallback(async () => {
+    if (!isFirebaseConfigured || !unitId) {
+      setUnit(null)
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    try {
+      const snap = await getDoc(doc(db, KOLEKSI, unitId))
+      setUnit(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+    } finally {
+      setLoading(false)
+    }
+  }, [unitId])
+
+  useEffect(() => {
+    muatSemula()
+  }, [muatSemula])
+
+  return { unit, loading, muatSemula }
+}
 
 export function useUnitUBKSTahun(tahunSesi) {
   const [senarai, setSenarai] = useState([])
@@ -45,7 +73,7 @@ export async function ambilSemuaUnitUBKS() {
 
 export async function tambahUnit(tahunSesi, namaUnit, kategoriUnit, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
-  await addDoc(collection(db, KOLEKSI), {
+  const ref = await addDoc(collection(db, KOLEKSI), {
     tahunSesi: String(tahunSesi),
     namaUnit,
     kategoriUnit,
@@ -55,6 +83,7 @@ export async function tambahUnit(tahunSesi, namaUnit, kategoriUnit, uid) {
     updatedAt: serverTimestamp(),
     updatedBy: uid,
   })
+  return ref.id // supaya boleh terus navigate ke halaman detail unit baru
 }
 
 export async function kemaskiniUnit(id, data, uid) {

@@ -45,6 +45,7 @@ import KehadiranRMT from './pages/MaklumatMurid/PapanRMT.jsx'
 import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
 import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
 import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
+import UnitUBKSDetail from './pages/EUBKS/UnitUBKSDetail.jsx'
 import ProfilMuridUBKS from './pages/EUBKS/ProfilMuridUBKS.jsx'
 import JawatankuasaUBKS from './pages/EUBKS/JawatankuasaUBKS.jsx'
 import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
@@ -204,6 +205,7 @@ export default function App() {
           <Route path="/eubks" element={<EUBKSLayout />}>
             <Route index element={<EUBKSHub />} />
             <Route path="murid-ubks" element={<MuridUBKS />} />
+            <Route path="murid-ubks/:unitId" element={<UnitUBKSDetail />} />
             <Route path="profil-murid" element={<ProfilMuridUBKS />} />
             <Route path="jawatankuasa-ubks" element={<JawatankuasaUBKS />} />
             <Route path="kehadiran-ubks" element={<KehadiranUBKS />} />
