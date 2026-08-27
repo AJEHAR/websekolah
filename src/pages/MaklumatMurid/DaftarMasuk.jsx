@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Printer, Upload, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, Printer, Upload, Search, Eye, X } from 'lucide-react'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { useDialog } from '../../context/DialogContext.jsx'
@@ -31,6 +31,45 @@ const LAJUR = [
 // tatal ke kanan tengok medan lain.
 const LEBAR = { bil: 44, nama: 170 }
 
+// Sticky column dalam <table border-collapse> boleh patah/tak boleh tatal
+// mendatar pada sesetengah browser mobile - jadi phone guna SENARAI KAD
+// (Bil/Nama/Darjah + ikon mata untuk buka SEMUA butiran dalam sheet),
+// desktop (sm+) kekal jadual sticky sedia ada, tak diubah.
+function ButiranRekodSheet({ rekod, onClose, onEdit, onPadam }) {
+  if (!rekod) return null
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 sm:hidden" onClick={onClose}>
+      <div className="bg-surface rounded-t-2xl w-full max-h-[85vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-sm font-bold text-ink">{rekod.nama}</p>
+            <p className="text-xs text-inkmuted">Bil. {rekod.bilangan}</p>
+          </div>
+          <button onClick={onClose} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="space-y-2.5 mb-5">
+          {LAJUR.map(([label, kunci]) => (
+            <div key={kunci} className="flex justify-between gap-3 text-sm border-b border-border pb-2">
+              <span className="text-inkmuted shrink-0">{label}</span>
+              <span className="text-ink text-right">{rekod[kunci] || '-'}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => onEdit(rekod)} className="flex-1 h-11 rounded-card border border-border text-sm font-semibold text-ink flex items-center justify-center gap-1.5">
+            <Pencil size={14} /> Edit
+          </button>
+          <button onClick={() => onPadam(rekod.id)} className="h-11 px-4 rounded-card border border-brand-red/30 text-sm font-semibold text-brand-red flex items-center justify-center gap-1.5">
+            <Trash2 size={14} /> Padam
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DaftarMasuk() {
   const { user } = useOutletContext()
   const { isAdmin, adaSeksyen } = useIsAdmin(user)
@@ -46,6 +85,7 @@ export default function DaftarMasuk() {
   const [tunjukBorang, setTunjukBorang] = useState(false)
   const [tunjukImport, setTunjukImport] = useState(false)
   const [rekodEdit, setRekodEdit] = useState(null)
+  const [rekodLihat, setRekodLihat] = useState(null)
   const [carian, setCarian] = useState('')
 
   const disenarai = senarai.filter((r) => (r.nama ?? '').toLowerCase().includes(carian.toLowerCase()))
@@ -128,7 +168,30 @@ export default function DaftarMasuk() {
       ) : disenarai.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada rekod sepadan dengan carian.</p>
       ) : (
-        <div className="overflow-auto border border-border rounded-card max-h-[75vh]">
+        <>
+          {/* Phone: senarai kad + ikon mata (butiran penuh dalam sheet) */}
+          <div className="sm:hidden space-y-2">
+            {disenarai.map((r) => (
+              <div key={r.id} className="flex items-center gap-2 p-3 rounded-card border border-border bg-surface">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-ink truncate">{r.nama}</p>
+                  <p className="text-xs text-inkmuted mt-0.5">Bil. {r.bilangan} · Darjah {r.darjah || '-'}</p>
+                </div>
+                <button onClick={() => setRekodLihat(r)} aria-label="Lihat butiran" className="p-2 rounded-card hover:bg-base text-inkmuted shrink-0">
+                  <Eye size={17} />
+                </button>
+                <button onClick={() => bukaEdit(r)} aria-label="Edit" className="p-2 rounded-card hover:bg-base text-inkmuted shrink-0">
+                  <Pencil size={17} />
+                </button>
+                <button onClick={() => padam(r.id)} aria-label="Padam" className="p-2 rounded-card hover:bg-base text-brand-red shrink-0">
+                  <Trash2 size={17} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop/tablet: jadual penuh sticky (tak diubah) */}
+          <div className="hidden sm:block overflow-auto border border-border rounded-card max-h-[75vh]">
           <table className="text-xs border-collapse w-full">
             <thead className="sticky top-0 z-20 bg-ink text-white">
               <tr>
@@ -162,8 +225,16 @@ export default function DaftarMasuk() {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
+
+      <ButiranRekodSheet
+        rekod={rekodLihat}
+        onClose={() => setRekodLihat(null)}
+        onEdit={(r) => { setRekodLihat(null); bukaEdit(r) }}
+        onPadam={(id) => { setRekodLihat(null); padam(id) }}
+      />
 
       <DaftarMasukModal
         open={tunjukBorang}
