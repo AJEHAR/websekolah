@@ -14,7 +14,7 @@ const DATA_UJIAN = [
   { kunci: 'murid', label: 'Data Murid (boleh import semula dari XLSX)' },
   { kunci: 'daftarMasukMurid', label: 'Daftar Masuk Murid (boleh import semula dari CSV)' },
   { kunci: 'sijilTamat', label: 'Sijil Tamat (boleh import semula dari CSV)' },
-  { kunci: 'koleksiPekeliling', label: 'Koleksi Pekeliling' },
+  { kunci: 'suratSpi', label: 'Surat/SPI' },
   { kunci: 'kertasKerja', label: 'Kertas Kerja (rekod Tajuk/Anjuran)' },
   { kunci: 'mukaDepanTahunan', label: 'Gambar Muka Depan Kertas Kerja (tahunan)' },
   { kunci: 'kehadiranMurid', label: 'Kehadiran Murid' },

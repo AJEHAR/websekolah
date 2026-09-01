@@ -182,7 +182,13 @@ function doPost(e) {
   }
 }
 
-// OPR - jana Kekuatan/Kelemahan/Penambahbaikan guna Groq (llama-3.3-70b).
+// OPR - jana Kekuatan/Kelemahan/Penambahbaikan guna Groq (openai/gpt-oss-120b).
+// NOTA (28 Ogos 2026): model lama 'llama-3.3-70b-versatile' DIBUANG TERUS
+// oleh Groq (diumum 17 Jun 2026, dinyahtauliah Ogos 2026) - "model tak
+// wujud" ni BUKAN salah key/kod, Groq yang tarik balik model tu. Gantian
+// rasmi Groq: openai/gpt-oss-120b (atau qwen/qwen3.6-27b). Rujuk
+// https://console.groq.com/docs/deprecations kalau error macam ni
+// berulang lagi masa depan (Groq kerap kemas kini/buang model lama).
 // Key GROQ_API_KEY disimpan SERVER SAHAJA (Script Properties) - staff
 // tak pernah nampak/pegang key ni, cuma perlu log masuk (sahkan idToken
 // macam biasa, dah dibuat di doPost sebelum sampai sini).
@@ -222,7 +228,7 @@ function kendalikanJanaAI(data) {
       contentType: 'application/json',
       headers: { Authorization: 'Bearer ' + GROQ_API_KEY },
       payload: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         messages: [
           { role: 'system', content: 'Anda pembantu penulisan laporan sekolah. Balas HANYA JSON sah. Tiada markdown.' },
           { role: 'user', content: prompt },

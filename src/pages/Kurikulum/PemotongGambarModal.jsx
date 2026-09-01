@@ -4,7 +4,7 @@ import { X, Check } from 'lucide-react'
 // Alat crop gambar (canvas) - staff boleh laraskan kotak crop (geser +
 // besarkan/kecilkan sudut) sebelum sahkan. Pulangkan blob JPEG hasil crop
 // melalui onSah(blob).
-export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah }) {
+export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah, onGagal }) {
   const imgRef = useRef(null)
   const kontenaRef = useRef(null)
   const [saizImej, setSaizImej] = useState({ lebar: 0, tinggi: 0 })
@@ -86,7 +86,15 @@ export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah })
       kotak.x * skalaAsal, kotak.y * skalaAsal, kotak.lebar * skalaAsal, kotak.tinggi * skalaAsal,
       0, 0, canvas.width, canvas.height
     )
-    canvas.toBlob((blob) => onSah(blob), 'image/jpeg', 0.85)
+    try {
+      canvas.toBlob((blob) => onSah(blob), 'image/jpeg', 0.85)
+    } catch {
+      // Kanvas "tainted" (gambar sedia ada dari storan luar tak benarkan
+      // baca piksel merentasi domain) - berlaku bila cuba laras SEMULA
+      // gambar yang dah dimuat naik sebelum ni. Bukan boleh dipulih di
+      // sini - staff kena upload fail asal semula dari peranti.
+      onGagal?.('Gagal laras gambar sedia ada (sekatan storan). Sila muat naik semula dari fail asal di peranti awak.')
+    }
   }
 
   return (
@@ -103,6 +111,7 @@ export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah })
           <img
             ref={imgRef}
             src={gambarSrc}
+            crossOrigin="anonymous"
             onLoad={imejDimuat}
             alt=""
             className="block w-full h-auto"

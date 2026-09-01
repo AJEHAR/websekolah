@@ -10,7 +10,7 @@ export const NAV_ITEMS = [
       { label: 'RPI', to: '/kurikulum/rpi' },
       { label: 'RPT', to: '/kurikulum/rpt' },
       { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja' },
-      { label: 'Koleksi Pekeliling', to: '/kurikulum/koleksi-pekeliling' },
+      { label: 'Surat/SPI', to: '/kurikulum/surat-spi' },
       { label: 'OPR', to: '/kurikulum/opr' },
       // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -
       // update juga kurikulumAksesPantas.js dan TAJUK_SUBPAGE dalam
@@ -27,6 +27,7 @@ export const NAV_ITEMS = [
       { label: 'Daftar Keluar Murid', to: '/maklumat-murid/daftar-keluar' },
       { label: 'Kehadiran Murid', to: '/maklumat-murid/kehadiran-murid' },
       { label: 'Kehadiran RMT', to: '/maklumat-murid/kehadiran-rmt' },
+      { label: 'Surat/SPI', to: '/maklumat-murid/surat-spi' },
     ],
   },
   {

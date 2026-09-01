@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sparkles, Upload, X, PenLine, Plus } from 'lucide-react'
+import { Sparkles, Upload, X, PenLine, Plus, Move } from 'lucide-react'
 import { muatNaikKeDrive, janaAiOpr } from '../../lib/driveUpload.js'
 import PemotongGambarModal from './PemotongGambarModal.jsx'
 import TandatanganModal from './TandatanganModal.jsx'
@@ -12,6 +12,7 @@ const MEDAN_KOSONG = {
   namaDisahkan: '', jawatanDisahkan: '', tandaTanganDisahkanUrl: '',
   disahkanAktif: true,
   latarBelakangUrl: '',
+  layoutCetak: 'gaya1',
 }
 
 function Medan({ label, value, onChange, textarea, placeholder }) {
@@ -71,6 +72,14 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     e.target.value = ''
   }
 
+  // Laras semula kedudukan/pemotongan gambar yang DAH dimuat naik - guna
+  // gambar sedia ada (URL) sebagai sumber, staff tak perlu cari & upload
+  // fail asal semula setiap kali nak tukar fokus/kedudukan gambar.
+  function larasGambarSlot(i) {
+    setGambarMentah(data.gambar[i])
+    setSlotCrop(i)
+  }
+
   async function crophasilSah(blob) {
     const i = slotCrop
     setSlotCrop(null)
@@ -126,7 +135,45 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">1. Tetapan Latar Belakang</p>
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">1. Gaya Cetakan</p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => u('layoutCetak', 'gaya1')}
+            className="rounded-card border-2 p-3 text-left"
+            style={{ borderColor: data.layoutCetak === 'gaya1' ? '#C8102E' : '#E5E5E5' }}
+          >
+            <div className="h-20 rounded bg-white border border-border mb-2 p-1.5 flex flex-col gap-0.5">
+              <div className="h-2 bg-gray-200 rounded-sm w-1/2 mx-auto" />
+              <div className="flex-1 grid grid-cols-2 gap-0.5 mt-1">
+                <div className="bg-gray-100 rounded-sm" />
+                <div className="bg-gray-100 rounded-sm" />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-ink">Gaya 1 - Kotak Ringkas</p>
+            <p className="text-[10px] text-inkmuted">Latar putih, kotak bersempadan hitam, gambar 4 sebaris</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => u('layoutCetak', 'gaya2')}
+            className="rounded-card border-2 p-3 text-left"
+            style={{ borderColor: data.layoutCetak === 'gaya2' ? '#C8102E' : '#E5E5E5' }}
+          >
+            <div className="h-20 rounded bg-white border border-border mb-2 overflow-hidden flex flex-col">
+              <div className="h-5 shrink-0" style={{ backgroundColor: '#1B4D2E' }} />
+              <div className="flex-1 p-1.5 flex gap-1">
+                <div className="flex-1 bg-gray-100 rounded-sm" />
+                <div className="w-4 bg-gray-200 rounded-sm" />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-ink">Gaya 2 - Kepala Hijau</p>
+            <p className="text-[10px] text-inkmuted">Kepala hijau ikut Unit, gambar sekolum di kanan</p>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">2. Tetapan Latar Belakang</p>
         <select
           value={data.latarBelakangUrl}
           onChange={(e) => u('latarBelakangUrl', e.target.value)}
@@ -140,7 +187,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
       </div>
 
       <div>
-        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">2. Maklumat Asas</p>
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">3. Maklumat Asas</p>
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Unit / Kategori</label>
@@ -165,7 +212,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
       </div>
 
       <div>
-        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">3. Laporan Pengurusan</p>
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">4. Laporan Pengurusan</p>
         <div className="space-y-3">
           <Medan label="Objektif Program" value={data.objektif} onChange={(v) => u('objektif', v)} textarea />
           <Medan label="Aktiviti" value={data.aktiviti} onChange={(v) => u('aktiviti', v)} textarea />
@@ -189,13 +236,23 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
       </div>
 
       <div>
-        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">4. Gambar Aktiviti</p>
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">5. Gambar Aktiviti</p>
+        <p className="text-[11px] text-inkmuted mb-2">Tekan ikon <Move size={10} className="inline" /> pada gambar bila-bila untuk laras semula kedudukan/fokus, tanpa perlu upload semula.</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="relative aspect-square rounded-card border-2 border-dashed border-border bg-base overflow-hidden">
               {data.gambar[i] ? (
                 <>
                   <img src={data.gambar[i]} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => larasGambarSlot(i)}
+                    aria-label="Laraskan kedudukan gambar"
+                    title="Laraskan kedudukan"
+                    className="absolute bottom-1 left-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center"
+                  >
+                    <Move size={12} />
+                  </button>
                   <button
                     type="button"
                     onClick={() => buangGambar(i)}
@@ -221,7 +278,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
       </div>
 
       <div>
-        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">5. Pengesahan Dokumen</p>
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">6. Pengesahan Dokumen</p>
         <div className="space-y-4">
           <BlokTandatangan
             label="Disediakan Oleh"
@@ -279,6 +336,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
         gambarSrc={gambarMentah}
         onTutup={() => setSlotCrop(null)}
         onSah={crophasilSah}
+        onGagal={(mesej) => { setSlotCrop(null); setRalat(mesej) }}
       />
       <TandatanganModal
         open={tunjukTandatangan !== null}

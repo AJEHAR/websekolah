@@ -10,7 +10,7 @@ const TAJUK_SUBPAGE = {
   '/kurikulum/rpi': 'RPI',
   '/kurikulum/rpt': 'RPT',
   '/kurikulum/template-kertas-kerja': 'Template Kertas Kerja',
-  '/kurikulum/koleksi-pekeliling': 'Koleksi Pekeliling',
+  '/kurikulum/surat-spi': 'Surat/SPI',
   '/kurikulum/opr': 'OPR',
 }
 

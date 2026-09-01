@@ -291,7 +291,7 @@ service cloud.firestore {
       allow write: if isStaffDiluluskan();
     }
 
-    match /koleksiPekeliling/{docId} {
+    match /suratSpi/{docId} {
       allow read: if isStaffDiluluskan();
       allow write: if isStaffDiluluskan();
     }
@@ -317,6 +317,11 @@ service cloud.firestore {
     }
 
     match /oprLatarBelakang/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    match /oprTetapan/{docId} {
       allow read: if isStaffDiluluskan();
       allow write: if isStaffDiluluskan();
     }
@@ -351,6 +356,18 @@ service cloud.firestore {
 
     // Perancangan UBKS - mana-mana staff DILULUSKAN boleh isi (biasanya guru unit sendiri).
     match /perancanganUBKS/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    // Laporan Aktiviti Perjumpaan UBKS - mana-mana staff DILULUSKAN boleh isi.
+    match /laporanUBKS/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
+    // Senarai rujukan PIKeBM - baca semua staff, tulis (tambah/edit/padam) admin sahaja.
+    match /pikebmUBKS/{docId} {
       allow read: if isStaffDiluluskan();
       allow write: if isStaffDiluluskan();
     }

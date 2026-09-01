@@ -57,7 +57,7 @@ import BorangPLC from './pages/Kurikulum/BorangPLC.jsx'
 import RPI from './pages/Kurikulum/RPI.jsx'
 import RPT from './pages/Kurikulum/RPT.jsx'
 import TemplateKertasKerja from './pages/Kurikulum/TemplateKertasKerja.jsx'
-import KoleksiPekeliling from './pages/Kurikulum/KoleksiPekeliling.jsx'
+import SuratSpi from './components/SuratSpi.jsx'
 import OPR from './pages/Kurikulum/OPR.jsx'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext.jsx'
@@ -194,6 +194,7 @@ export default function App() {
             <Route path="daftar-keluar" element={<DaftarKeluar />} />
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
             <Route path="kehadiran-rmt" element={<KehadiranRMT />} />
+            <Route path="surat-spi" element={<SuratSpi seksyen="hem" />} />
           </Route>
 
           {/* URL lama "/ebanci/*" (seksyen dah digabung ke HEM) -
@@ -220,7 +221,9 @@ export default function App() {
             <Route path="rpi" element={<RPI />} />
             <Route path="rpt" element={<RPT />} />
             <Route path="template-kertas-kerja" element={<TemplateKertasKerja />} />
-            <Route path="koleksi-pekeliling" element={<KoleksiPekeliling />} />
+            <Route path="surat-spi" element={<SuratSpi seksyen="kurikulum" />} />
+            {/* URL lama "koleksi-pekeliling" - redirect supaya bookmark sedia ada tak terus mati. */}
+            <Route path="koleksi-pekeliling" element={<Navigate to="/kurikulum/surat-spi" replace />} />
             <Route path="opr" element={<OPR />} />
           </Route>
 

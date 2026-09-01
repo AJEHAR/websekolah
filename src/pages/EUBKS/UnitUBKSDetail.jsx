@@ -63,6 +63,8 @@ export default function UnitUBKSDetail() {
   const [editNama, setEditNama] = useState(false)
   const [kategoriUnit, setKategoriUnit] = useState('')
   const [editKategori, setEditKategori] = useState(false)
+  const [guruPenasihat, setGuruPenasihat] = useState('')
+  const [editGuru, setEditGuru] = useState(false)
   const [gambarGagal, setGambarGagal] = useState(false)
   const [memuatNaikGambar, setMemuatNaikGambar] = useState(false)
   const [tersimpanApa, setTersimpanApa] = useState(null)
@@ -71,6 +73,7 @@ export default function UnitUBKSDetail() {
     if (unit) {
       setNamaUnit(unit.namaUnit ?? '')
       setKategoriUnit(unit.kategoriUnit ?? '')
+      setGuruPenasihat(unit.guruPenasihat ?? '')
     }
   }, [unit])
 
@@ -93,6 +96,14 @@ export default function UnitUBKSDetail() {
     if (!unit || kod === unit.kategoriUnit) return
     await kemaskiniUnit(unit.id, { kategoriUnit: kod }, user.uid)
     kilasTersimpan('kategori')
+    muatSemula()
+  }
+
+  async function simpanGuru() {
+    setEditGuru(false)
+    if (!unit || guruPenasihat.trim() === (unit.guruPenasihat ?? '')) return
+    await kemaskiniUnit(unit.id, { guruPenasihat: guruPenasihat.trim() }, user.uid)
+    kilasTersimpan('guru')
     muatSemula()
   }
 
@@ -273,6 +284,33 @@ export default function UnitUBKSDetail() {
         </div>
         <Tersimpan tunjuk={tersimpanApa === 'kategori'} />
         <p className="text-[11px] text-inkmuted mt-2">Tahun sesi {unit.tahunSesi}</p>
+
+        <div className="mt-4 pt-4 border-t border-border text-left">
+          <label className="flex items-center gap-2 text-xs font-medium text-inkmuted mb-1">
+            Guru Penasihat <Tersimpan tunjuk={tersimpanApa === 'guru'} />
+          </label>
+          {editGuru && isAdmin ? (
+            <input
+              autoFocus
+              type="text"
+              value={guruPenasihat}
+              onChange={(e) => setGuruPenasihat(e.target.value)}
+              onBlur={simpanGuru}
+              onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+              placeholder="cth. Cikgu Ahmad bin Ali"
+              className="w-full h-10 px-3 rounded-card border border-border bg-surface text-sm"
+            />
+          ) : (
+            <button
+              onClick={() => isAdmin && setEditGuru(true)}
+              disabled={!isAdmin}
+              className="w-full text-left h-10 px-3 rounded-card border border-border bg-base text-sm text-ink flex items-center"
+            >
+              {guruPenasihat || <span className="text-inkmuted">Belum ditetapkan - klik untuk isi</span>}
+            </button>
+          )}
+          <p className="text-[10px] text-inkmuted mt-1">Digunakan untuk auto-isi Laporan Aktiviti Perjumpaan unit ni.</p>
+        </div>
       </div>
 
       {/* Kad statistik - infografik ringkasan ahli */}

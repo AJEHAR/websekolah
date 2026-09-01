@@ -9,6 +9,6 @@ export const KURIKULUM_AKSES_PANTAS = [
   { label: 'RPI', to: '/kurikulum/rpi', Ikon: FileText },
   { label: 'RPT', to: '/kurikulum/rpt', Ikon: CalendarRange },
   { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja', Ikon: FileStack },
-  { label: 'Koleksi Pekeliling', to: '/kurikulum/koleksi-pekeliling', Ikon: FolderOpen },
+  { label: 'Surat/SPI', to: '/kurikulum/surat-spi', Ikon: FolderOpen },
   { label: 'OPR', to: '/kurikulum/opr', Ikon: Sparkles },
 ]

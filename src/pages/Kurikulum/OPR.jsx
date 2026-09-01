@@ -6,10 +6,12 @@ import { useCetak } from '../../hooks/useCetak.js'
 import { useLaporanOPR, tambahLaporanOPR, kemaskiniLaporanOPR, padamLaporanOPR } from '../../hooks/useLaporanOPR.js'
 import { useOprUnit } from '../../hooks/useOprUnit.js'
 import { useOprLatarBelakang } from '../../hooks/useOprLatarBelakang.js'
+import { useOprLogo } from '../../hooks/useOprLogo.js'
 import OPRForm from './OPRForm.jsx'
 import CetakOPR from './CetakOPR.jsx'
 import UrusUnitOPRModal from './UrusUnitOPRModal.jsx'
 import UrusLatarBelakangOPRModal from './UrusLatarBelakangOPRModal.jsx'
+import UrusLogoOPRModal from './UrusLogoOPRModal.jsx'
 import ImportOPRModal from './ImportOPRModal.jsx'
 
 export default function OPR() {
@@ -18,6 +20,7 @@ export default function OPR() {
   const { senarai, loading, muatSemula } = useLaporanOPR()
   const { senarai: senaraiUnit, muatSemula: muatSemulaUnit } = useOprUnit()
   const { senarai: senaraiLatarBelakang, muatSemula: muatSemulaLatarBelakang } = useOprLatarBelakang()
+  const { logo, muatSemula: muatSemulaLogo } = useOprLogo()
   const [dataCetak, setDataCetak] = useCetak()
 
   const [modeForm, setModeForm] = useState(false)
@@ -26,6 +29,7 @@ export default function OPR() {
   const [carian, setCarian] = useState('')
   const [tunjukUnit, setTunjukUnit] = useState(false)
   const [tunjukLatar, setTunjukLatar] = useState(false)
+  const [tunjukLogo, setTunjukLogo] = useState(false)
   const [tunjukImport, setTunjukImport] = useState(false)
 
   const disenarai = senarai.filter((r) =>
@@ -122,6 +126,9 @@ export default function OPR() {
         <button onClick={() => setTunjukLatar(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
           <Settings size={14} /> Latar
         </button>
+        <button onClick={() => setTunjukLogo(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
+          <Settings size={14} /> Logo
+        </button>
         <button onClick={() => setTunjukImport(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
           <Upload size={14} /> Import CSV
         </button>
@@ -160,9 +167,10 @@ export default function OPR() {
 
       <UrusUnitOPRModal open={tunjukUnit} senarai={senaraiUnit} user={user} onClose={() => setTunjukUnit(false)} onSelesai={muatSemulaUnit} />
       <UrusLatarBelakangOPRModal open={tunjukLatar} senarai={senaraiLatarBelakang} user={user} onClose={() => setTunjukLatar(false)} onSelesai={muatSemulaLatarBelakang} />
+      <UrusLogoOPRModal open={tunjukLogo} logo={logo} user={user} onClose={() => setTunjukLogo(false)} onSelesai={muatSemulaLogo} />
       <ImportOPRModal open={tunjukImport} onClose={() => setTunjukImport(false)} user={user} onSelesai={muatSemula} />
 
-      {dataCetak && <CetakOPR rekod={dataCetak} />}
+      {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} />}
     </div>
   )
 }
