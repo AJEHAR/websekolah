@@ -50,6 +50,7 @@ import ProfilMuridUBKS from './pages/EUBKS/ProfilMuridUBKS.jsx'
 import JawatankuasaUBKS from './pages/EUBKS/JawatankuasaUBKS.jsx'
 import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
 import LaporanUBKS from './pages/EUBKS/LaporanUBKS.jsx'
+import LaporanUBKSDetail from './pages/EUBKS/LaporanUBKSDetail.jsx'
 import PerancanganUBKS from './pages/EUBKS/PerancanganUBKS.jsx'
 import KurikulumLayout from './pages/Kurikulum/KurikulumLayout.jsx'
 import KurikulumHub from './pages/Kurikulum/KurikulumHub.jsx'
@@ -211,6 +212,7 @@ export default function App() {
             <Route path="jawatankuasa-ubks" element={<JawatankuasaUBKS />} />
             <Route path="kehadiran-ubks" element={<KehadiranUBKS />} />
             <Route path="laporan-ubks" element={<LaporanUBKS />} />
+            <Route path="laporan-ubks/:unitId/:perjumpaan" element={<LaporanUBKSDetail />} />
             <Route path="perancangan-ubks" element={<PerancanganUBKS />} />
           </Route>
 

@@ -4,6 +4,7 @@ import { ChevronDown, Users, Save, Eye, X } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useUnitUBKSTahun, kemaskiniUnit } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
+import { kumpulUnitIkutKategori } from './kumpulUnitIkutKategori.js'
 import ProfilMuridUBKSModal from './ProfilMuridUBKSModal.jsx'
 
 const TAHUN_SEMASA = new Date().getFullYear()
@@ -148,6 +149,7 @@ export default function JawatankuasaUBKS() {
   const [tahunSesi, setTahunSesi] = useState(TAHUN_SEMASA)
   const { senarai: unitSenarai, loading, muatSemula } = useUnitUBKSTahun(tahunSesi)
   const { senarai: kategoriSenarai } = useKategoriUBKS()
+  const kumpulan = kumpulUnitIkutKategori(unitSenarai, kategoriSenarai)
 
   const [unitDibuka, setUnitDibuka] = useState(null)
   const [unitCartaPenuh, setUnitCartaPenuh] = useState(null)
@@ -222,8 +224,12 @@ export default function JawatankuasaUBKS() {
       ) : unitSenarai.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada unit untuk tahun {tahunSesi} lagi.</p>
       ) : (
-        <div className="space-y-2.5">
-          {unitSenarai.map((unit) => {
+        <div className="space-y-6">
+          {kumpulan.map((kump) => (
+            <div key={kump.kod}>
+              <h3 className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">{kump.label} <span className="font-normal normal-case">({kump.units.length})</span></h3>
+              <div className="space-y-2.5">
+          {kump.units.map((unit) => {
             const dibuka = unitDibuka === unit.id
             const bilanganJawatan = unit.ahli.filter((a) => a.jawatan?.trim()).length
             const adaDraf = Boolean(draf[unit.id] && Object.keys(draf[unit.id]).length > 0)
@@ -289,6 +295,9 @@ export default function JawatankuasaUBKS() {
               </div>
             )
           })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

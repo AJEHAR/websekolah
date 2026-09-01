@@ -4,6 +4,7 @@ import { Plus, Users, Search } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useUnitUBKSTahun, tambahUnit } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
+import { kumpulUnitIkutKategori } from './kumpulUnitIkutKategori.js'
 
 function AvatarUnit({ gambarUnit }) {
   const [gagal, setGagal] = useState(false)
@@ -53,6 +54,7 @@ export default function MuridUBKS() {
   const [carian, setCarian] = useState('')
 
   const unitDitapis = unitSenarai.filter((u) => u.namaUnit?.toLowerCase().includes(carian.toLowerCase()))
+  const kumpulan = kumpulUnitIkutKategori(unitDitapis, kategoriSenarai)
 
   async function tambah(e) {
     e.preventDefault()
@@ -75,9 +77,6 @@ export default function MuridUBKS() {
     }
   }
 
-  function labelKategori(kod) {
-    return kategoriSenarai.find((k) => k.kod === kod)?.nama ?? kod
-  }
 
   return (
     <div>
@@ -148,29 +147,35 @@ export default function MuridUBKS() {
       ) : unitDitapis.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada unit untuk tahun {tahunSesi} lagi.</p>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-3">
-          {unitDitapis.map((u) => {
-            const namaKategori = labelKategori(u.kategoriUnit)
-            const w = warnaKategori(namaKategori)
-            return (
-              <button
-                key={u.id}
-                onClick={() => navigate(`/eubks/murid-ubks/${u.id}`)}
-                className="text-left p-4 rounded-card border border-border bg-surface hover:border-brand-red transition-colors flex items-center gap-3"
-              >
-                <AvatarUnit gambarUnit={u.gambarUnit} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-ink truncate">{u.namaUnit}</p>
-                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.fg }}>
-                      {namaKategori}
-                    </span>
-                    <span className="text-xs text-inkmuted">{(u.ahli ?? []).length} ahli</span>
-                  </div>
-                </div>
-              </button>
-            )
-          })}
+        <div className="space-y-6">
+          {kumpulan.map((kump) => (
+            <div key={kump.kod}>
+              <h3 className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">{kump.label} <span className="font-normal normal-case">({kump.units.length})</span></h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {kump.units.map((u) => {
+                  const w = warnaKategori(kump.label)
+                  return (
+                    <button
+                      key={u.id}
+                      onClick={() => navigate(`/eubks/murid-ubks/${u.id}`)}
+                      className="text-left p-4 rounded-card border border-border bg-surface hover:border-brand-red transition-colors flex items-center gap-3"
+                    >
+                      <AvatarUnit gambarUnit={u.gambarUnit} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-ink truncate">{u.namaUnit}</p>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.fg }}>
+                            {kump.label}
+                          </span>
+                          <span className="text-xs text-inkmuted">{(u.ahli ?? []).length} ahli</span>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
