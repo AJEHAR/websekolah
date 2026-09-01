@@ -86,11 +86,16 @@ export default function LaporanUBKSForm({ open, unit, perjumpaan, user, onClose,
       if (sediaAda) {
         setData({ ...MEDAN_KOSONG, ...sediaAda })
       } else {
+        // Auto-isi Setiausaha daripada Jawatankuasa UBKS unit ni (cari
+        // ahli yang jawatan dia mengandungi "setiausaha" - padan sebahagian
+        // sebab jawatan teks bebas, cth. "Setiausaha 1" pun patut sepadan).
+        const setiausaha = unit.ahli?.find((a) => a.jawatan?.toLowerCase().includes('setiausaha'))
         setData({
           ...MEDAN_KOSONG,
           tarikh: slotPerancangan?.tarikh || '',
           guruPenasihat: unit.guruPenasihat || '',
           namaGuruTtd: unit.guruPenasihat || '',
+          namaSetiausaha: setiausaha?.nama || '',
         })
       }
       setMemuatkan(false)
@@ -267,10 +272,13 @@ export default function LaporanUBKSForm({ open, unit, perjumpaan, user, onClose,
             <div>
               <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">Tandatangan</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <BlokTtd label="Setiausaha" nama={data.namaSetiausaha} ttdUrl={data.ttdSetiausahaUrl} onNama={(v) => u('namaSetiausaha', v)} onTandatangan={() => setTunjukTtd('setiausaha')} onPadamTtd={() => u('ttdSetiausahaUrl', '')} />
+                <BlokTtd label="Setiausaha (auto dari Jawatankuasa)" nama={data.namaSetiausaha} ttdUrl={data.ttdSetiausahaUrl} onNama={(v) => u('namaSetiausaha', v)} onTandatangan={() => setTunjukTtd('setiausaha')} onPadamTtd={() => u('ttdSetiausahaUrl', '')} />
                 <BlokTtd label="Guru Penasihat" nama={data.namaGuruTtd} ttdUrl={data.ttdGuruUrl} onNama={(v) => u('namaGuruTtd', v)} onTandatangan={() => setTunjukTtd('guru')} onPadamTtd={() => u('ttdGuruUrl', '')} />
                 <BlokTtd label="GPK Kokurikulum" nama={data.namaGPK} ttdUrl={data.ttdGPKUrl} onNama={(v) => u('namaGPK', v)} onTandatangan={() => setTunjukTtd('gpk')} onPadamTtd={() => u('ttdGPKUrl', '')} />
               </div>
+              {!data.namaSetiausaha && (
+                <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Setiausaha dilantik lagi untuk unit ni - pergi "Jawatankuasa UBKS" untuk lantik, atau taip nama terus.</p>
+              )}
             </div>
 
             {ralat && <p className="text-sm text-brand-red">{ralat}</p>}
