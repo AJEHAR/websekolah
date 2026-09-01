@@ -98,11 +98,18 @@ export default function LaporanUBKSDetail() {
         setData({ ...MEDAN_KOSONG, ...sediaAda })
       } else {
         const setiausaha = unit.ahli?.find((a) => a.jawatan?.toLowerCase().includes('setiausaha'))
+        // unit.guruPenasihat rekod lama = string, rekod baru = array
+        // [{nama, tahunDarjah}] - gabung jadi teks "Nama (Tahun X), Nama2"
+        // untuk medan Laporan (teks bebas, boleh edit); nama guru PERTAMA
+        // sahaja dijadikan lalai tandatangan (staff boleh tukar kalau perlu).
+        const gp = unit.guruPenasihat
+        const senaraiGpArr = !gp ? [] : typeof gp === 'string' ? [{ nama: gp, tahunDarjah: '' }] : gp
+        const gpTeks = senaraiGpArr.map((g) => (g.tahunDarjah ? `${g.nama} (${g.tahunDarjah})` : g.nama)).join(', ')
         setData({
           ...MEDAN_KOSONG,
           tarikh: slotPerancangan?.tarikh || '',
-          guruPenasihat: unit.guruPenasihat || '',
-          namaGuruTtd: unit.guruPenasihat || '',
+          guruPenasihat: gpTeks,
+          namaGuruTtd: senaraiGpArr[0]?.nama || '',
           namaSetiausaha: setiausaha?.nama || '',
         })
       }

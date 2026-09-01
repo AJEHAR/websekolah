@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Camera, Trash2, Plus, Star, Check, Search, Users, Award, Pencil } from 'lucide-react'
+import { ArrowLeft, Camera, Trash2, Plus, Star, Check, Search, Users, Award, Pencil, X } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useMuridList } from '../../hooks/useMurid.js'
+import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { useUnitUBKSSatu, kemaskiniUnit, padamUnit } from '../../hooks/useUnitUBKS.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
@@ -40,6 +41,49 @@ function Avatar({ nama }) {
   )
 }
 
+// Satu baris guru penasihat - medan Tahun/Darjah (pilihan, untuk "incharge"
+// tahun/darjah tertentu) simpan sendiri bila blur (elak terlalu banyak
+// panggilan simpan setiap ketukan kekunci).
+function BarisGuru({ guru, isAdmin, onUbahTahunDarjah, onBuang }) {
+  const [nilai, setNilai] = useState(guru.tahunDarjah ?? '')
+  useEffect(() => { setNilai(guru.tahunDarjah ?? '') }, [guru.tahunDarjah])
+
+  return (
+    <div className="flex items-center gap-2 p-2 rounded-card border border-border">
+      <Avatar nama={guru.nama} />
+      <span className="text-sm text-ink flex-1 min-w-0 truncate">{guru.nama}</span>
+      {isAdmin ? (
+        <input
+          type="text"
+          value={nilai}
+          onChange={(e) => setNilai(e.target.value)}
+          onBlur={() => nilai !== (guru.tahunDarjah ?? '') && onUbahTahunDarjah(guru.nama, nilai)}
+          placeholder="Tahun/Darjah (pilihan)"
+          className="h-8 w-36 px-2 rounded-card border border-border bg-surface text-xs shrink-0"
+        />
+      ) : (
+        guru.tahunDarjah && <span className="text-xs text-inkmuted shrink-0">{guru.tahunDarjah}</span>
+      )}
+      {isAdmin && (
+        <button onClick={() => onBuang(guru.nama)} aria-label="Buang guru" className="p-1 rounded-card hover:bg-base text-brand-red shrink-0">
+          <X size={14} />
+        </button>
+      )}
+    </div>
+  )
+}
+
+// unit.guruPenasihat rekod LAMA simpan STRING tunggal (ciri asal sebelum
+// ni) - rekod BARU simpan ARRAY [{nama, tahunDarjah}] (sokong ramai guru +
+// tahun/darjah "incharge" setiap seorang). Fungsi ni normalize dua-dua
+// bentuk supaya UI selalu terima array, tak kira rekod lama/baru.
+function senaraiGuru(unit) {
+  const g = unit?.guruPenasihat
+  if (!g) return []
+  if (typeof g === 'string') return g.trim() ? [{ nama: g.trim(), tahunDarjah: '' }] : []
+  return g
+}
+
 // Halaman detail SATU unit UBKS. Prinsip reka bentuk: "satu tindakan,
 // satu simpan" (Maklumat & Ahli simpan berasingan, terus ke Firestore
 // bila diubah) DAN gaya paparan INFOGRAFIK (kad hero berpusat + kad
@@ -54,6 +98,7 @@ export default function UnitUBKSDetail() {
   const { konfirm, amaran } = useDialog()
   const { unit, loading, muatSemula } = useUnitUBKSSatu(unitId)
   const { senarai: muridSenarai } = useMuridList()
+  const { profiles: staffSenarai } = useProfilesList()
   const { senarai: kategoriSenarai } = useKategoriUBKS()
 
   const [profilDibuka, setProfilDibuka] = useState(null)
@@ -63,8 +108,6 @@ export default function UnitUBKSDetail() {
   const [editNama, setEditNama] = useState(false)
   const [kategoriUnit, setKategoriUnit] = useState('')
   const [editKategori, setEditKategori] = useState(false)
-  const [guruPenasihat, setGuruPenasihat] = useState('')
-  const [editGuru, setEditGuru] = useState(false)
   const [gambarGagal, setGambarGagal] = useState(false)
   const [memuatNaikGambar, setMemuatNaikGambar] = useState(false)
   const [tersimpanApa, setTersimpanApa] = useState(null)
@@ -73,7 +116,6 @@ export default function UnitUBKSDetail() {
     if (unit) {
       setNamaUnit(unit.namaUnit ?? '')
       setKategoriUnit(unit.kategoriUnit ?? '')
-      setGuruPenasihat(unit.guruPenasihat ?? '')
     }
   }, [unit])
 
@@ -99,12 +141,34 @@ export default function UnitUBKSDetail() {
     muatSemula()
   }
 
-  async function simpanGuru() {
-    setEditGuru(false)
-    if (!unit || guruPenasihat.trim() === (unit.guruPenasihat ?? '')) return
-    await kemaskiniUnit(unit.id, { guruPenasihat: guruPenasihat.trim() }, user.uid)
-    kilasTersimpan('guru')
-    muatSemula()
+  async function simpanSenaraiGuru(senaraiBaru) {
+    setMenyimpanGuru(true)
+    try {
+      await kemaskiniUnit(unit.id, { guruPenasihat: senaraiBaru }, user.uid)
+      kilasTersimpan('guru')
+      muatSemula()
+    } finally {
+      setMenyimpanGuru(false)
+    }
+  }
+
+  async function tambahGuru() {
+    const guruSedia = senaraiGuru(unit)
+    const namaSedia = new Set(guruSedia.map((g) => g.nama))
+    const baru = staffSenarai
+      .filter((s) => dipilihGuru.has(s.id) && !namaSedia.has(s.nama))
+      .map((s) => ({ nama: s.nama, tahunDarjah: '' }))
+    setDipilihGuru(new Set())
+    setTunjukTambahGuru(false)
+    await simpanSenaraiGuru([...guruSedia, ...baru])
+  }
+
+  async function buangGuru(nama) {
+    await simpanSenaraiGuru(senaraiGuru(unit).filter((g) => g.nama !== nama))
+  }
+
+  async function ubahTahunDarjahGuru(nama, tahunDarjah) {
+    await simpanSenaraiGuru(senaraiGuru(unit).map((g) => (g.nama === nama ? { ...g, tahunDarjah } : g)))
   }
 
   async function pilihGambar(e) {
@@ -125,6 +189,12 @@ export default function UnitUBKSDetail() {
     }
   }
 
+  // --- Guru Penasihat (ramai, dari senarai staff sedia ada) ---
+  const [carianGuru, setCarianGuru] = useState('')
+  const [dipilihGuru, setDipilihGuru] = useState(new Set())
+  const [tunjukTambahGuru, setTunjukTambahGuru] = useState(false)
+  const [menyimpanGuru, setMenyimpanGuru] = useState(false)
+
   // --- Ahli - setiap tindakan simpan terus ---
   const [tahunDipilih, setTahunDipilih] = useState('')
   const [carian, setCarian] = useState('')
@@ -142,6 +212,7 @@ export default function UnitUBKSDetail() {
   const muridTahunIni = muridSenarai.filter(
     (m) => m.tahunTingkatan === tahunDipilih && !idSudahAhli.has(m.idMurid) && m.nama?.toLowerCase().includes(carian.toLowerCase())
   )
+  const semuaMuridDipilih = muridTahunIni.length > 0 && muridTahunIni.every((m) => dipilihSementara.has(m.idMurid))
 
   function toggl(idMurid) {
     setDipilihSementara((s) => {
@@ -150,6 +221,30 @@ export default function UnitUBKSDetail() {
       else baru.add(idMurid)
       return baru
     })
+  }
+
+  function togglSemuaMurid() {
+    setDipilihSementara(semuaMuridDipilih ? new Set() : new Set(muridTahunIni.map((m) => m.idMurid)))
+  }
+
+  // Senarai staff (guru) yang belum dilantik ke unit ni + padan carian.
+  const namaGuruSedia = new Set(senaraiGuru(unit).map((g) => g.nama))
+  const staffBolehTambah = staffSenarai.filter(
+    (s) => !namaGuruSedia.has(s.nama) && s.nama?.toLowerCase().includes(carianGuru.toLowerCase())
+  )
+  const semuaGuruDipilih = staffBolehTambah.length > 0 && staffBolehTambah.every((s) => dipilihGuru.has(s.id))
+
+  function togglGuru(id) {
+    setDipilihGuru((s) => {
+      const baru = new Set(s)
+      if (baru.has(id)) baru.delete(id)
+      else baru.add(id)
+      return baru
+    })
+  }
+
+  function togglSemuaGuru() {
+    setDipilihGuru(semuaGuruDipilih ? new Set() : new Set(staffBolehTambah.map((s) => s.id)))
   }
 
   async function simpanAhliBaru(ahliBaru) {
@@ -286,30 +381,71 @@ export default function UnitUBKSDetail() {
         <p className="text-[11px] text-inkmuted mt-2">Tahun sesi {unit.tahunSesi}</p>
 
         <div className="mt-4 pt-4 border-t border-border text-left">
-          <label className="flex items-center gap-2 text-xs font-medium text-inkmuted mb-1">
+          <label className="flex items-center gap-2 text-xs font-medium text-inkmuted mb-2">
             Guru Penasihat <Tersimpan tunjuk={tersimpanApa === 'guru'} />
           </label>
-          {editGuru && isAdmin ? (
-            <input
-              autoFocus
-              type="text"
-              value={guruPenasihat}
-              onChange={(e) => setGuruPenasihat(e.target.value)}
-              onBlur={simpanGuru}
-              onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
-              placeholder="cth. Cikgu Ahmad bin Ali"
-              className="w-full h-10 px-3 rounded-card border border-border bg-surface text-sm"
-            />
+
+          {senaraiGuru(unit).length === 0 ? (
+            <p className="text-xs text-inkmuted mb-2">Belum ada guru penasihat dilantik.</p>
           ) : (
-            <button
-              onClick={() => isAdmin && setEditGuru(true)}
-              disabled={!isAdmin}
-              className="w-full text-left h-10 px-3 rounded-card border border-border bg-base text-sm text-ink flex items-center"
-            >
-              {guruPenasihat || <span className="text-inkmuted">Belum ditetapkan - klik untuk isi</span>}
+            <div className="space-y-1.5 mb-2">
+              {senaraiGuru(unit).map((g) => (
+                <BarisGuru key={g.nama} guru={g} isAdmin={isAdmin} onUbahTahunDarjah={ubahTahunDarjahGuru} onBuang={buangGuru} />
+              ))}
+            </div>
+          )}
+
+          {isAdmin && !tunjukTambahGuru && (
+            <button onClick={() => setTunjukTambahGuru(true)} className="flex items-center gap-1.5 h-9 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+              <Plus size={13} /> Tambah Guru
             </button>
           )}
-          <p className="text-[10px] text-inkmuted mt-1">Digunakan untuk auto-isi Laporan Aktiviti Perjumpaan unit ni.</p>
+
+          {isAdmin && tunjukTambahGuru && (
+            <div className="p-3 rounded-card bg-base">
+              <div className="relative mb-2">
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-inkmuted" />
+                <input
+                  type="text"
+                  value={carianGuru}
+                  onChange={(e) => setCarianGuru(e.target.value)}
+                  placeholder="Cari nama staff…"
+                  className="w-full h-9 pl-8 pr-3 rounded-card border border-border bg-surface text-sm"
+                />
+              </div>
+              <div className="max-h-40 overflow-y-auto border border-border rounded-card divide-y divide-border bg-surface mb-2">
+                {staffBolehTambah.length === 0 ? (
+                  <p className="p-2 text-xs text-inkmuted">Tiada staff lagi untuk tambah.</p>
+                ) : (
+                  <>
+                    <label className="flex items-center gap-2 p-2 text-xs font-semibold cursor-pointer hover:bg-base border-b border-border">
+                      <input type="checkbox" checked={semuaGuruDipilih} onChange={togglSemuaGuru} className="h-4 w-4" />
+                      <span className="text-ink">Pilih Semua ({staffBolehTambah.length})</span>
+                    </label>
+                    {staffBolehTambah.map((s) => (
+                      <label key={s.id} className="flex items-center gap-2 p-2 text-sm cursor-pointer hover:bg-base">
+                        <input type="checkbox" checked={dipilihGuru.has(s.id)} onChange={() => togglGuru(s.id)} className="h-4 w-4" />
+                        <span className="text-ink">{s.nama}</span>
+                      </label>
+                    ))}
+                  </>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={tambahGuru}
+                  disabled={dipilihGuru.size === 0 || menyimpanGuru}
+                  className="flex items-center gap-1.5 h-9 px-3 rounded-card bg-ink text-white text-xs font-semibold disabled:opacity-40"
+                >
+                  <Plus size={13} /> {menyimpanGuru ? 'Menyimpan…' : `Tambah ${dipilihGuru.size > 0 ? `(${dipilihGuru.size})` : ''}`}
+                </button>
+                <button onClick={() => { setTunjukTambahGuru(false); setDipilihGuru(new Set()); setCarianGuru('') }} className="h-9 px-3 rounded-card border border-border text-xs font-medium text-ink">
+                  Batal
+                </button>
+              </div>
+            </div>
+          )}
+          <p className="text-[10px] text-inkmuted mt-2">Digunakan untuk auto-isi Laporan Aktiviti Perjumpaan unit ni. Isi "Tahun/Darjah" kalau guru tu incharge satu tahun/darjah tertentu sahaja.</p>
         </div>
       </div>
 
@@ -376,12 +512,18 @@ export default function UnitUBKSDetail() {
                   {muridTahunIni.length === 0 ? (
                     <p className="p-2 text-xs text-inkmuted">Tiada murid lagi untuk tambah (semua dah jadi ahli, atau tiada murid tahun ni).</p>
                   ) : (
-                    muridTahunIni.map((m) => (
-                      <label key={m.idMurid} className="flex items-center gap-2 p-2 text-sm cursor-pointer hover:bg-base">
-                        <input type="checkbox" checked={dipilihSementara.has(m.idMurid)} onChange={() => toggl(m.idMurid)} className="h-4 w-4" />
-                        <span className="text-ink">{m.nama}</span>
+                    <>
+                      <label className="flex items-center gap-2 p-2 text-xs font-semibold cursor-pointer hover:bg-base border-b border-border">
+                        <input type="checkbox" checked={semuaMuridDipilih} onChange={togglSemuaMurid} className="h-4 w-4" />
+                        <span className="text-ink">Pilih Semua ({muridTahunIni.length})</span>
                       </label>
-                    ))
+                      {muridTahunIni.map((m) => (
+                        <label key={m.idMurid} className="flex items-center gap-2 p-2 text-sm cursor-pointer hover:bg-base">
+                          <input type="checkbox" checked={dipilihSementara.has(m.idMurid)} onChange={() => toggl(m.idMurid)} className="h-4 w-4" />
+                          <span className="text-ink">{m.nama}</span>
+                        </label>
+                      ))}
+                    </>
                   )}
                 </div>
                 <button
