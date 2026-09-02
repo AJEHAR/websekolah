@@ -38,7 +38,7 @@ function GambarSlot({ src }) {
 
 function BlokTandatanganCetak({ label, ttdUrl, nama }) {
   return (
-    <div className="flex-1 border-r border-black last:border-r-0">
+    <div className="flex-1">
       <div style={{ backgroundColor: PUTIH }} className="text-center py-1 border-b border-black"><p className="text-[11px] font-bold text-black">{label}</p></div>
       {/* Templat TETAP: (tandatangan) di atas, nama (kecil) di bawah -
           DUA-DUA sentiasa dipaparkan sekali (bukan salah satu sahaja) -
@@ -145,7 +145,9 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
 
           <div className="flex border border-black">
             <BlokTandatanganCetak label="Tandatangan Setiausaha" ttdUrl={data.ttdSetiausahaUrl} nama={data.namaSetiausaha} />
+            <div className="w-px shrink-0" style={{ backgroundColor: '#000' }} />
             <BlokTandatanganCetak label="Tandatangan Guru Penasihat" ttdUrl={data.ttdGuruUrl} nama={data.namaGuruTtd} />
+            <div className="w-px shrink-0" style={{ backgroundColor: '#000' }} />
             <BlokTandatanganCetak label="Tandatangan GPK Kokurikulum" ttdUrl={data.ttdGPKUrl} nama={data.namaGPK} />
           </div>
         </div>
