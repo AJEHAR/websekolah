@@ -57,24 +57,6 @@ function Medan({ label, value, onChange, textarea, placeholder, type = 'text', r
   )
 }
 
-function BlokTtd({ label, nama, ttdUrl, onNama, onTandatangan, onPadamTtd }) {
-  return (
-    <div>
-      <p className="text-xs font-medium text-ink mb-1.5">{label}</p>
-      {ttdUrl ? (
-        <div className="relative h-16 rounded-card border border-border bg-white flex items-center justify-center mb-1.5">
-          <img src={ttdUrl} alt="Tandatangan" className="max-h-full max-w-full object-contain" />
-          <button type="button" onClick={onPadamTtd} className="absolute top-1 right-1 text-[10px] text-brand-red font-semibold">Padam</button>
-        </div>
-      ) : (
-        <button type="button" onClick={onTandatangan} className="w-full h-10 rounded-card border border-dashed border-border text-xs font-semibold text-inkmuted flex items-center justify-center gap-1.5 mb-1.5">
-          <PenLine size={13} /> Tandatangan
-        </button>
-      )}
-      <input type="text" value={nama} onChange={(e) => onNama(e.target.value)} placeholder="Nama" className="w-full h-9 px-2.5 rounded-card border border-border bg-surface text-xs" />
-    </div>
-  )
-}
 
 function BlokTtdBank({ label, senaraiNama, nama, ttdUrl, adaTersimpan, onPilihNama, onTandatangan, onGunaTersimpan, onPadamTtd }) {
   const [modLain, setModLain] = useState(false)
@@ -403,8 +385,8 @@ export default function LaporanUBKSDetail() {
       const medan = { setiausaha: 'ttdSetiausahaUrl', guru: 'ttdGuruUrl', gpk: 'ttdGPKUrl' }[kunci]
       u(medan, hasil.url)
 
-      if (kunci === 'setiausaha' || kunci === 'guru') {
-        const namaMedan = kunci === 'setiausaha' ? 'namaSetiausaha' : 'namaGuruTtd'
+      if (kunci === 'setiausaha' || kunci === 'guru' || kunci === 'gpk') {
+        const namaMedan = { setiausaha: 'namaSetiausaha', guru: 'namaGuruTtd', gpk: 'namaGPK' }[kunci]
         const namaSemasa = data[namaMedan]
         if (namaSemasa?.trim()) {
           await kemaskiniUnit(unit.id, { tandaTanganTersimpan: upsertTtdTersimpan(unit, namaSemasa.trim(), hasil.url) }, user.uid)
@@ -423,6 +405,11 @@ export default function LaporanUBKSDetail() {
   function pilihNamaSetiausaha(namaBaru) {
     u('namaSetiausaha', namaBaru)
     u('ttdSetiausahaUrl', cariTtdTersimpan(unit, namaBaru) || '')
+  }
+
+  function pilihNamaGPK(namaBaru) {
+    u('namaGPK', namaBaru)
+    u('ttdGPKUrl', cariTtdTersimpan(unit, namaBaru) || '')
   }
 
   async function simpan() {
@@ -463,6 +450,10 @@ export default function LaporanUBKSDetail() {
 
   const namaGuruPilihan = unit ? senaraiGuru(unit).map((g) => g.nama) : []
   const namaSetiausahaPilihan = unit ? (unit.ahli ?? []).filter((a) => a.jawatan?.toLowerCase().includes('setiausaha')).map((a) => a.nama) : []
+  // Senarai dropdown GPK dari Profile (bukan hanya SATU nilai auto-isi
+  // lagi) - sokong kes sekolah ada lebih dari satu PK Kokurikulum, atau
+  // staff nak tukar terus ke "Lain-lain" (relief/pelawat).
+  const namaGPKPilihan = profiles.filter((p) => p.jawatan === 'Penolong Kanan Kokurikulum').map((p) => p.nama)
 
   if (loadingUnit || memuatkan) return <p className="text-sm text-inkmuted">Memuatkan…</p>
   if (!unit) {
@@ -650,7 +641,17 @@ export default function LaporanUBKSDetail() {
               onGunaTersimpan={() => u('ttdGuruUrl', cariTtdTersimpan(unit, data.namaGuruTtd) || '')}
               onPadamTtd={() => u('ttdGuruUrl', '')}
             />
-            <BlokTtd label="GPK Kokurikulum (auto dari Profile)" nama={data.namaGPK} ttdUrl={data.ttdGPKUrl} onNama={(v) => u('namaGPK', v)} onTandatangan={() => setTunjukTtd('gpk')} onPadamTtd={() => u('ttdGPKUrl', '')} />
+            <BlokTtdBank
+              label="GPK Kokurikulum (tandatangan)"
+              senaraiNama={namaGPKPilihan}
+              nama={data.namaGPK}
+              ttdUrl={data.ttdGPKUrl}
+              adaTersimpan={Boolean(cariTtdTersimpan(unit, data.namaGPK))}
+              onPilihNama={pilihNamaGPK}
+              onTandatangan={() => setTunjukTtd('gpk')}
+              onGunaTersimpan={() => u('ttdGPKUrl', cariTtdTersimpan(unit, data.namaGPK) || '')}
+              onPadamTtd={() => u('ttdGPKUrl', '')}
+            />
           </div>
           {!data.namaSetiausaha && (
             <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Setiausaha dilantik lagi untuk unit ni - pergi "Jawatankuasa UBKS" untuk lantik, atau taip nama terus.</p>
@@ -659,7 +660,7 @@ export default function LaporanUBKSDetail() {
             <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Guru Penasihat ditetapkan lagi untuk unit ni - pergi halaman Unit (Murid UBKS) untuk isi, atau taip nama terus.</p>
           )}
           {!data.namaGPK && (
-            <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada staff dengan jawatan "Penolong Kanan Kokurikulum" dijumpai dalam Profile - pergi Panel Admin &gt; Profile untuk tetapkan, atau taip nama terus.</p>
+            <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada staff berjawatan "Penolong Kanan Kokurikulum" dijumpai dalam Profile - pergi Panel Admin &gt; Profile untuk tetapkan, atau pilih "Lain-lain" untuk taip nama terus.</p>
           )}
         </div>
 
