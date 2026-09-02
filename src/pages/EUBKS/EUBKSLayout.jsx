@@ -12,6 +12,8 @@ const TAJUK_SUBPAGE = {
   '/eubks/kehadiran-ubks': 'Kehadiran UBKS',
   '/eubks/laporan-ubks': 'Laporan UBKS',
   '/eubks/perancangan-ubks': 'Perancangan UBKS',
+  '/eubks/opr': 'OPR',
+  '/eubks/surat-spi': 'Surat/SPI',
 }
 
 export default function EUBKSLayout() {

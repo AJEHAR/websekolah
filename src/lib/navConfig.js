@@ -28,6 +28,7 @@ export const NAV_ITEMS = [
       { label: 'Kehadiran Murid', to: '/maklumat-murid/kehadiran-murid' },
       { label: 'Kehadiran RMT', to: '/maklumat-murid/kehadiran-rmt' },
       { label: 'Surat/SPI', to: '/maklumat-murid/surat-spi' },
+      { label: 'OPR', to: '/maklumat-murid/opr' },
     ],
   },
   {
@@ -40,6 +41,8 @@ export const NAV_ITEMS = [
       { label: 'Kehadiran UBKS', to: '/eubks/kehadiran-ubks' },
       { label: 'Laporan UBKS', to: '/eubks/laporan-ubks' },
       { label: 'Perancangan UBKS', to: '/eubks/perancangan-ubks' },
+      { label: 'OPR', to: '/eubks/opr' },
+      { label: 'Surat/SPI', to: '/eubks/surat-spi' },
     ],
   },
   {

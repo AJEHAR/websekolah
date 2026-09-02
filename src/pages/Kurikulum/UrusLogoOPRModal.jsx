@@ -5,7 +5,7 @@ import { simpanOprLogo } from '../../hooks/useOprLogo.js'
 
 // Urus sehingga 3 logo yang dipaparkan sebaris di atas setiap cetakan OPR
 // (Gaya 1 & Gaya 2) - kosongkan semua untuk kembali ke logo sekolah lalai.
-export default function UrusLogoOPRModal({ open, logo, user, onClose, onSelesai }) {
+export default function UrusLogoOPRModal({ open, logo, seksyen, user, onClose, onSelesai }) {
   const [senarai, setSenarai] = useState(logo ?? [])
   const [memuatNaik, setMemuatNaik] = useState(false)
   const [menyimpan, setMenyimpan] = useState(false)
@@ -40,7 +40,7 @@ export default function UrusLogoOPRModal({ open, logo, user, onClose, onSelesai 
   async function simpan() {
     setMenyimpan(true)
     try {
-      await simpanOprLogo(senarai, user.uid)
+      await simpanOprLogo(seksyen, senarai, user.uid)
       onSelesai()
       onClose()
     } catch (err) {

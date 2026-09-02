@@ -51,13 +51,18 @@ function failKeBase64(fail) {
 
 // Muat naik fail ke Google Drive melalui Apps Script Web App.
 // subfolder: 'profil'/'kehadiran'/'unitUBKS' dll - untuk susun fail ikut kategori dalam Drive.
+// mampatkan: false untuk fail yang MESTI kekal PNG/latar telus (tandatangan
+// digital) - mampatan tukar ke JPEG (tiada sokongan alpha), latar telus
+// jadi HITAM PEKAT bila ditukar (bukan bug hias, betul-betul rosakkan
+// tandatangan). Fail tandatangan pun kecil (garis lukisan sahaja), tiada
+// faedah nak mampat pun.
 // Pulangkan { url, previewUrl, fileId, fileName }.
 //
 // KESELAMATAN: Guna Firebase ID Token pengguna semasa (bukan "rahsia" statik)
 // supaya Apps Script boleh sahkan permintaan ni betul-betul datang dari staff
 // yang log masuk sistem - lihat nota panjang dalam appscript/Code.gs untuk
 // sebab perubahan ni (rahsia statik lama terbukti terdedah dalam bundle JS awam).
-export async function muatNaikKeDrive(failAsal, subfolder) {
+export async function muatNaikKeDrive(failAsal, subfolder, { mampatkan = true } = {}) {
   if (!isDriveUploadConfigured) {
     throw new Error('Google Drive upload belum disetup (isi VITE_APPS_SCRIPT_URL dalam .env)')
   }
@@ -70,7 +75,7 @@ export async function muatNaikKeDrive(failAsal, subfolder) {
 
   const idToken = await auth.currentUser.getIdToken()
 
-  const fail = await mampatkanGambar(failAsal)
+  const fail = mampatkan ? await mampatkanGambar(failAsal) : failAsal
   const base64Data = await failKeBase64(fail)
 
   const controller = new AbortController()

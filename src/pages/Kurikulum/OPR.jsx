@@ -14,13 +14,18 @@ import UrusLatarBelakangOPRModal from './UrusLatarBelakangOPRModal.jsx'
 import UrusLogoOPRModal from './UrusLogoOPRModal.jsx'
 import ImportOPRModal from './ImportOPRModal.jsx'
 
-export default function OPR() {
+// OPR - komponen DIKONGSI antara sub-page KURI/HEM/KOKU (sama corak
+// dengan Surat/SPI, komponents/SuratSpi.jsx) - "seksyen" tentukan koleksi
+// data mana dipapar/disimpan. Data (laporan, tag Unit, latar belakang,
+// logo) TIDAK dikongsi antara seksyen - setiap bahagian/unit nak OPR
+// sendiri sepenuhnya berasingan.
+export default function OPR({ seksyen }) {
   const { user } = useOutletContext()
   const { konfirm } = useDialog()
-  const { senarai, loading, muatSemula } = useLaporanOPR()
-  const { senarai: senaraiUnit, muatSemula: muatSemulaUnit } = useOprUnit()
-  const { senarai: senaraiLatarBelakang, muatSemula: muatSemulaLatarBelakang } = useOprLatarBelakang()
-  const { logo, muatSemula: muatSemulaLogo } = useOprLogo()
+  const { senarai, loading, muatSemula } = useLaporanOPR(seksyen)
+  const { senarai: senaraiUnit, muatSemula: muatSemulaUnit } = useOprUnit(seksyen)
+  const { senarai: senaraiLatarBelakang, muatSemula: muatSemulaLatarBelakang } = useOprLatarBelakang(seksyen)
+  const { logo, muatSemula: muatSemulaLogo } = useOprLogo(seksyen)
   const [dataCetak, setDataCetak] = useCetak()
 
   const [modeForm, setModeForm] = useState(false)
@@ -35,10 +40,6 @@ export default function OPR() {
   const disenarai = senarai.filter((r) =>
     `${r.nama ?? ''} ${r.tempat ?? ''} ${r.tarikh ?? ''} ${r.unit ?? ''}`.toLowerCase().includes(carian.toLowerCase())
   )
-
-  function kiraIkutUnit(kataKunci) {
-    return senarai.filter((r) => (r.unit ?? '').toLowerCase().includes(kataKunci)).length
-  }
 
   function bukaTambah() {
     setRekodEdit(null)
@@ -56,7 +57,7 @@ export default function OPR() {
       if (rekodEdit) {
         await kemaskiniLaporanOPR(rekodEdit.id, data, user.uid)
       } else {
-        await tambahLaporanOPR(data, user.uid)
+        await tambahLaporanOPR(seksyen, data, user.uid)
       }
       setModeForm(false)
       setRekodEdit(null)
@@ -90,23 +91,9 @@ export default function OPR() {
 
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-        <div className="p-3 rounded-card bg-surface border border-border text-center">
-          <p className="text-lg font-bold text-ink">{senarai.length}</p>
-          <p className="text-[10px] text-inkmuted">Jumlah Laporan</p>
-        </div>
-        <div className="p-3 rounded-card bg-surface border border-border text-center">
-          <p className="text-lg font-bold text-ink">{kiraIkutUnit('kuri')}</p>
-          <p className="text-[10px] text-inkmuted">KURI</p>
-        </div>
-        <div className="p-3 rounded-card bg-surface border border-border text-center">
-          <p className="text-lg font-bold text-ink">{kiraIkutUnit('hem')}</p>
-          <p className="text-[10px] text-inkmuted">HEM</p>
-        </div>
-        <div className="p-3 rounded-card bg-surface border border-border text-center">
-          <p className="text-lg font-bold text-ink">{kiraIkutUnit('koku')}</p>
-          <p className="text-[10px] text-inkmuted">KOKU</p>
-        </div>
+      <div className="p-3 rounded-card bg-surface border border-border text-center w-fit mb-4">
+        <p className="text-lg font-bold text-ink">{senarai.length}</p>
+        <p className="text-[10px] text-inkmuted">Jumlah Laporan</p>
       </div>
 
       <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -165,10 +152,10 @@ export default function OPR() {
         </div>
       )}
 
-      <UrusUnitOPRModal open={tunjukUnit} senarai={senaraiUnit} user={user} onClose={() => setTunjukUnit(false)} onSelesai={muatSemulaUnit} />
-      <UrusLatarBelakangOPRModal open={tunjukLatar} senarai={senaraiLatarBelakang} user={user} onClose={() => setTunjukLatar(false)} onSelesai={muatSemulaLatarBelakang} />
-      <UrusLogoOPRModal open={tunjukLogo} logo={logo} user={user} onClose={() => setTunjukLogo(false)} onSelesai={muatSemulaLogo} />
-      <ImportOPRModal open={tunjukImport} onClose={() => setTunjukImport(false)} user={user} onSelesai={muatSemula} />
+      <UrusUnitOPRModal open={tunjukUnit} senarai={senaraiUnit} seksyen={seksyen} user={user} onClose={() => setTunjukUnit(false)} onSelesai={muatSemulaUnit} />
+      <UrusLatarBelakangOPRModal open={tunjukLatar} senarai={senaraiLatarBelakang} seksyen={seksyen} user={user} onClose={() => setTunjukLatar(false)} onSelesai={muatSemulaLatarBelakang} />
+      <UrusLogoOPRModal open={tunjukLogo} logo={logo} seksyen={seksyen} user={user} onClose={() => setTunjukLogo(false)} onSelesai={muatSemulaLogo} />
+      <ImportOPRModal open={tunjukImport} seksyen={seksyen} onClose={() => setTunjukImport(false)} user={user} onSelesai={muatSemula} />
 
       {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} />}
     </div>

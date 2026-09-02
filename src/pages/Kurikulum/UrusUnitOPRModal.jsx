@@ -3,7 +3,7 @@ import { X, Plus, Trash2 } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { tambahOprUnit, padamOprUnit } from '../../hooks/useOprUnit.js'
 
-export default function UrusUnitOPRModal({ open, senarai, user, onClose, onSelesai }) {
+export default function UrusUnitOPRModal({ open, senarai, seksyen, user, onClose, onSelesai }) {
   const { konfirm } = useDialog()
   const [namaBaru, setNamaBaru] = useState('')
   const [menambah, setMenambah] = useState(false)
@@ -14,7 +14,7 @@ export default function UrusUnitOPRModal({ open, senarai, user, onClose, onSeles
     if (!namaBaru.trim()) return
     setMenambah(true)
     try {
-      await tambahOprUnit(namaBaru.trim(), user.uid)
+      await tambahOprUnit(seksyen, namaBaru.trim(), user.uid)
       setNamaBaru('')
       onSelesai()
     } finally {

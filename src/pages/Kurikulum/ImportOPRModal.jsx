@@ -28,7 +28,7 @@ const BARIS_CONTOH = [[
   '[]', '', '8:00 pagi - 5:00 petang',
 ]]
 
-export default function ImportOPRModal({ open, onClose, user, onSelesai }) {
+export default function ImportOPRModal({ open, seksyen, onClose, user, onSelesai }) {
   const [langkah, setLangkah] = useState('pilih')
   const [baris, setBaris] = useState([])
   const [ralat, setRalat] = useState(null)
@@ -67,7 +67,7 @@ export default function ImportOPRModal({ open, onClose, user, onSelesai }) {
     setLangkah('mengimport')
     setRalat(null)
     try {
-      const hasil = await importPukalLaporanOPR(baris, user.uid, (selesai, jumlah) => setProgres({ selesai, jumlah }))
+      const hasil = await importPukalLaporanOPR(seksyen, baris, user.uid, (selesai, jumlah) => setProgres({ selesai, jumlah }))
       setHasilAkhir(hasil)
       setLangkah('selesai')
       onSelesai?.()

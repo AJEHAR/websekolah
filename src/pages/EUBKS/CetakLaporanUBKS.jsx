@@ -5,7 +5,7 @@ const BIRU = '#1B0FB0'
 
 function KotakKrim({ children, className = '' }) {
   return (
-    <div className={`border border-black text-center py-2.5 px-2 overflow-hidden ${className}`} style={{ backgroundColor: KRIM }}>
+    <div className={`flex-1 border border-black text-center py-2.5 px-2 overflow-hidden ${className}`} style={{ backgroundColor: KRIM }}>
       <p className="text-xs font-bold text-black">{children}</p>
     </div>
   )
@@ -24,10 +24,25 @@ function BarisJadual({ label, value }) {
   )
 }
 
-function GambarSlot({ src, flex }) {
+function GambarSlot({ src }) {
   return (
-    <div className="border-2 border-black overflow-hidden" style={{ flex }}>
+    <div className="border-2 border-black overflow-hidden flex-1">
       {src ? <img src={src} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-[#EAF3FB]" />}
+    </div>
+  )
+}
+
+function BlokTandatanganCetak({ label, ttdUrl, nama }) {
+  return (
+    <div className="flex-1">
+      <div style={{ backgroundColor: KRIM }} className="text-center py-2 border-b border-black"><p className="text-xs font-bold text-black">{label}</p></div>
+      {/* Templat TETAP: (tandatangan) di atas, nama (kecil) di bawah -
+          DUA-DUA sentiasa dipaparkan sekali (bukan salah satu sahaja) -
+          staff perlu nampak nama walaupun dah ada gambar tandatangan. */}
+      <div className="h-12 flex items-center justify-center p-1">
+        {ttdUrl && <img src={ttdUrl} alt="" className="h-full object-contain" />}
+      </div>
+      <p className="text-[10px] text-black text-center pb-1.5 truncate px-1">{nama || '\u00A0'}</p>
     </div>
   )
 }
@@ -94,32 +109,17 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
             </div>
 
             <div className="w-[110px] shrink-0 flex flex-col gap-2">
-              <GambarSlot src={gambar[0]} flex={3} />
-              <GambarSlot src={gambar[1]} flex={1.6} />
-              <GambarSlot src={gambar[2]} flex={1.5} />
-              <GambarSlot src={gambar[3]} flex={1.5} />
+              <GambarSlot src={gambar[0]} />
+              <GambarSlot src={gambar[1]} />
+              <GambarSlot src={gambar[2]} />
+              <GambarSlot src={gambar[3]} />
             </div>
           </div>
 
           <div className="flex border border-black divide-x divide-black mt-3 shrink-0">
-            <div className="flex-1">
-              <div style={{ backgroundColor: KRIM }} className="text-center py-2 border-b border-black"><p className="text-xs font-bold text-black">Tandatangan Setiausaha</p></div>
-              <div className="h-14 flex items-center justify-center p-1">
-                {data.ttdSetiausahaUrl ? <img src={data.ttdSetiausahaUrl} alt="" className="h-full object-contain" /> : <span className="text-[10px] text-black">{data.namaSetiausaha}</span>}
-              </div>
-            </div>
-            <div className="flex-1">
-              <div style={{ backgroundColor: KRIM }} className="text-center py-2 border-b border-black"><p className="text-xs font-bold text-black">Tandatangan Guru Penasihat</p></div>
-              <div className="h-14 flex items-center justify-center p-1">
-                {data.ttdGuruUrl ? <img src={data.ttdGuruUrl} alt="" className="h-full object-contain" /> : <span className="text-[10px] text-black">{data.namaGuruTtd}</span>}
-              </div>
-            </div>
-            <div className="flex-1">
-              <div style={{ backgroundColor: KRIM }} className="text-center py-2 border-b border-black"><p className="text-xs font-bold text-black">Tandatangan GPK Kokurikulum</p></div>
-              <div className="h-14 flex items-center justify-center p-1">
-                {data.ttdGPKUrl ? <img src={data.ttdGPKUrl} alt="" className="h-full object-contain" /> : <span className="text-[10px] text-black">{data.namaGPK}</span>}
-              </div>
-            </div>
+            <BlokTandatanganCetak label="Tandatangan Setiausaha" ttdUrl={data.ttdSetiausahaUrl} nama={data.namaSetiausaha} />
+            <BlokTandatanganCetak label="Tandatangan Guru Penasihat" ttdUrl={data.ttdGuruUrl} nama={data.namaGuruTtd} />
+            <BlokTandatanganCetak label="Tandatangan GPK Kokurikulum" ttdUrl={data.ttdGPKUrl} nama={data.namaGPK} />
           </div>
         </div>
       </div>

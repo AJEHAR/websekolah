@@ -113,7 +113,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     setMemuatNaikTtd(true)
     try {
       const fail = new File([blob], `ttd-${kunci}.png`, { type: 'image/png' })
-      const hasil = await muatNaikKeDrive(fail, 'opr')
+      const hasil = await muatNaikKeDrive(fail, 'opr', { mampatkan: false })
       u(kunci === 'disediakan' ? 'tandaTanganDisediakanUrl' : 'tandaTanganDisahkanUrl', hasil.url)
     } catch (err) {
       setRalat(err.message || 'Gagal muat naik tandatangan.')

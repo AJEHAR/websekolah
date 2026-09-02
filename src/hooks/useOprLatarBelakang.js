@@ -1,29 +1,32 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'oprLatarBelakang'
 
-export function useOprLatarBelakang() {
+// Latar belakang cetakan OPR - BERASINGAN ikut seksyen (setiap bahagian
+// boleh ada tema/latar sendiri untuk OPR dia, tak dikongsi).
+export function useOprLatarBelakang(seksyen) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)
 
   const muatSemula = useCallback(async () => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !seksyen) {
       setSenarai([])
       setLoading(false)
       return
     }
     setLoading(true)
     try {
-      const snap = await getDocs(collection(db, KOLEKSI))
+      const q = query(collection(db, KOLEKSI), where('seksyen', '==', seksyen))
+      const snap = await getDocs(q)
       const semua = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       semua.sort((a, b) => (a.namaTema ?? '').localeCompare(b.namaTema ?? ''))
       setSenarai(semua)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [seksyen])
 
   useEffect(() => {
     muatSemula()
@@ -32,9 +35,9 @@ export function useOprLatarBelakang() {
   return { senarai, loading, muatSemula }
 }
 
-export async function tambahOprLatarBelakang(namaTema, gambarUrl, uid) {
+export async function tambahOprLatarBelakang(seksyen, namaTema, gambarUrl, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
-  await addDoc(collection(db, KOLEKSI), { namaTema, gambarUrl, createdAt: serverTimestamp(), updatedBy: uid })
+  await addDoc(collection(db, KOLEKSI), { namaTema, gambarUrl, seksyen, createdAt: serverTimestamp(), updatedBy: uid })
 }
 
 export async function padamOprLatarBelakang(id) {

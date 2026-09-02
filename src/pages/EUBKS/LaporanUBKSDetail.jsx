@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useOutletContext, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, PenLine, Move, Printer, X } from 'lucide-react'
+import { ArrowLeft, Plus, PenLine, Move, Printer, X, RotateCcw } from 'lucide-react'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { usePikebm } from '../../hooks/usePikebm.js'
-import { useUnitUBKSSatu } from '../../hooks/useUnitUBKS.js'
+import { useUnitUBKSSatu, kemaskiniUnit } from '../../hooks/useUnitUBKS.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { muatkanLaporanUBKS, simpanLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
 import { muatkanPerancangan } from '../../hooks/usePerancanganUBKS.js'
+import { senaraiGuru, cariTtdTersimpan, upsertTtdTersimpan } from './unitHelpers.js'
 import PemotongGambarModal from '../Kurikulum/PemotongGambarModal.jsx'
 import TandatanganModal from '../Kurikulum/TandatanganModal.jsx'
 import CetakLaporanUBKS from './CetakLaporanUBKS.jsx'
@@ -58,6 +59,56 @@ function BlokTtd({ label, nama, ttdUrl, onNama, onTandatangan, onPadamTtd }) {
   )
 }
 
+// Blok tandatangan dengan BANK per-unit - dropdown nama (dari Guru
+// Penasihat/Jawatankuasa unit ni, BUKAN semua staff sekolah - relevan
+// sahaja) + tandatangan tersimpan automatik terpakai bila nama sepadan
+// (staff tak perlu lukis berulang). Kalau guru biasa tak hadir, staff
+// tukar terus ke nama lain dalam dropdown - tandatangan berbeza ikut
+// nama dipilih.
+function BlokTtdBank({ label, senaraiNama, nama, ttdUrl, adaTersimpan, onPilihNama, onTandatangan, onGunaTersimpan, onPadamTtd }) {
+  const [modLain, setModLain] = useState(false)
+  return (
+    <div>
+      <p className="text-xs font-medium text-ink mb-1.5">{label}</p>
+      {ttdUrl ? (
+        <div className="relative h-16 rounded-card border border-border bg-white flex items-center justify-center mb-1.5">
+          <img src={ttdUrl} alt="Tandatangan" className="max-h-full max-w-full object-contain" />
+          <button type="button" onClick={onPadamTtd} className="absolute top-1 right-1 text-[10px] text-brand-red font-semibold">Padam</button>
+        </div>
+      ) : (
+        <div className="flex gap-1.5 mb-1.5">
+          <button type="button" onClick={onTandatangan} className="flex-1 h-10 rounded-card border border-dashed border-border text-xs font-semibold text-inkmuted flex items-center justify-center gap-1.5">
+            <PenLine size={13} /> Tandatangan
+          </button>
+          {adaTersimpan && (
+            <button type="button" onClick={onGunaTersimpan} title="Guna tandatangan tersimpan" className="h-10 w-10 rounded-card border border-border text-inkmuted flex items-center justify-center shrink-0">
+              <RotateCcw size={14} />
+            </button>
+          )}
+        </div>
+      )}
+      {modLain || (nama && !senaraiNama.includes(nama)) ? (
+        <input
+          autoFocus={modLain}
+          type="text"
+          value={nama}
+          onChange={(e) => onPilihNama(e.target.value)}
+          placeholder="Taip nama…"
+          className="w-full h-9 px-2.5 rounded-card border border-border bg-surface text-xs"
+        />
+      ) : (
+        <select value={nama} onChange={(e) => (e.target.value === '__lain' ? setModLain(true) : onPilihNama(e.target.value))} className="w-full h-9 px-2 rounded-card border border-border bg-surface text-xs">
+          <option value="">-- Pilih nama --</option>
+          {senaraiNama.map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+          <option value="__lain">Lain-lain (taip nama)…</option>
+        </select>
+      )}
+    </div>
+  )
+}
+
 // Halaman PENUH (bukan popup lagi) untuk SATU Laporan Aktiviti Perjumpaan
 // - subpage /eubks/laporan-ubks/:unitId/:perjumpaan. Borang panjang ni
 // jauh lebih selesa jadi halaman sendiri (scroll biasa, boleh bookmark/
@@ -102,15 +153,18 @@ export default function LaporanUBKSDetail() {
         // [{nama, tahunDarjah}] - gabung jadi teks "Nama (Tahun X), Nama2"
         // untuk medan Laporan (teks bebas, boleh edit); nama guru PERTAMA
         // sahaja dijadikan lalai tandatangan (staff boleh tukar kalau perlu).
-        const gp = unit.guruPenasihat
-        const senaraiGpArr = !gp ? [] : typeof gp === 'string' ? [{ nama: gp, tahunDarjah: '' }] : gp
+        const senaraiGpArr = senaraiGuru(unit)
         const gpTeks = senaraiGpArr.map((g) => (g.tahunDarjah ? `${g.nama} (${g.tahunDarjah})` : g.nama)).join(', ')
+        const namaGuruLalai = senaraiGpArr[0]?.nama || ''
+        const namaSetiausahaLalai = setiausaha?.nama || ''
         setData({
           ...MEDAN_KOSONG,
           tarikh: slotPerancangan?.tarikh || '',
           guruPenasihat: gpTeks,
-          namaGuruTtd: senaraiGpArr[0]?.nama || '',
-          namaSetiausaha: setiausaha?.nama || '',
+          namaGuruTtd: namaGuruLalai,
+          ttdGuruUrl: cariTtdTersimpan(unit, namaGuruLalai) || '',
+          namaSetiausaha: namaSetiausahaLalai,
+          ttdSetiausahaUrl: cariTtdTersimpan(unit, namaSetiausahaLalai) || '',
         })
       }
       setMemuatkan(false)
@@ -172,12 +226,33 @@ export default function LaporanUBKSDetail() {
     setTunjukTtd(null)
     try {
       const fail = new File([blob], `ttd-${kunci}.png`, { type: 'image/png' })
-      const hasil = await muatNaikKeDrive(fail, 'laporanUbks')
+      const hasil = await muatNaikKeDrive(fail, 'laporanUbks', { mampatkan: false })
       const medan = { setiausaha: 'ttdSetiausahaUrl', guru: 'ttdGuruUrl', gpk: 'ttdGPKUrl' }[kunci]
       u(medan, hasil.url)
+
+      // Setiausaha & Guru Penasihat - simpan ke BANK tandatangan unit ni
+      // automatik (bukan GPK Kokurikulum, sebab dia bukan "orang unit ni"
+      // - tandatangan dia manual setiap kali, macam sebelum ni).
+      if (kunci === 'setiausaha' || kunci === 'guru') {
+        const namaMedan = kunci === 'setiausaha' ? 'namaSetiausaha' : 'namaGuruTtd'
+        const namaSemasa = data[namaMedan]
+        if (namaSemasa?.trim()) {
+          await kemaskiniUnit(unit.id, { tandaTanganTersimpan: upsertTtdTersimpan(unit, namaSemasa.trim(), hasil.url) }, user.uid)
+        }
+      }
     } catch (err) {
       setRalat(err.message || 'Gagal muat naik tandatangan.')
     }
+  }
+
+  function pilihNamaGuru(namaBaru) {
+    u('namaGuruTtd', namaBaru)
+    u('ttdGuruUrl', cariTtdTersimpan(unit, namaBaru) || '')
+  }
+
+  function pilihNamaSetiausaha(namaBaru) {
+    u('namaSetiausaha', namaBaru)
+    u('ttdSetiausahaUrl', cariTtdTersimpan(unit, namaBaru) || '')
   }
 
   async function simpan() {
@@ -195,6 +270,9 @@ export default function LaporanUBKSDetail() {
   function cetak() {
     setDataCetak({ data, unit, perjumpaan })
   }
+
+  const namaGuruPilihan = unit ? senaraiGuru(unit).map((g) => g.nama) : []
+  const namaSetiausahaPilihan = unit ? (unit.ahli ?? []).filter((a) => a.jawatan?.toLowerCase().includes('setiausaha')).map((a) => a.nama) : []
 
   if (loadingUnit || memuatkan) return <p className="text-sm text-inkmuted">Memuatkan…</p>
   if (!unit) {
@@ -293,13 +371,34 @@ export default function LaporanUBKSDetail() {
         <div>
           <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">Tandatangan</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <BlokTtd label="Setiausaha (auto dari Jawatankuasa)" nama={data.namaSetiausaha} ttdUrl={data.ttdSetiausahaUrl} onNama={(v) => u('namaSetiausaha', v)} onTandatangan={() => setTunjukTtd('setiausaha')} onPadamTtd={() => u('ttdSetiausahaUrl', '')} />
-            <BlokTtd label="Guru Penasihat" nama={data.namaGuruTtd} ttdUrl={data.ttdGuruUrl} onNama={(v) => u('namaGuruTtd', v)} onTandatangan={() => setTunjukTtd('guru')} onPadamTtd={() => u('ttdGuruUrl', '')} />
+            <BlokTtdBank
+              label="Setiausaha (dari Jawatankuasa)"
+              senaraiNama={namaSetiausahaPilihan}
+              nama={data.namaSetiausaha}
+              ttdUrl={data.ttdSetiausahaUrl}
+              adaTersimpan={Boolean(cariTtdTersimpan(unit, data.namaSetiausaha))}
+              onPilihNama={pilihNamaSetiausaha}
+              onTandatangan={() => setTunjukTtd('setiausaha')}
+              onGunaTersimpan={() => u('ttdSetiausahaUrl', cariTtdTersimpan(unit, data.namaSetiausaha) || '')}
+              onPadamTtd={() => u('ttdSetiausahaUrl', '')}
+            />
+            <BlokTtdBank
+              label="Guru Penasihat"
+              senaraiNama={namaGuruPilihan}
+              nama={data.namaGuruTtd}
+              ttdUrl={data.ttdGuruUrl}
+              adaTersimpan={Boolean(cariTtdTersimpan(unit, data.namaGuruTtd))}
+              onPilihNama={pilihNamaGuru}
+              onTandatangan={() => setTunjukTtd('guru')}
+              onGunaTersimpan={() => u('ttdGuruUrl', cariTtdTersimpan(unit, data.namaGuruTtd) || '')}
+              onPadamTtd={() => u('ttdGuruUrl', '')}
+            />
             <BlokTtd label="GPK Kokurikulum" nama={data.namaGPK} ttdUrl={data.ttdGPKUrl} onNama={(v) => u('namaGPK', v)} onTandatangan={() => setTunjukTtd('gpk')} onPadamTtd={() => u('ttdGPKUrl', '')} />
           </div>
           {!data.namaSetiausaha && (
             <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Setiausaha dilantik lagi untuk unit ni - pergi "Jawatankuasa UBKS" untuk lantik, atau taip nama terus.</p>
           )}
+          <p className="text-[11px] text-inkmuted mt-2">💡 Guru tak hadir? Tukar terus nama dalam dropdown Guru Penasihat - tandatangan tersimpan (kalau ada) terus terpakai.</p>
         </div>
 
         {ralat && <p className="text-sm text-brand-red">{ralat}</p>}

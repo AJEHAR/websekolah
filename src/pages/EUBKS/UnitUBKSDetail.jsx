@@ -8,6 +8,7 @@ import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { useUnitUBKSSatu, kemaskiniUnit, padamUnit } from '../../hooks/useUnitUBKS.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { useDialog } from '../../context/DialogContext.jsx'
+import { senaraiGuru } from './unitHelpers.js'
 import ProfilMuridUBKSModal from './ProfilMuridUBKSModal.jsx'
 
 // Toast kecil "Tersimpan" - maklum balik ringkas lepas SETIAP tindakan
@@ -75,14 +76,9 @@ function BarisGuru({ guru, isAdmin, onUbahTahunDarjah, onBuang }) {
 
 // unit.guruPenasihat rekod LAMA simpan STRING tunggal (ciri asal sebelum
 // ni) - rekod BARU simpan ARRAY [{nama, tahunDarjah}] (sokong ramai guru +
-// tahun/darjah "incharge" setiap seorang). Fungsi ni normalize dua-dua
-// bentuk supaya UI selalu terima array, tak kira rekod lama/baru.
-function senaraiGuru(unit) {
-  const g = unit?.guruPenasihat
-  if (!g) return []
-  if (typeof g === 'string') return g.trim() ? [{ nama: g.trim(), tahunDarjah: '' }] : []
-  return g
-}
+// tahun/darjah "incharge" setiap seorang). Fungsi normalize dikongsi -
+// lihat unitHelpers.js.
+
 
 // Halaman detail SATU unit UBKS. Prinsip reka bentuk: "satu tindakan,
 // satu simpan" (Maklumat & Ahli simpan berasingan, terus ke Firestore

@@ -196,6 +196,7 @@ export default function App() {
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
             <Route path="kehadiran-rmt" element={<KehadiranRMT />} />
             <Route path="surat-spi" element={<SuratSpi seksyen="hem" />} />
+            <Route path="opr" element={<OPR seksyen="hem" />} />
           </Route>
 
           {/* URL lama "/ebanci/*" (seksyen dah digabung ke HEM) -
@@ -214,6 +215,8 @@ export default function App() {
             <Route path="laporan-ubks" element={<LaporanUBKS />} />
             <Route path="laporan-ubks/:unitId/:perjumpaan" element={<LaporanUBKSDetail />} />
             <Route path="perancangan-ubks" element={<PerancanganUBKS />} />
+            <Route path="opr" element={<OPR seksyen="koku" />} />
+            <Route path="surat-spi" element={<SuratSpi seksyen="koku" />} />
           </Route>
 
           {/* KURI - hub dengan akses pantas, + sub-page (pengisian ditambah kemudian) */}
@@ -226,7 +229,7 @@ export default function App() {
             <Route path="surat-spi" element={<SuratSpi seksyen="kurikulum" />} />
             {/* URL lama "koleksi-pekeliling" - redirect supaya bookmark sedia ada tak terus mati. */}
             <Route path="koleksi-pekeliling" element={<Navigate to="/kurikulum/surat-spi" replace />} />
-            <Route path="opr" element={<OPR />} />
+            <Route path="opr" element={<OPR seksyen="kurikulum" />} />
           </Route>
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}

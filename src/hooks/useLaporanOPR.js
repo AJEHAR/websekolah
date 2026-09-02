@@ -1,29 +1,34 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where, writeBatch } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'laporanOPR'
 
-export function useLaporanOPR() {
+// Data BERASINGAN ikut seksyen ('kurikulum' | 'hem' | 'kokurikulum') -
+// setiap page OPR (KURI/HEM/KOKU) cuma tapis & papar laporan seksyen dia
+// sendiri, sama corak dengan Surat/SPI (useSuratSpi.js). TIDAK dikongsi -
+// setiap unit/bahagian nak OPR sendiri, berasingan sepenuhnya.
+export function useLaporanOPR(seksyen) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)
 
   const muatSemula = useCallback(async () => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !seksyen) {
       setSenarai([])
       setLoading(false)
       return
     }
     setLoading(true)
     try {
-      const snap = await getDocs(collection(db, KOLEKSI))
+      const q = query(collection(db, KOLEKSI), where('seksyen', '==', seksyen))
+      const snap = await getDocs(q)
       const semua = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       semua.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0))
       setSenarai(semua)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [seksyen])
 
   useEffect(() => {
     muatSemula()
@@ -38,10 +43,11 @@ export async function dapatkanLaporanOPR(id) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null
 }
 
-export async function tambahLaporanOPR(data, uid) {
+export async function tambahLaporanOPR(seksyen, data, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   const ref = await addDoc(collection(db, KOLEKSI), {
     ...data,
+    seksyen,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     updatedBy: uid,
@@ -63,7 +69,7 @@ export async function padamLaporanOPR(id) {
 // gambar/tandatangan KEKAL sebagai URL Google Drive sedia ada (tak perlu
 // muat naik semula - fail asal kekal di Drive yang sama, cuma pautan
 // disalin terus ke rekod Firestore baharu).
-export async function importPukalLaporanOPR(baris, uid, onProgress) {
+export async function importPukalLaporanOPR(seksyen, baris, uid, onProgress) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   const SAIZ_KELOMPOK = 400
   let selesai = 0
@@ -72,7 +78,7 @@ export async function importPukalLaporanOPR(baris, uid, onProgress) {
     const batch = writeBatch(db)
     kumpulan.forEach((b) => {
       const ref = doc(collection(db, KOLEKSI))
-      batch.set(ref, { ...b.data, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: uid })
+      batch.set(ref, { ...b.data, seksyen, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: uid })
     })
     await batch.commit()
     selesai += kumpulan.length

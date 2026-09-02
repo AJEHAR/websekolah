@@ -1,29 +1,33 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'oprUnit'
 
-export function useOprUnit() {
+// Tag "Unit" dalam laporan OPR - BERASINGAN ikut seksyen (sama sebab
+// dengan useLaporanOPR.js - setiap bahagian ada konsep "Unit" tersendiri,
+// tak sepadan/berkaitan antara KURI/HEM/KOKU).
+export function useOprUnit(seksyen) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)
 
   const muatSemula = useCallback(async () => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !seksyen) {
       setSenarai([])
       setLoading(false)
       return
     }
     setLoading(true)
     try {
-      const snap = await getDocs(collection(db, KOLEKSI))
+      const q = query(collection(db, KOLEKSI), where('seksyen', '==', seksyen))
+      const snap = await getDocs(q)
       const semua = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
       semua.sort((a, b) => (a.namaUnit ?? '').localeCompare(b.namaUnit ?? ''))
       setSenarai(semua)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [seksyen])
 
   useEffect(() => {
     muatSemula()
@@ -32,9 +36,9 @@ export function useOprUnit() {
   return { senarai, loading, muatSemula }
 }
 
-export async function tambahOprUnit(namaUnit, uid) {
+export async function tambahOprUnit(seksyen, namaUnit, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
-  await addDoc(collection(db, KOLEKSI), { namaUnit, createdAt: serverTimestamp(), updatedBy: uid })
+  await addDoc(collection(db, KOLEKSI), { namaUnit, seksyen, createdAt: serverTimestamp(), updatedBy: uid })
 }
 
 export async function padamOprUnit(id) {

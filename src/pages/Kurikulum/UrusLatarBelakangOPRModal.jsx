@@ -4,7 +4,7 @@ import { useDialog } from '../../context/DialogContext.jsx'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { tambahOprLatarBelakang, padamOprLatarBelakang } from '../../hooks/useOprLatarBelakang.js'
 
-export default function UrusLatarBelakangOPRModal({ open, senarai, user, onClose, onSelesai }) {
+export default function UrusLatarBelakangOPRModal({ open, senarai, seksyen, user, onClose, onSelesai }) {
   const { konfirm } = useDialog()
   const [namaBaru, setNamaBaru] = useState('')
   const [fail, setFail] = useState(null)
@@ -20,7 +20,7 @@ export default function UrusLatarBelakangOPRModal({ open, senarai, user, onClose
     setMemuatNaik(true)
     try {
       const hasil = await muatNaikKeDrive(fail, 'opr')
-      await tambahOprLatarBelakang(namaBaru.trim(), hasil.url, user.uid)
+      await tambahOprLatarBelakang(seksyen, namaBaru.trim(), hasil.url, user.uid)
       setNamaBaru('')
       setFail(null)
       onSelesai()

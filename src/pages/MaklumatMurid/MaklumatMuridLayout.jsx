@@ -13,6 +13,7 @@ const TAJUK_SUBPAGE = {
   '/maklumat-murid/kehadiran-murid': 'Kehadiran Murid',
   '/maklumat-murid/kehadiran-rmt': 'Kehadiran RMT',
   '/maklumat-murid/surat-spi': 'Surat/SPI',
+  '/maklumat-murid/opr': 'OPR',
 }
 
 export default function MaklumatMuridLayout() {
