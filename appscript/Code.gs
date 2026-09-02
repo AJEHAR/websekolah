@@ -131,6 +131,10 @@ function doPost(e) {
       return kendalikanJanaAILaporanUBKS(data)
     }
 
+    if (data.action === 'generateAktivitiSivik') {
+      return kendalikanJanaAyatSivik(data)
+    }
+
     if (!data.base64Data || !data.fileName) {
       return jsonResponse({ error: 'Data fail tidak lengkap' })
     }
@@ -296,16 +300,16 @@ function kendalikanJanaAILaporanUBKS(data) {
     '- Bil. Ahli Hadir: ' + (d.bilAhliHadir || '(tiada maklumat)') + '\n' +
     '- Aktiviti PIKeBM: ' + (d.pikebmTajuk || '(tiada)') + ' - ' + (d.pikebmObjektif || '') + '\n\n' +
     'Apa yang dirancang/berlaku untuk perjumpaan ni (staff pilih/taip):\n' + (d.perancangan || '(tiada maklumat spesifik - anggar aktiviti biasa unit ni)') + '\n\n' +
-    'SENARAI TAJUK SIVIK DIBENARKAN (pilih TEPAT 2 sahaja dari senarai ni, JANGAN cipta tajuk baru):\n' +
+    'SENARAI TAJUK SIVIK DIBENARKAN (pilih TEPAT 1 sahaja dari senarai ni, JANGAN cipta tajuk baru):\n' +
     senaraiSivikTeks + '\n\n' +
     'ARAHAN:\n' +
     '1. "laporanAktiviti" - huraikan apa yang berlaku sepanjang perjumpaan (berdasarkan perancangan di atas, anggap ia berjalan seperti dirancang).\n' +
     '2. "refleksi" - penilaian ringkas hasil/keberkesanan perjumpaan.\n' +
-    '3. Pilih 2 tajuk PALING SESUAI dari senarai Sivik di atas (nama tajuk MESTI SAMA PERSIS dengan dalam senarai), tulis aktiviti sivik untuk setiap satu berdasarkan konteks perjumpaan ni (bukan salin terus cadangan asal, sesuaikan).\n' +
-    '4. SETIAP medan teks (laporanAktiviti, refleksi, aktiviti setiap sivik) MAKSIMUM 3 bullet, format "1. [ayat]\\n2. [ayat]\\n3. [ayat]" (boleh kurang 3, jangan lebih).\n' +
+    '3. Pilih 1 tajuk PALING SESUAI dari senarai Sivik di atas (nama tajuk MESTI SAMA PERSIS dengan dalam senarai), tulis aktiviti sivik untuk tajuk tu berdasarkan konteks perjumpaan ni (bukan salin terus cadangan asal, sesuaikan).\n' +
+    '4. SETIAP medan teks (laporanAktiviti, refleksi, aktiviti sivik) MAKSIMUM 3 bullet, format "1. [ayat]\\n2. [ayat]\\n3. [ayat]" (boleh kurang 3, jangan lebih).\n' +
     '5. Bahasa Melayu formal, ayat pendek dan jelas.\n\n' +
     'OUTPUT - format JSON SAHAJA:\n' +
-    '{"laporanAktiviti":"...","refleksi":"...","sivik":[{"nilai":"...","tajuk":"...","aktiviti":"..."},{"nilai":"...","tajuk":"...","aktiviti":"..."}]}'
+    '{"laporanAktiviti":"...","refleksi":"...","sivik":[{"nilai":"...","tajuk":"...","aktiviti":"..."}]}'
 
   try {
     const res = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -341,7 +345,7 @@ function kendalikanJanaAILaporanUBKS(data) {
       return jsonResponse({ error: 'Ralat format respons AI. Sila cuba lagi.' })
     }
 
-    const sivik = Array.isArray(hasil.sivik) ? hasil.sivik.slice(0, 2) : []
+    const sivik = Array.isArray(hasil.sivik) ? hasil.sivik.slice(0, 1) : []
     return jsonResponse({
       laporanAktiviti: hasil.laporanAktiviti || '',
       refleksi: hasil.refleksi || '',
@@ -352,7 +356,64 @@ function kendalikanJanaAILaporanUBKS(data) {
   }
 }
 
-// Sahkan Firebase ID Token terus dengan Google guna Identity Toolkit REST API
+// AI KECIL - tulis SATU ayat Aktiviti sahaja untuk Tajuk Sivik yang staff
+// DAH PILIH sendiri (dari dropdown senarai rasmi) - AI tak pilih tajuk
+// langsung di sini, cuma bantu perhalusi/tulis ayat aktiviti sepadan.
+function kendalikanJanaAyatSivik(data) {
+  if (!GROQ_API_KEY) {
+    return jsonResponse({ error: 'AI belum disetup - GROQ_API_KEY tiada dalam Script Properties. Hubungi admin.' })
+  }
+
+  const d = data.payload || {}
+  const prompt =
+    'Anda pembantu penulisan laporan kokurikulum sekolah, Bahasa Melayu formal.\n\n' +
+    'Unit: ' + (d.unit || '(tiada)') + '\n' +
+    'Nilai Sivik: ' + (d.nilai || '(tiada)') + '\n' +
+    'Tajuk Sivik: ' + (d.tajuk || '(tiada)') + '\n' +
+    'Cadangan aktiviti asal (rujukan rasmi, sesuaikan bukan salin): ' + (d.cadanganAsal || '(tiada)') + '\n' +
+    'Konteks Laporan Aktiviti perjumpaan ni (kalau ada): ' + (d.laporanAktiviti || '(tiada)') + '\n\n' +
+    'ARAHAN: Tulis SATU medan "aktiviti" sahaja - huraikan aktiviti sivik untuk Tajuk di atas, disesuaikan dengan konteks perjumpaan (kalau konteks ada). MAKSIMUM 3 bullet, format "1. [ayat]\\n2. [ayat]\\n3. [ayat]" (boleh kurang 3). Bahasa Melayu formal, ayat pendek.\n\n' +
+    'OUTPUT - format JSON SAHAJA: {"aktiviti":"..."}'
+
+  try {
+    const res = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + GROQ_API_KEY },
+      payload: JSON.stringify({
+        model: 'openai/gpt-oss-120b',
+        messages: [
+          { role: 'system', content: 'Anda pembantu penulisan laporan kokurikulum sekolah. Balas HANYA JSON sah. Tiada markdown.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.65,
+        max_tokens: 400,
+        response_format: { type: 'json_object' },
+      }),
+      muteHttpExceptions: true,
+    })
+
+    const json = JSON.parse(res.getContentText())
+    if (res.getResponseCode() !== 200) {
+      const mesejRalat = (json && json.error && json.error.message) || ('HTTP ' + res.getResponseCode())
+      return jsonResponse({ error: 'Ralat Groq API: ' + mesejRalat })
+    }
+
+    let kandungan = json.choices[0].message.content.trim()
+    kandungan = kandungan.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
+
+    let hasil
+    try {
+      hasil = JSON.parse(kandungan)
+    } catch (pe) {
+      return jsonResponse({ error: 'Ralat format respons AI. Sila cuba lagi.' })
+    }
+
+    return jsonResponse({ aktiviti: hasil.aktiviti || '' })
+  } catch (err) {
+    return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })
+  }
+}
 // (accounts:lookup) - ni cara sahkan token tanpa Firebase Admin SDK (yang
 // tak tersedia dalam Apps Script). Pulangkan emel yang disahkan, atau null
 // kalau token tak sah/tamat/dipalsukan.

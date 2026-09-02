@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useOutletContext, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, PenLine, Move, Printer, X, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowLeft, Plus, PenLine, Move, Printer, X, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
 import { todayISO, namaHari } from '../../lib/dateUtils.js'
-import { muatNaikKeDrive, janaAiLaporanUBKS } from '../../lib/driveUpload.js'
+import { muatNaikKeDrive, janaAiLaporanUBKS, janaAiAktivitiSivik } from '../../lib/driveUpload.js'
 import { usePikebm } from '../../hooks/usePikebm.js'
 import { useSivikKokurikulum } from '../../hooks/useSivikKokurikulum.js'
 import { useUnitUBKSSatu, kemaskiniUnit } from '../../hooks/useUnitUBKS.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { useDialog } from '../../context/DialogContext.jsx'
-import { muatkanLaporanUBKS, simpanLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
+import { muatkanLaporanUBKS, simpanLaporanUBKS, padamLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
 import { muatkanPerancangan } from '../../hooks/usePerancanganUBKS.js'
 import { muatkanKehadiranSatu } from '../../hooks/useKehadiranUBKS.js'
 import { senaraiGuru, cariTtdTersimpan, upsertTtdTersimpan } from './unitHelpers.js'
@@ -31,7 +31,7 @@ const MEDAN_KOSONG = {
   tarikh: '', masa: '', tempat: '', bilAhliHadir: '', guruPenasihat: '',
   laporanAktiviti: '', refleksi: '',
   pikebmTajuk: '', pikebmObjektif: '',
-  sivik: [{ ...SIVIK_KOSONG }, { ...SIVIK_KOSONG }],
+  sivik: { ...SIVIK_KOSONG },
   gambar: [null, null, null, null],
   namaSetiausaha: '', ttdSetiausahaUrl: '',
   namaGuruTtd: '', ttdGuruUrl: '',
@@ -136,6 +136,7 @@ export default function LaporanUBKSDetail() {
   const [memuatkan, setMemuatkan] = useState(true)
   const [menyimpan, setMenyimpan] = useState(false)
   const [mencetak, setMencetak] = useState(false)
+  const [memadam, setMemadam] = useState(false)
   const [ralat, setRalat] = useState(null)
   const [dirty, setDirty] = useState(false)
   const [rekodSediaAda, setRekodSediaAda] = useState(false)
@@ -150,6 +151,7 @@ export default function LaporanUBKSDetail() {
   const [perancanganDicek, setPerancanganDicek] = useState(new Set())
   const [lainLain, setLainLain] = useState('')
   const [menjanaAI, setMenjanaAI] = useState(false)
+  const [menjanaAyatSivik, setMenjanaAyatSivik] = useState(false)
 
   useEffect(() => {
     if (!unit) return
@@ -172,13 +174,16 @@ export default function LaporanUBKSDetail() {
 
       if (sediaAda) {
         setRekodSediaAda(true)
-        // Sokong rekod LAMA (nilaiTeras/nilaiAktiviti tunggal) -> migrate ke
-        // struktur sivik[] (2 slot) secara telus, staff tak perasan pun.
-        const sivikSediaAda = sediaAda.sivik?.length
-          ? sediaAda.sivik
-          : sediaAda.nilaiTeras || sediaAda.nilaiAktiviti
-            ? [{ nilai: sediaAda.nilaiTeras || '', tajuk: '', aktiviti: sediaAda.nilaiAktiviti || '' }, { ...SIVIK_KOSONG }]
-            : [{ ...SIVIK_KOSONG }, { ...SIVIK_KOSONG }]
+        // Sokong rekod LAMA (nilaiTeras/nilaiAktiviti tunggal, ATAU sivik[]
+        // 2-slot dari versi ciri ni sebelum dikurangkan ke 1) -> migrate ke
+        // struktur sivik tunggal secara telus, staff tak perasan pun.
+        const sivikSediaAda = Array.isArray(sediaAda.sivik)
+          ? (sediaAda.sivik[0] ?? { ...SIVIK_KOSONG })
+          : sediaAda.sivik
+            ? sediaAda.sivik
+            : sediaAda.nilaiTeras || sediaAda.nilaiAktiviti
+              ? { nilai: sediaAda.nilaiTeras || '', tajuk: '', aktiviti: sediaAda.nilaiAktiviti || '' }
+              : { ...SIVIK_KOSONG }
         setData({ ...MEDAN_KOSONG, ...sediaAda, sivik: sivikSediaAda })
       } else {
         setRekodSediaAda(false)
@@ -235,13 +240,41 @@ export default function LaporanUBKSDetail() {
     u('pikebmObjektif', item?.objektif ?? data.pikebmObjektif)
   }
 
-  function ubahSivik(i, medan, nilai) {
+  function ubahSivik(medan, nilai) {
     setDirty(true)
-    setData((d) => {
-      const sivik = [...d.sivik]
-      sivik[i] = { ...sivik[i], [medan]: nilai }
-      return { ...d, sivik }
-    })
+    setData((d) => ({ ...d, sivik: { ...d.sivik, [medan]: nilai } }))
+  }
+
+  function pilihTajukSivik(tajuk) {
+    if (tajuk === '__lain') {
+      setDirty(true)
+      setData((d) => ({ ...d, sivik: { ...d.sivik, tajuk: '' } }))
+      return
+    }
+    const item = senaraiSivik.find((s) => s.tajuk === tajuk)
+    setDirty(true)
+    setData((d) => ({ ...d, sivik: { nilai: item?.nilai || '', tajuk, aktiviti: d.sivik.aktiviti } }))
+  }
+
+  async function janaAyatSivik() {
+    if (!data.sivik.tajuk.trim()) return
+    setMenjanaAyatSivik(true)
+    setRalat(null)
+    try {
+      const item = senaraiSivik.find((s) => s.tajuk === data.sivik.tajuk)
+      const hasil = await janaAiAktivitiSivik({
+        unit: unit.namaUnit,
+        nilai: data.sivik.nilai,
+        tajuk: data.sivik.tajuk,
+        cadanganAsal: item?.aktiviti || '',
+        laporanAktiviti: data.laporanAktiviti,
+      })
+      ubahSivik('aktiviti', hasil.aktiviti || data.sivik.aktiviti)
+    } catch (err) {
+      await amaran(err.message || 'Gagal jana ayat dengan AI. Sila cuba lagi.')
+    } finally {
+      setMenjanaAyatSivik(false)
+    }
   }
 
   function togglPerancangan(p) {
@@ -259,7 +292,7 @@ export default function LaporanUBKSDetail() {
   async function janaAI() {
     // Amaran kalau dah ada kandungan (staff mungkin dah edit tangan lepas
     // jana AI kali pertama) - elak timpa kerja staff senyap-senyap.
-    const adaKandunganSediaAda = data.laporanAktiviti.trim() || data.refleksi.trim() || data.sivik.some((s) => s.tajuk.trim() || s.aktiviti.trim())
+    const adaKandunganSediaAda = data.laporanAktiviti.trim() || data.refleksi.trim() || data.sivik.tajuk.trim() || data.sivik.aktiviti.trim()
     if (adaKandunganSediaAda) {
       const teruskan = await konfirm('Laporan Aktiviti/Refleksi/Nilai Sivik sedia ada akan DITIMPA hasil AI baru. Teruskan?', { bahaya: true })
       if (!teruskan) return
@@ -291,7 +324,7 @@ export default function LaporanUBKSDetail() {
         ...d,
         laporanAktiviti: hasil.laporanAktiviti || d.laporanAktiviti,
         refleksi: hasil.refleksi || d.refleksi,
-        sivik: hasil.sivik?.length ? [hasil.sivik[0] || { ...SIVIK_KOSONG }, hasil.sivik[1] || { ...SIVIK_KOSONG }] : d.sivik,
+        sivik: hasil.sivik?.[0] || d.sivik,
       }))
     } catch (err) {
       await amaran(err.message || 'Gagal jana dengan AI. Sila cuba lagi.')
@@ -379,10 +412,23 @@ export default function LaporanUBKSDetail() {
     try {
       await simpanLaporanUBKS(unit.tahunSesi, unit.id, unit.namaUnit, perjumpaan, data, user.uid)
       setDirty(false)
+      setRekodSediaAda(true)
     } catch (err) {
       setRalat(err.message || 'Gagal simpan.')
     } finally {
       setMenyimpan(false)
+    }
+  }
+
+  async function padam() {
+    if (!(await konfirm(`Padam Laporan Aktiviti Perjumpaan ${perjumpaan} (${unit.namaUnit})? Tindakan ini tidak boleh dibatalkan.`, { bahaya: true }))) return
+    setMemadam(true)
+    try {
+      await padamLaporanUBKS(unit.tahunSesi, unit.id, perjumpaan)
+      navigate('/eubks/laporan-ubks')
+    } catch (err) {
+      setRalat(err.message || 'Gagal padam.')
+      setMemadam(false)
     }
   }
 
@@ -495,18 +541,41 @@ export default function LaporanUBKSDetail() {
 
         <div>
           <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-1">Penerapan Nilai Sivik Dalam Kokurikulum</p>
-          <p className="text-[11px] text-inkmuted mb-2">2 tajuk (boleh isi manual, atau guna "Jana dengan AI" di atas untuk cadangan automatik).</p>
-          <div className="space-y-3">
-            {[0, 1].map((i) => (
-              <div key={i} className="p-3 rounded-card border border-border space-y-2">
-                <p className="text-[11px] font-semibold text-inkmuted">Nilai Sivik {i + 1}</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <input type="text" value={data.sivik[i]?.nilai ?? ''} onChange={(e) => ubahSivik(i, 'nilai', e.target.value)} placeholder="Nilai (cth. Kasih Sayang)" className="h-9 px-2.5 rounded-card border border-border bg-surface text-xs" />
-                  <input type="text" value={data.sivik[i]?.tajuk ?? ''} onChange={(e) => ubahSivik(i, 'tajuk', e.target.value)} placeholder="Tajuk" className="h-9 px-2.5 rounded-card border border-border bg-surface text-xs" />
-                </div>
-                <textarea rows={2} value={data.sivik[i]?.aktiviti ?? ''} onChange={(e) => ubahSivik(i, 'aktiviti', e.target.value)} placeholder="Aktiviti…" className="w-full px-2.5 py-2 rounded-card border border-border bg-surface text-xs resize-y" />
+          <p className="text-[11px] text-inkmuted mb-2">Pilih Tajuk dari senarai rasmi (Nilai auto-isi), atau taip sendiri. Lepas tu boleh "Tulis dengan AI" untuk Aktiviti sahaja.</p>
+          <div className="p-3 rounded-card border border-border space-y-2">
+            <div>
+              <label className="block text-xs font-medium text-ink mb-1">Tajuk</label>
+              {senaraiSivik.some((s) => s.tajuk === data.sivik.tajuk) || !data.sivik.tajuk ? (
+                <select
+                  value={data.sivik.tajuk}
+                  onChange={(e) => pilihTajukSivik(e.target.value)}
+                  className="w-full h-10 px-3 rounded-card border border-border bg-surface text-sm"
+                >
+                  <option value="">-- Pilih Tajuk Sivik --</option>
+                  {senaraiSivik.map((s) => (
+                    <option key={s.id} value={s.tajuk}>[{s.nilai}] {s.tajuk}</option>
+                  ))}
+                  <option value="__lain">Lain-lain (taip sendiri)…</option>
+                </select>
+              ) : (
+                <input type="text" value={data.sivik.tajuk} onChange={(e) => ubahSivik('tajuk', e.target.value)} placeholder="Tajuk…" className="w-full h-10 px-3 rounded-card border border-border bg-surface text-sm" />
+              )}
+            </div>
+            <input type="text" value={data.sivik.nilai} onChange={(e) => ubahSivik('nilai', e.target.value)} placeholder="Nilai (cth. Kasih Sayang) - auto-isi bila pilih Tajuk" className="w-full h-9 px-2.5 rounded-card border border-border bg-surface text-xs" />
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-ink">Aktiviti</label>
+                <button
+                  type="button"
+                  onClick={janaAyatSivik}
+                  disabled={!data.sivik.tajuk.trim() || menjanaAyatSivik}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-ink disabled:opacity-40"
+                >
+                  <Sparkles size={11} /> {menjanaAyatSivik ? 'Menjana…' : 'Tulis dengan AI'}
+                </button>
               </div>
-            ))}
+              <textarea rows={2} value={data.sivik.aktiviti} onChange={(e) => ubahSivik('aktiviti', e.target.value)} placeholder="Aktiviti… (taip sendiri, atau pilih Tajuk dulu & tekan 'Tulis dengan AI')" className="w-full px-2.5 py-2 rounded-card border border-border bg-surface text-xs resize-y" />
+            </div>
           </div>
         </div>
 
@@ -581,6 +650,11 @@ export default function LaporanUBKSDetail() {
           <button onClick={cetak} disabled={mencetak} className="h-12 px-4 rounded-card border border-border text-sm font-medium text-ink flex items-center gap-1.5 disabled:opacity-60">
             <Printer size={15} /> {mencetak ? (dirty ? 'Menyimpan…' : 'Menyediakan…') : 'Cetak'}
           </button>
+          {rekodSediaAda && (
+            <button onClick={padam} disabled={memadam} title="Padam Laporan" aria-label="Padam Laporan" className="h-12 w-12 shrink-0 rounded-card border border-brand-red/30 text-brand-red flex items-center justify-center disabled:opacity-60">
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       </div>
 

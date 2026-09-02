@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { ChevronDown, Users, FileText, Printer, Settings } from 'lucide-react'
+import { ChevronDown, Users, FileText, Printer, Settings, Trash2 } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { useCetak } from '../../hooks/useCetak.js'
-import { senaraiLaporanUnit } from '../../hooks/useLaporanUBKS.js'
+import { useDialog } from '../../context/DialogContext.jsx'
+import { senaraiLaporanUnit, padamLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
 import { usePikebm } from '../../hooks/usePikebm.js'
 import { kumpulUnitIkutKategori } from './kumpulUnitIkutKategori.js'
 import CetakLaporanUBKS from './CetakLaporanUBKS.jsx'
@@ -25,6 +26,7 @@ export default function LaporanUBKS() {
   const navigate = useNavigate()
   const { adaSeksyen } = useIsAdmin(user)
   const isAdmin = adaSeksyen('ubks')
+  const { konfirm } = useDialog()
   const [tahunSesi, setTahunSesi] = useState(TAHUN_SEMASA)
   const { senarai: unitSenarai, loading } = useUnitUBKSTahun(tahunSesi)
   const { senarai: kategoriSenarai } = useKategoriUBKS()
@@ -71,6 +73,16 @@ export default function LaporanUBKS() {
     const rekod = statusLaporan[unit.id]?.[perjumpaan]
     if (!rekod) return
     setDataCetak({ data: rekod, unit, perjumpaan })
+  }
+
+  async function padamTerus(unit, perjumpaan) {
+    if (!(await konfirm(`Padam Laporan Aktiviti Perjumpaan ${perjumpaan} (${unit.namaUnit})? Tindakan ini tidak boleh dibatalkan.`, { bahaya: true }))) return
+    await padamLaporanUBKS(unit.tahunSesi, unit.id, perjumpaan)
+    setStatusLaporan((s) => {
+      const peta = { ...(s[unit.id] ?? {}) }
+      delete peta[perjumpaan]
+      return { ...s, [unit.id]: peta }
+    })
   }
 
   return (
@@ -138,15 +150,24 @@ export default function LaporanUBKS() {
                                     <FileText size={14} />
                                     <span className="text-[11px] font-semibold">Bil. {p}</span>
                                   </button>
-                                  {/* Ruang butang Cetak sentiasa disediakan (kelihatan/tersembunyi)
+                                  {/* Ruang butang sentiasa disediakan (kelihatan/tersembunyi)
                                       supaya SEMUA petak sama tinggi - elak grid nampak "berombak"
                                       antara petak yang ada/tiada laporan. */}
-                                  <button
-                                    onClick={() => cetakTerus(unit, p)}
-                                    className={`flex items-center justify-center gap-1 h-7 rounded-card border border-border text-[10px] text-inkmuted ${adaLaporan ? '' : 'invisible'}`}
-                                  >
-                                    <Printer size={11} /> Cetak
-                                  </button>
+                                  <div className={`flex gap-1 ${adaLaporan ? '' : 'invisible'}`}>
+                                    <button
+                                      onClick={() => cetakTerus(unit, p)}
+                                      className="flex-1 flex items-center justify-center gap-1 h-7 rounded-card border border-border text-[10px] text-inkmuted"
+                                    >
+                                      <Printer size={11} /> Cetak
+                                    </button>
+                                    <button
+                                      onClick={() => padamTerus(unit, p)}
+                                      aria-label="Padam laporan"
+                                      className="h-7 w-7 shrink-0 flex items-center justify-center rounded-card border border-brand-red/30 text-brand-red"
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </div>
                                 </div>
                               )
                             })}

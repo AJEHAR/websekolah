@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
+import { collection, doc, deleteDoc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'laporanUBKS'
@@ -33,4 +33,9 @@ export async function simpanLaporanUBKS(tahunSesi, unitId, namaUnit, perjumpaan,
     tahunSesi: String(tahunSesi), unitId, namaUnit, perjumpaan,
     updatedAt: serverTimestamp(), updatedBy: uid,
   })
+}
+
+export async function padamLaporanUBKS(tahunSesi, unitId, perjumpaan) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  await deleteDoc(doc(db, KOLEKSI, idRekod(tahunSesi, unitId, perjumpaan)))
 }

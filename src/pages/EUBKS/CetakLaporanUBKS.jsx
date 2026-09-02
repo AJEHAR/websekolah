@@ -80,16 +80,17 @@ function cubaFormatTarikh(tarikh) {
 export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
   const gambar = data.gambar || [null, null, null, null]
   const hari = data.hari || cubaNamaHari(data.tarikh)
-  // Sokong rekod LAMA (sebelum ciri 2-Nilai-Sivik) yang cetak TERUS dari
-  // senarai (bukan lalu borang edit dulu, jadi tak lalu proses migrate
-  // yang ada dalam LaporanUBKSDetail.jsx) - kena include nilaiTeras JUGA,
-  // bukan nilaiAktiviti sahaja (bug asal: "Nilai Teras" hilang senyap
-  // pada cetakan rekod lama walaupun data tu sebenarnya masih ada).
-  const sivik = data.sivik?.length
-    ? data.sivik
-    : (data.nilaiTeras || data.nilaiAktiviti)
-      ? [{ nilai: data.nilaiTeras || '', tajuk: '', aktiviti: data.nilaiAktiviti || '' }]
-      : [{ nilai: '', tajuk: '', aktiviti: '' }]
+  // Sokong SEMUA bentuk data lama (nilaiTeras/nilaiAktiviti asal, ATAU
+  // array sivik[] 2-slot dari versi interim, ATAU objek sivik tunggal
+  // yang terkini) - cetak terus dari senarai (bypass migrate di borang
+  // edit) kena boleh papar semua bentuk dengan betul.
+  const sivik = Array.isArray(data.sivik)
+    ? (data.sivik[0] ?? { nilai: '', tajuk: '', aktiviti: '' })
+    : data.sivik
+      ? data.sivik
+      : (data.nilaiTeras || data.nilaiAktiviti)
+        ? { nilai: data.nilaiTeras || '', tajuk: '', aktiviti: data.nilaiAktiviti || '' }
+        : { nilai: '', tajuk: '', aktiviti: '' }
 
   return (
     <PrintArea>
@@ -115,14 +116,14 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
 
           <div className="flex-1 flex gap-2 min-h-0">
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex flex-col mb-2" style={{ flex: 3 }}>
+              <div className="flex flex-col mb-2" style={{ flex: 3.5 }}>
                 <KotakKrim className="shrink-0">Laporan Aktiviti</KotakKrim>
                 <div className="flex-1 border border-t-0 border-black p-2 overflow-hidden">
                   <p className="text-[11px] text-black whitespace-pre-line leading-snug">{data.laporanAktiviti}</p>
                 </div>
               </div>
 
-              <div className="flex flex-col mb-2" style={{ flex: 1.4 }}>
+              <div className="flex flex-col mb-2" style={{ flex: 1.8 }}>
                 <KotakKrim className="shrink-0">Refleksi</KotakKrim>
                 <div className="flex-1 border border-t-0 border-black p-2 overflow-hidden">
                   <p className="text-[11px] text-black whitespace-pre-line leading-snug">{data.refleksi}</p>
@@ -137,15 +138,11 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
                 </div>
               </div>
 
-              <div className="flex flex-col" style={{ flex: 2.3 }}>
+              <div className="flex flex-col" style={{ flex: 1.2 }}>
                 <KotakKrim className="shrink-0">Penerapan Nilai Sivik Dalam Kokurikulum</KotakKrim>
                 <div className="flex-1 border border-t-0 border-black flex flex-col">
-                  {sivik.map((s, i) => (
-                    <div key={i} className={`flex-1 flex flex-col ${i > 0 ? 'border-t border-black' : ''}`}>
-                      <BarisJadual label="Nilai Teras" value={[s.nilai, s.tajuk].filter(Boolean).join(' - ')} />
-                      <BarisJadual label="Aktiviti" value={s.aktiviti} />
-                    </div>
-                  ))}
+                  <BarisJadual label="Nilai Teras" value={[sivik.nilai, sivik.tajuk].filter(Boolean).join(' - ')} />
+                  <BarisJadual label="Aktiviti" value={sivik.aktiviti} />
                 </div>
               </div>
             </div>
