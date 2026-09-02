@@ -15,34 +15,13 @@ export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah, o
     if (open) setSeret(null)
   }, [open, gambarSrc])
 
-  if (!open) return null
-
-  function imejDimuat(e) {
-    const img = e.target
-    const kW = kontenaRef.current?.clientWidth ?? img.naturalWidth
-    const skala = Math.min(1, kW / img.naturalWidth)
-    const lebar = img.naturalWidth * skala
-    const tinggi = img.naturalHeight * skala
-    setSaizImej({ lebar, tinggi })
-    // Kotak crop lalai - kotak segi empat sama di tengah, 70% saiz terkecil
-    const saizKotak = Math.min(lebar, tinggi) * 0.7
-    setKotak({ x: (lebar - saizKotak) / 2, y: (tinggi - saizKotak) / 2, lebar: saizKotak, tinggi: saizKotak })
-  }
-
-  function posEvent(e) {
-    const p = e.touches ? e.touches[0] : e
-    const r = imgRef.current.getBoundingClientRect()
-    return { x: p.clientX - r.left, y: p.clientY - r.top }
-  }
-
-  function mulaSeret(jenis) {
-    return (e) => {
-      e.preventDefault()
-      const pos = posEvent(e)
-      setSeret({ jenis, mulaX: pos.x, mulaY: pos.y, kotakMula: { ...kotak } })
-    }
-  }
-
+  // PENTING: semua hooks (useState/useEffect) MESTI dipanggil dulu,
+  // "if (!open) return null" kena selepas SEMUA hooks - React kira
+  // bilangan hooks ikut turutan setiap render, kalau early-return berada
+  // DI TENGAH dua useEffect, bilangan hooks berbeza bila open bertukar
+  // true/false -> "Rendered fewer hooks than expected" -> app crash
+  // terus (skrin kosong). Effect kedua (drag handler) diletak DI BAWAH
+  // baris ni sebelum ni - itu puncanya, dah dipindah ke atas early-return.
   useEffect(() => {
     if (!seret) return
     function gerak(e) {
@@ -73,6 +52,34 @@ export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah, o
       window.removeEventListener('touchend', lepas)
     }
   }, [seret, saizImej])
+
+  if (!open) return null
+
+  function imejDimuat(e) {
+    const img = e.target
+    const kW = kontenaRef.current?.clientWidth ?? img.naturalWidth
+    const skala = Math.min(1, kW / img.naturalWidth)
+    const lebar = img.naturalWidth * skala
+    const tinggi = img.naturalHeight * skala
+    setSaizImej({ lebar, tinggi })
+    // Kotak crop lalai - kotak segi empat sama di tengah, 70% saiz terkecil
+    const saizKotak = Math.min(lebar, tinggi) * 0.7
+    setKotak({ x: (lebar - saizKotak) / 2, y: (tinggi - saizKotak) / 2, lebar: saizKotak, tinggi: saizKotak })
+  }
+
+  function posEvent(e) {
+    const p = e.touches ? e.touches[0] : e
+    const r = imgRef.current.getBoundingClientRect()
+    return { x: p.clientX - r.left, y: p.clientY - r.top }
+  }
+
+  function mulaSeret(jenis) {
+    return (e) => {
+      e.preventDefault()
+      const pos = posEvent(e)
+      setSeret({ jenis, mulaX: pos.x, mulaY: pos.y, kotakMula: { ...kotak } })
+    }
+  }
 
   function sahkanCrop() {
     const img = imgRef.current

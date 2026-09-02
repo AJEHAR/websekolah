@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { ChevronDown, Users, FileText, Printer, Settings } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
@@ -33,22 +33,38 @@ export default function LaporanUBKS() {
 
   const [unitDibuka, setUnitDibuka] = useState(null)
   const [statusLaporan, setStatusLaporan] = useState({})
+  const [memuatkanStatus, setMemuatkanStatus] = useState(false)
   const [tunjukPikebm, setTunjukPikebm] = useState(false)
 
   const kumpulan = kumpulUnitIkutKategori(unitSenarai, kategoriSenarai)
 
-  async function bukaUnit(unit) {
-    if (unitDibuka === unit.id) {
-      setUnitDibuka(null)
-      return
-    }
-    setUnitDibuka(unit.id)
-    if (!statusLaporan[unit.id]) {
-      const senarai = await senaraiLaporanUnit(unit.tahunSesi, unit.id)
-      const peta = {}
-      senarai.forEach((r) => { peta[r.perjumpaan] = r })
-      setStatusLaporan((s) => ({ ...s, [unit.id]: peta }))
-    }
+  // Ambil bilangan laporan untuk SEMUA unit terus bila page load (bukan
+  // tunggu staff klik buka satu-satu) - kalau tidak, "X/12 laporan diisi"
+  // akan tunjuk "0/12" PALSU untuk semua unit sebelum dibuka (mengelirukan
+  // staff yang scan senarai pantas, ingat semua unit belum ada laporan
+  // langsung walhal dah ada).
+  useEffect(() => {
+    if (unitSenarai.length === 0) return
+    let batal = false
+    setMemuatkanStatus(true)
+    ;(async () => {
+      const hasil = await Promise.all(
+        unitSenarai.map(async (unit) => {
+          const senarai = await senaraiLaporanUnit(unit.tahunSesi, unit.id)
+          const peta = {}
+          senarai.forEach((r) => { peta[r.perjumpaan] = r })
+          return [unit.id, peta]
+        })
+      )
+      if (batal) return
+      setStatusLaporan(Object.fromEntries(hasil))
+      setMemuatkanStatus(false)
+    })()
+    return () => { batal = true }
+  }, [unitSenarai])
+
+  function bukaUnit(unit) {
+    setUnitDibuka(unitDibuka === unit.id ? null : unit.id)
   }
 
   function cetakTerus(unit, perjumpaan) {
@@ -100,7 +116,7 @@ export default function LaporanUBKS() {
                         <Users size={16} className="text-inkmuted shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-ink truncate">{unit.namaUnit}</p>
-                          <p className="text-xs text-inkmuted">{bilangan}/12 laporan diisi</p>
+                          <p className="text-xs text-inkmuted">{memuatkanStatus ? 'Memuatkan…' : `${bilangan}/12 laporan diisi`}</p>
                         </div>
                         <ChevronDown size={16} className={`text-inkmuted shrink-0 transition-transform ${dibuka ? 'rotate-180' : ''}`} />
                       </button>
@@ -122,11 +138,15 @@ export default function LaporanUBKS() {
                                     <FileText size={14} />
                                     <span className="text-[11px] font-semibold">Bil. {p}</span>
                                   </button>
-                                  {adaLaporan && (
-                                    <button onClick={() => cetakTerus(unit, p)} className="flex items-center justify-center gap-1 h-7 rounded-card border border-border text-[10px] text-inkmuted">
-                                      <Printer size={11} /> Cetak
-                                    </button>
-                                  )}
+                                  {/* Ruang butang Cetak sentiasa disediakan (kelihatan/tersembunyi)
+                                      supaya SEMUA petak sama tinggi - elak grid nampak "berombak"
+                                      antara petak yang ada/tiada laporan. */}
+                                  <button
+                                    onClick={() => cetakTerus(unit, p)}
+                                    className={`flex items-center justify-center gap-1 h-7 rounded-card border border-border text-[10px] text-inkmuted ${adaLaporan ? '' : 'invisible'}`}
+                                  >
+                                    <Printer size={11} /> Cetak
+                                  </button>
                                 </div>
                               )
                             })}

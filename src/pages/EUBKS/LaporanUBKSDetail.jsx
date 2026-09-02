@@ -5,6 +5,7 @@ import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { usePikebm } from '../../hooks/usePikebm.js'
 import { useUnitUBKSSatu, kemaskiniUnit } from '../../hooks/useUnitUBKS.js'
 import { useCetak } from '../../hooks/useCetak.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 import { muatkanLaporanUBKS, simpanLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
 import { muatkanPerancangan } from '../../hooks/usePerancanganUBKS.js'
 import { senaraiGuru, cariTtdTersimpan, upsertTtdTersimpan } from './unitHelpers.js'
@@ -121,12 +122,15 @@ export default function LaporanUBKSDetail() {
   const { unit, loading: loadingUnit } = useUnitUBKSSatu(unitId)
   const { senarai: senaraiPikebm } = usePikebm()
   const [dataCetak, setDataCetak] = useCetak()
+  const { konfirm } = useDialog()
 
   const [data, setData] = useState(MEDAN_KOSONG)
   const [memuatkan, setMemuatkan] = useState(true)
   const [menyimpan, setMenyimpan] = useState(false)
+  const [mencetak, setMencetak] = useState(false)
   const [ralat, setRalat] = useState(null)
   const [rujukanPerancangan, setRujukanPerancangan] = useState(null)
+  const [dirty, setDirty] = useState(false)
 
   const [slotCrop, setSlotCrop] = useState(null)
   const [gambarMentah, setGambarMentah] = useState(null)
@@ -173,7 +177,25 @@ export default function LaporanUBKSDetail() {
   }, [unit, perjumpaan])
 
   function u(kunci, nilai) {
+    setDirty(true)
     setData((d) => ({ ...d, [kunci]: nilai }))
+  }
+
+  // Amaran kalau tinggalkan page (tutup tab/refresh) sedangkan ada
+  // perubahan belum Simpan - elak kerja hilang senyap.
+  useEffect(() => {
+    function amaranKeluar(e) {
+      if (!dirty) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', amaranKeluar)
+    return () => window.removeEventListener('beforeunload', amaranKeluar)
+  }, [dirty])
+
+  async function kembali() {
+    if (dirty && !(await konfirm('Ada perubahan belum disimpan. Tinggalkan halaman ni tanpa simpan?', { bahaya: true }))) return
+    navigate('/eubks/laporan-ubks')
   }
 
   function pilihPikebm(tajuk) {
@@ -201,6 +223,7 @@ export default function LaporanUBKSDetail() {
     try {
       const fail = new File([blob], `gambar-laporan-ubks-${i}.jpg`, { type: 'image/jpeg' })
       const hasil = await muatNaikKeDrive(fail, 'laporanUbks')
+      setDirty(true)
       setData((d) => {
         const gambar = [...d.gambar]
         gambar[i] = hasil.url
@@ -214,6 +237,7 @@ export default function LaporanUBKSDetail() {
   }
 
   function buangGambar(i) {
+    setDirty(true)
     setData((d) => {
       const gambar = [...d.gambar]
       gambar[i] = null
@@ -260,6 +284,7 @@ export default function LaporanUBKSDetail() {
     setMenyimpan(true)
     try {
       await simpanLaporanUBKS(unit.tahunSesi, unit.id, unit.namaUnit, perjumpaan, data, user.uid)
+      setDirty(false)
     } catch (err) {
       setRalat(err.message || 'Gagal simpan.')
     } finally {
@@ -267,8 +292,17 @@ export default function LaporanUBKSDetail() {
     }
   }
 
-  function cetak() {
-    setDataCetak({ data, unit, perjumpaan })
+  // Cetak - kalau ada perubahan belum simpan, SIMPAN DULU secara automatik
+  // sebelum cetak (elak staff anggap "cetak = dah simpan" sedangkan
+  // sebenarnya data tu belum masuk pangkalan data).
+  async function cetak() {
+    setMencetak(true)
+    try {
+      if (dirty) await simpan()
+      setDataCetak({ data, unit, perjumpaan })
+    } finally {
+      setMencetak(false)
+    }
   }
 
   const namaGuruPilihan = unit ? senaraiGuru(unit).map((g) => g.nama) : []
@@ -286,7 +320,7 @@ export default function LaporanUBKSDetail() {
 
   return (
     <div className="max-w-2xl">
-      <button onClick={() => navigate('/eubks/laporan-ubks')} className="inline-flex items-center gap-1.5 text-xs text-inkmuted hover:text-ink mb-4">
+      <button onClick={kembali} className="inline-flex items-center gap-1.5 text-xs text-inkmuted hover:text-ink mb-4">
         <ArrowLeft size={14} /> Laporan UBKS
       </button>
 
@@ -308,7 +342,7 @@ export default function LaporanUBKSDetail() {
           <Medan label="Tempat" value={data.tempat} onChange={(v) => u('tempat', v)} />
           <Medan label="Bil. Ahli Hadir (auto dari Kehadiran)" value={data.bilAhliHadir} onChange={(v) => u('bilAhliHadir', v)} placeholder="24" />
         </div>
-        <Medan label="Guru Penasihat" value={data.guruPenasihat} onChange={(v) => u('guruPenasihat', v)} />
+        <Medan label="Guru Penasihat (ringkasan untuk teks laporan)" value={data.guruPenasihat} onChange={(v) => u('guruPenasihat', v)} />
 
         <Medan label="Laporan Aktiviti" value={data.laporanAktiviti} onChange={(v) => u('laporanAktiviti', v)} textarea />
         <Medan label="Refleksi" value={data.refleksi} onChange={(v) => u('refleksi', v)} textarea />
@@ -372,7 +406,7 @@ export default function LaporanUBKSDetail() {
           <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">Tandatangan</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <BlokTtdBank
-              label="Setiausaha (dari Jawatankuasa)"
+              label="Setiausaha (tandatangan)"
               senaraiNama={namaSetiausahaPilihan}
               nama={data.namaSetiausaha}
               ttdUrl={data.ttdSetiausahaUrl}
@@ -383,7 +417,7 @@ export default function LaporanUBKSDetail() {
               onPadamTtd={() => u('ttdSetiausahaUrl', '')}
             />
             <BlokTtdBank
-              label="Guru Penasihat"
+              label="Guru Penasihat (tandatangan)"
               senaraiNama={namaGuruPilihan}
               nama={data.namaGuruTtd}
               ttdUrl={data.ttdGuruUrl}
@@ -398,7 +432,10 @@ export default function LaporanUBKSDetail() {
           {!data.namaSetiausaha && (
             <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Setiausaha dilantik lagi untuk unit ni - pergi "Jawatankuasa UBKS" untuk lantik, atau taip nama terus.</p>
           )}
-          <p className="text-[11px] text-inkmuted mt-2">💡 Guru tak hadir? Tukar terus nama dalam dropdown Guru Penasihat - tandatangan tersimpan (kalau ada) terus terpakai.</p>
+          {namaGuruPilihan.length === 0 && (
+            <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Guru Penasihat ditetapkan lagi untuk unit ni - pergi halaman Unit (Murid UBKS) untuk isi, atau taip nama terus.</p>
+          )}
+          <p className="text-[11px] text-inkmuted mt-2">💡 Guru tak hadir? Tukar terus nama dalam dropdown Guru Penasihat (tandatangan) - tandatangan tersimpan (kalau ada) terus terpakai.</p>
         </div>
 
         {ralat && <p className="text-sm text-brand-red">{ralat}</p>}
@@ -407,8 +444,8 @@ export default function LaporanUBKSDetail() {
           <button onClick={simpan} disabled={menyimpan} className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
             {menyimpan ? 'Menyimpan…' : 'Simpan Laporan'}
           </button>
-          <button onClick={cetak} className="h-12 px-4 rounded-card border border-border text-sm font-medium text-ink flex items-center gap-1.5">
-            <Printer size={15} /> Cetak
+          <button onClick={cetak} disabled={mencetak} className="h-12 px-4 rounded-card border border-border text-sm font-medium text-ink flex items-center gap-1.5 disabled:opacity-60">
+            <Printer size={15} /> {mencetak ? (dirty ? 'Menyimpan…' : 'Menyediakan…') : 'Cetak'}
           </button>
         </div>
       </div>
