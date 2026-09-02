@@ -1,41 +1,56 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useOutletContext, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, PenLine, Move, Printer, X, RotateCcw } from 'lucide-react'
-import { muatNaikKeDrive } from '../../lib/driveUpload.js'
+import { ArrowLeft, Plus, PenLine, Move, Printer, X, RotateCcw, Sparkles } from 'lucide-react'
+import { todayISO, namaHari } from '../../lib/dateUtils.js'
+import { muatNaikKeDrive, janaAiLaporanUBKS } from '../../lib/driveUpload.js'
 import { usePikebm } from '../../hooks/usePikebm.js'
+import { useSivikKokurikulum } from '../../hooks/useSivikKokurikulum.js'
 import { useUnitUBKSSatu, kemaskiniUnit } from '../../hooks/useUnitUBKS.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { muatkanLaporanUBKS, simpanLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
 import { muatkanPerancangan } from '../../hooks/usePerancanganUBKS.js'
+import { muatkanKehadiranSatu } from '../../hooks/useKehadiranUBKS.js'
 import { senaraiGuru, cariTtdTersimpan, upsertTtdTersimpan } from './unitHelpers.js'
 import PemotongGambarModal from '../Kurikulum/PemotongGambarModal.jsx'
 import TandatanganModal from '../Kurikulum/TandatanganModal.jsx'
 import CetakLaporanUBKS from './CetakLaporanUBKS.jsx'
 
+const SIVIK_KOSONG = { nilai: '', tajuk: '', aktiviti: '' }
+
+// Format ringkas DD/MM/YYYY untuk paparan/cetakan (bukan
+// formatTarikhPaparan yang sertakan nama hari sekali - dah ada medan
+// "Hari" berasingan, elak bertindih/berulang).
+function ddmmyyyy(iso) {
+  if (!iso) return ''
+  const [t, b, h] = iso.split('-')
+  return `${h}/${b}/${t}`
+}
+
 const MEDAN_KOSONG = {
   tarikh: '', masa: '', tempat: '', bilAhliHadir: '', guruPenasihat: '',
   laporanAktiviti: '', refleksi: '',
   pikebmTajuk: '', pikebmObjektif: '',
-  nilaiTeras: '', nilaiAktiviti: '',
+  sivik: [{ ...SIVIK_KOSONG }, { ...SIVIK_KOSONG }],
   gambar: [null, null, null, null],
   namaSetiausaha: '', ttdSetiausahaUrl: '',
   namaGuruTtd: '', ttdGuruUrl: '',
   namaGPK: '', ttdGPKUrl: '',
 }
 
-function Medan({ label, value, onChange, textarea, placeholder }) {
+function Medan({ label, value, onChange, textarea, placeholder, type = 'text', readOnly }) {
   const Komponen = textarea ? 'textarea' : 'input'
   return (
     <div>
       <label className="block text-xs font-medium text-ink mb-1">{label}</label>
       <Komponen
-        type={textarea ? undefined : 'text'}
+        type={textarea ? undefined : type}
         rows={textarea ? 3 : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full px-3 rounded-card border border-border bg-surface text-sm ${textarea ? 'py-2 resize-y' : 'h-10'}`}
+        readOnly={readOnly}
+        className={`w-full px-3 rounded-card border border-border text-sm ${textarea ? 'py-2 resize-y' : 'h-10'} ${readOnly ? 'bg-base text-inkmuted' : 'bg-surface'}`}
       />
     </div>
   )
@@ -60,12 +75,6 @@ function BlokTtd({ label, nama, ttdUrl, onNama, onTandatangan, onPadamTtd }) {
   )
 }
 
-// Blok tandatangan dengan BANK per-unit - dropdown nama (dari Guru
-// Penasihat/Jawatankuasa unit ni, BUKAN semua staff sekolah - relevan
-// sahaja) + tandatangan tersimpan automatik terpakai bila nama sepadan
-// (staff tak perlu lukis berulang). Kalau guru biasa tak hadir, staff
-// tukar terus ke nama lain dalam dropdown - tandatangan berbeza ikut
-// nama dipilih.
 function BlokTtdBank({ label, senaraiNama, nama, ttdUrl, adaTersimpan, onPilihNama, onTandatangan, onGunaTersimpan, onPadamTtd }) {
   const [modLain, setModLain] = useState(false)
   return (
@@ -110,10 +119,8 @@ function BlokTtdBank({ label, senaraiNama, nama, ttdUrl, adaTersimpan, onPilihNa
   )
 }
 
-// Halaman PENUH (bukan popup lagi) untuk SATU Laporan Aktiviti Perjumpaan
-// - subpage /eubks/laporan-ubks/:unitId/:perjumpaan. Borang panjang ni
-// jauh lebih selesa jadi halaman sendiri (scroll biasa, boleh bookmark/
-// share pautan terus ke laporan tertentu) berbanding popup kecil.
+// Halaman PENUH (bukan popup) untuk SATU Laporan Aktiviti Perjumpaan -
+// subpage /eubks/laporan-ubks/:unitId/:perjumpaan.
 export default function LaporanUBKSDetail() {
   const { unitId, perjumpaan: perjumpaanStr } = useParams()
   const perjumpaan = Number(perjumpaanStr)
@@ -121,54 +128,80 @@ export default function LaporanUBKSDetail() {
   const { user } = useOutletContext()
   const { unit, loading: loadingUnit } = useUnitUBKSSatu(unitId)
   const { senarai: senaraiPikebm } = usePikebm()
+  const { senarai: senaraiSivik } = useSivikKokurikulum()
   const [dataCetak, setDataCetak] = useCetak()
-  const { konfirm } = useDialog()
+  const { konfirm, amaran } = useDialog()
 
   const [data, setData] = useState(MEDAN_KOSONG)
   const [memuatkan, setMemuatkan] = useState(true)
   const [menyimpan, setMenyimpan] = useState(false)
   const [mencetak, setMencetak] = useState(false)
   const [ralat, setRalat] = useState(null)
-  const [rujukanPerancangan, setRujukanPerancangan] = useState(null)
   const [dirty, setDirty] = useState(false)
+  const [rekodSediaAda, setRekodSediaAda] = useState(false)
 
   const [slotCrop, setSlotCrop] = useState(null)
   const [gambarMentah, setGambarMentah] = useState(null)
   const [memuatNaikSlot, setMemuatNaikSlot] = useState(null)
   const [tunjukTtd, setTunjukTtd] = useState(null)
 
+  // --- Perancangan Unit (SEMENTARA - bantu AI sahaja, TAK disimpan dalam rekod Laporan) ---
+  const [senaraiPerancanganUnit, setSenaraiPerancanganUnit] = useState([])
+  const [perancanganDicek, setPerancanganDicek] = useState(new Set())
+  const [lainLain, setLainLain] = useState('')
+  const [menjanaAI, setMenjanaAI] = useState(false)
+
   useEffect(() => {
     if (!unit) return
     let batal = false
     setMemuatkan(true)
     ;(async () => {
-      const [sediaAda, perancangan] = await Promise.all([
+      const [sediaAda, perancangan, kehadiran] = await Promise.all([
         muatkanLaporanUBKS(unit.tahunSesi, unit.id, perjumpaan),
         muatkanPerancangan(unit.id),
+        muatkanKehadiranSatu(unit.tahunSesi, unit.id, perjumpaan),
       ])
       if (batal) return
-      const slotPerancangan = perancangan?.senaraiPerjumpaan?.find((p) => p.perjumpaan === perjumpaan)
-      setRujukanPerancangan(slotPerancangan?.perancangan || null)
+
+      const semuaPerjumpaan = perancangan?.senaraiPerjumpaan ?? []
+      setSenaraiPerancanganUnit(semuaPerjumpaan)
+      const slotSemasa = semuaPerjumpaan.find((p) => p.perjumpaan === perjumpaan)
+      // Pra-tick perancangan perjumpaan SEMASA sahaja (kalau ada kandungan) -
+      // staff boleh tambah/buang tick lain sebelum jana AI.
+      setPerancanganDicek(slotSemasa?.perancangan?.trim() ? new Set([perjumpaan]) : new Set())
+
       if (sediaAda) {
-        setData({ ...MEDAN_KOSONG, ...sediaAda })
+        setRekodSediaAda(true)
+        // Sokong rekod LAMA (nilaiTeras/nilaiAktiviti tunggal) -> migrate ke
+        // struktur sivik[] (2 slot) secara telus, staff tak perasan pun.
+        const sivikSediaAda = sediaAda.sivik?.length
+          ? sediaAda.sivik
+          : sediaAda.nilaiTeras || sediaAda.nilaiAktiviti
+            ? [{ nilai: sediaAda.nilaiTeras || '', tajuk: '', aktiviti: sediaAda.nilaiAktiviti || '' }, { ...SIVIK_KOSONG }]
+            : [{ ...SIVIK_KOSONG }, { ...SIVIK_KOSONG }]
+        setData({ ...MEDAN_KOSONG, ...sediaAda, sivik: sivikSediaAda })
       } else {
+        setRekodSediaAda(false)
         const setiausaha = unit.ahli?.find((a) => a.jawatan?.toLowerCase().includes('setiausaha'))
-        // unit.guruPenasihat rekod lama = string, rekod baru = array
-        // [{nama, tahunDarjah}] - gabung jadi teks "Nama (Tahun X), Nama2"
-        // untuk medan Laporan (teks bebas, boleh edit); nama guru PERTAMA
-        // sahaja dijadikan lalai tandatangan (staff boleh tukar kalau perlu).
         const senaraiGpArr = senaraiGuru(unit)
         const gpTeks = senaraiGpArr.map((g) => (g.tahunDarjah ? `${g.nama} (${g.tahunDarjah})` : g.nama)).join(', ')
         const namaGuruLalai = senaraiGpArr[0]?.nama || ''
         const namaSetiausahaLalai = setiausaha?.nama || ''
         setData({
           ...MEDAN_KOSONG,
-          tarikh: slotPerancangan?.tarikh || '',
+          // Tarikh lalai TAHUN SEMASA (bukan cuba "auto dari Perancangan" -
+          // Perancangan UBKS tak ada medan tarikh dirancang boleh diisi pun,
+          // jadi sentiasa kosong - lebih berguna default hari ni terus,
+          // staff tukar manual kalau buat hari lain).
+          tarikh: todayISO(),
           guruPenasihat: gpTeks,
           namaGuruTtd: namaGuruLalai,
           ttdGuruUrl: cariTtdTersimpan(unit, namaGuruLalai) || '',
           namaSetiausaha: namaSetiausahaLalai,
           ttdSetiausahaUrl: cariTtdTersimpan(unit, namaSetiausahaLalai) || '',
+          // Bil. Ahli Hadir - auto dari rekod KEHADIRAN SEBENAR (bukan reka
+          // angka) - kalau kehadiran perjumpaan ni belum direkod, kosong.
+          bilAhliHadir: kehadiran ? String(kehadiran.jumlahHadir ?? '') : '',
         })
       }
       setMemuatkan(false)
@@ -181,8 +214,6 @@ export default function LaporanUBKSDetail() {
     setData((d) => ({ ...d, [kunci]: nilai }))
   }
 
-  // Amaran kalau tinggalkan page (tutup tab/refresh) sedangkan ada
-  // perubahan belum Simpan - elak kerja hilang senyap.
   useEffect(() => {
     function amaranKeluar(e) {
       if (!dirty) return
@@ -200,7 +231,73 @@ export default function LaporanUBKSDetail() {
 
   function pilihPikebm(tajuk) {
     const item = senaraiPikebm.find((p) => p.tajuk === tajuk)
-    setData((d) => ({ ...d, pikebmTajuk: tajuk, pikebmObjektif: item?.objektif ?? d.pikebmObjektif }))
+    u('pikebmTajuk', tajuk)
+    u('pikebmObjektif', item?.objektif ?? data.pikebmObjektif)
+  }
+
+  function ubahSivik(i, medan, nilai) {
+    setDirty(true)
+    setData((d) => {
+      const sivik = [...d.sivik]
+      sivik[i] = { ...sivik[i], [medan]: nilai }
+      return { ...d, sivik }
+    })
+  }
+
+  function togglPerancangan(p) {
+    setPerancanganDicek((s) => {
+      const baru = new Set(s)
+      if (baru.has(p)) baru.delete(p)
+      else baru.add(p)
+      return baru
+    })
+  }
+
+  const perancanganBolehJana = senaraiPerancanganUnit.filter((p) => p.perancangan?.trim())
+  const bolehJanaAI = perancanganDicek.size > 0 || lainLain.trim().length > 0
+
+  async function janaAI() {
+    // Amaran kalau dah ada kandungan (staff mungkin dah edit tangan lepas
+    // jana AI kali pertama) - elak timpa kerja staff senyap-senyap.
+    const adaKandunganSediaAda = data.laporanAktiviti.trim() || data.refleksi.trim() || data.sivik.some((s) => s.tajuk.trim() || s.aktiviti.trim())
+    if (adaKandunganSediaAda) {
+      const teruskan = await konfirm('Laporan Aktiviti/Refleksi/Nilai Sivik sedia ada akan DITIMPA hasil AI baru. Teruskan?', { bahaya: true })
+      if (!teruskan) return
+    }
+
+    setMenjanaAI(true)
+    setRalat(null)
+    try {
+      const teksPerancangan = [
+        ...senaraiPerancanganUnit.filter((p) => perancanganDicek.has(p.perjumpaan)).map((p) => `Perjumpaan ${p.perjumpaan}: ${p.perancangan}`),
+        lainLain.trim() ? `Lain-lain: ${lainLain.trim()}` : null,
+      ].filter(Boolean).join('\n')
+
+      const hasil = await janaAiLaporanUBKS({
+        unit: unit.namaUnit,
+        tarikh: ddmmyyyy(data.tarikh),
+        hari: data.tarikh ? namaHari(data.tarikh) : '',
+        masa: data.masa,
+        tempat: data.tempat,
+        bilAhliHadir: data.bilAhliHadir,
+        pikebmTajuk: data.pikebmTajuk,
+        pikebmObjektif: data.pikebmObjektif,
+        perancangan: teksPerancangan,
+        senaraiSivik: senaraiSivik.map((s) => ({ nilai: s.nilai, tajuk: s.tajuk, aktiviti: s.aktiviti })),
+      })
+
+      setDirty(true)
+      setData((d) => ({
+        ...d,
+        laporanAktiviti: hasil.laporanAktiviti || d.laporanAktiviti,
+        refleksi: hasil.refleksi || d.refleksi,
+        sivik: hasil.sivik?.length ? [hasil.sivik[0] || { ...SIVIK_KOSONG }, hasil.sivik[1] || { ...SIVIK_KOSONG }] : d.sivik,
+      }))
+    } catch (err) {
+      await amaran(err.message || 'Gagal jana dengan AI. Sila cuba lagi.')
+    } finally {
+      setMenjanaAI(false)
+    }
   }
 
   function pilihGambarSlot(i, e) {
@@ -254,9 +351,6 @@ export default function LaporanUBKSDetail() {
       const medan = { setiausaha: 'ttdSetiausahaUrl', guru: 'ttdGuruUrl', gpk: 'ttdGPKUrl' }[kunci]
       u(medan, hasil.url)
 
-      // Setiausaha & Guru Penasihat - simpan ke BANK tandatangan unit ni
-      // automatik (bukan GPK Kokurikulum, sebab dia bukan "orang unit ni"
-      // - tandatangan dia manual setiap kali, macam sebelum ni).
       if (kunci === 'setiausaha' || kunci === 'guru') {
         const namaMedan = kunci === 'setiausaha' ? 'namaSetiausaha' : 'namaGuruTtd'
         const namaSemasa = data[namaMedan]
@@ -292,9 +386,6 @@ export default function LaporanUBKSDetail() {
     }
   }
 
-  // Cetak - kalau ada perubahan belum simpan, SIMPAN DULU secara automatik
-  // sebelum cetak (elak staff anggap "cetak = dah simpan" sedangkan
-  // sebenarnya data tu belum masuk pangkalan data).
   async function cetak() {
     setMencetak(true)
     try {
@@ -330,19 +421,54 @@ export default function LaporanUBKSDetail() {
       </div>
 
       <div className="space-y-5">
-        {rujukanPerancangan && (
-          <p className="text-xs text-inkmuted p-2.5 rounded-card bg-base">📋 Perancangan asal: {rujukanPerancangan}</p>
-        )}
-
         <div className="grid grid-cols-2 gap-3">
-          <Medan label="Tarikh (auto dari Perancangan)" value={data.tarikh} onChange={(v) => u('tarikh', v)} placeholder="14/03/2026" />
+          <Medan label="Tarikh (boleh tukar manual)" value={data.tarikh} onChange={(v) => u('tarikh', v)} type="date" />
+          <Medan label="Hari (auto dari Tarikh)" value={data.tarikh ? namaHari(data.tarikh) : ''} readOnly />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <Medan label="Masa" value={data.masa} onChange={(v) => u('masa', v)} placeholder="4.00 petang" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
           <Medan label="Tempat" value={data.tempat} onChange={(v) => u('tempat', v)} />
-          <Medan label="Bil. Ahli Hadir (auto dari Kehadiran)" value={data.bilAhliHadir} onChange={(v) => u('bilAhliHadir', v)} placeholder="24" />
         </div>
+        <Medan
+          label="Bil. Ahli Hadir (auto dari Kehadiran UBKS)"
+          value={data.bilAhliHadir}
+          onChange={(v) => u('bilAhliHadir', v)}
+          placeholder="Belum ada rekod Kehadiran untuk perjumpaan ni"
+        />
         <Medan label="Guru Penasihat (ringkasan untuk teks laporan)" value={data.guruPenasihat} onChange={(v) => u('guruPenasihat', v)} />
+
+        <div className="p-3.5 rounded-card bg-base border border-border">
+          <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-1">Perancangan Unit (bantu AI sahaja - tak disimpan)</p>
+          <p className="text-[11px] text-inkmuted mb-3">Tick perancangan yang nak dijadikan asas AI tulis Laporan Aktiviti/Refleksi. Tak nak ikut Perancangan? Isi "Lain-lain" sahaja.</p>
+          {perancanganBolehJana.length === 0 ? (
+            <p className="text-xs text-inkmuted mb-3">Tiada Perancangan diisi lagi untuk unit ni.</p>
+          ) : (
+            <div className="space-y-1.5 mb-3">
+              {perancanganBolehJana.map((p) => (
+                <label key={p.perjumpaan} className="flex items-start gap-2 p-2 rounded-card bg-surface border border-border cursor-pointer">
+                  <input type="checkbox" checked={perancanganDicek.has(p.perjumpaan)} onChange={() => togglPerancangan(p.perjumpaan)} className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span className="text-xs text-ink whitespace-pre-line"><strong>Perjumpaan {p.perjumpaan}:</strong> {p.perancangan}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          <label className="block text-xs font-medium text-ink mb-1">Lain-lain (taip sendiri, tak ikut Perancangan)</label>
+          <textarea
+            rows={2}
+            value={lainLain}
+            onChange={(e) => setLainLain(e.target.value)}
+            placeholder="cth. Aktiviti sebenar berbeza dari perancangan sebab..."
+            className="w-full px-3 py-2 rounded-card border border-border bg-surface text-sm resize-y mb-3"
+          />
+          <button
+            type="button"
+            onClick={janaAI}
+            disabled={!bolehJanaAI || menjanaAI}
+            className="w-full h-11 rounded-card bg-ink text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            <Sparkles size={15} /> {menjanaAI ? 'Menjana dengan AI…' : 'Jana dengan AI'}
+          </button>
+        </div>
 
         <Medan label="Laporan Aktiviti" value={data.laporanAktiviti} onChange={(v) => u('laporanAktiviti', v)} textarea />
         <Medan label="Refleksi" value={data.refleksi} onChange={(v) => u('refleksi', v)} textarea />
@@ -368,10 +494,19 @@ export default function LaporanUBKSDetail() {
         </div>
 
         <div>
-          <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">Penerapan Nilai Sivik Dalam Kokurikulum</p>
-          <div className="space-y-2">
-            <Medan label="Nilai Teras" value={data.nilaiTeras} onChange={(v) => u('nilaiTeras', v)} placeholder="cth. Kerjasama" />
-            <Medan label="Aktiviti" value={data.nilaiAktiviti} onChange={(v) => u('nilaiAktiviti', v)} textarea />
+          <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-1">Penerapan Nilai Sivik Dalam Kokurikulum</p>
+          <p className="text-[11px] text-inkmuted mb-2">2 tajuk (boleh isi manual, atau guna "Jana dengan AI" di atas untuk cadangan automatik).</p>
+          <div className="space-y-3">
+            {[0, 1].map((i) => (
+              <div key={i} className="p-3 rounded-card border border-border space-y-2">
+                <p className="text-[11px] font-semibold text-inkmuted">Nilai Sivik {i + 1}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="text" value={data.sivik[i]?.nilai ?? ''} onChange={(e) => ubahSivik(i, 'nilai', e.target.value)} placeholder="Nilai (cth. Kasih Sayang)" className="h-9 px-2.5 rounded-card border border-border bg-surface text-xs" />
+                  <input type="text" value={data.sivik[i]?.tajuk ?? ''} onChange={(e) => ubahSivik(i, 'tajuk', e.target.value)} placeholder="Tajuk" className="h-9 px-2.5 rounded-card border border-border bg-surface text-xs" />
+                </div>
+                <textarea rows={2} value={data.sivik[i]?.aktiviti ?? ''} onChange={(e) => ubahSivik(i, 'aktiviti', e.target.value)} placeholder="Aktiviti…" className="w-full px-2.5 py-2 rounded-card border border-border bg-surface text-xs resize-y" />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -435,14 +570,13 @@ export default function LaporanUBKSDetail() {
           {namaGuruPilihan.length === 0 && (
             <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Guru Penasihat ditetapkan lagi untuk unit ni - pergi halaman Unit (Murid UBKS) untuk isi, atau taip nama terus.</p>
           )}
-          <p className="text-[11px] text-inkmuted mt-2">💡 Guru tak hadir? Tukar terus nama dalam dropdown Guru Penasihat (tandatangan) - tandatangan tersimpan (kalau ada) terus terpakai.</p>
         </div>
 
         {ralat && <p className="text-sm text-brand-red">{ralat}</p>}
 
         <div className="flex gap-3 pt-2 border-t border-border sticky bottom-0 bg-surface pb-2">
           <button onClick={simpan} disabled={menyimpan} className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
-            {menyimpan ? 'Menyimpan…' : 'Simpan Laporan'}
+            {menyimpan ? 'Menyimpan…' : rekodSediaAda ? 'Kemaskini Laporan' : 'Simpan Laporan'}
           </button>
           <button onClick={cetak} disabled={mencetak} className="h-12 px-4 rounded-card border border-border text-sm font-medium text-ink flex items-center gap-1.5 disabled:opacity-60">
             <Printer size={15} /> {mencetak ? (dirty ? 'Menyimpan…' : 'Menyediakan…') : 'Cetak'}

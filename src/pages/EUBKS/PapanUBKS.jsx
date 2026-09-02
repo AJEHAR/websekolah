@@ -14,16 +14,19 @@ const PERJUMPAAN_SENARAI = Array.from({ length: 12 }, (_, i) => i + 1)
 const LEBAR = { bil: 32, nama: 150, kelas: 90, sel: 26, jumlah: 44 }
 const KIRI = { bil: 0, nama: LEBAR.bil, kelas: LEBAR.bil + LEBAR.nama }
 
-// Hanya 3 kategori standard ni dipaparkan di Papan (bukan kategori custom lain
-// yang admin mungkin tambah, contoh "Kebitaraan" atau lain-lain).
-const KOD_DIBENARKAN = ['UB', 'K', 'S']
+// Papan ni cuma papar 3 KATEGORI ASAS (Unit Beruniform/Kelab/Sukan) - tapis
+// guna medan "jenis" (tetap: beruniform/kelab/sukan), BUKAN kod kategori
+// tegar seperti dulu (['UB','K','S']) - kod kategori admin taip bebas,
+// tak boleh dijamin ikut singkatan tu (ini punca "Papan Kehadiran kosong"
+// yang pernah berlaku - sama akar masalah dengan Sijil Tamat sebelum ni).
+const JENIS_DIBENARKAN = ['beruniform', 'kelab', 'sukan']
 const WARNA_KATEGORI = {
-  UB: { header: '#E6F1FB', headerTeks: '#0C447C', sel: '#F5FAFF' },
-  K: { header: '#EAF3DE', headerTeks: '#27500A', sel: '#F7FBF2' },
-  S: { header: '#FAECE7', headerTeks: '#712B13', sel: '#FDF6F3' },
+  beruniform: { header: '#E6F1FB', headerTeks: '#0C447C', sel: '#F5FAFF' },
+  kelab: { header: '#EAF3DE', headerTeks: '#27500A', sel: '#F7FBF2' },
+  sukan: { header: '#FAECE7', headerTeks: '#712B13', sel: '#FDF6F3' },
 }
-function warnaUntuk(kod) {
-  return WARNA_KATEGORI[kod] ?? { header: '#F1EFE8', headerTeks: '#444441', sel: '#FAFAF8' }
+function warnaUntuk(jenis) {
+  return WARNA_KATEGORI[jenis] ?? { header: '#F1EFE8', headerTeks: '#444441', sel: '#FAFAF8' }
 }
 
 export default function PapanUBKS() {
@@ -31,7 +34,7 @@ export default function PapanUBKS() {
   const { senarai: unitSenarai, loading: loadingUnit } = useUnitUBKSTahun(tahunSesi)
   const { senarai: kehadiranSenarai, loading: loadingKehadiran } = useKehadiranUBKSTahun(tahunSesi)
   const { senarai: kategoriSemua } = useKategoriUBKS()
-  const kategoriSenarai = kategoriSemua.filter((k) => KOD_DIBENARKAN.includes(k.kod?.toUpperCase()))
+  const kategoriSenarai = kategoriSemua.filter((k) => JENIS_DIBENARKAN.includes(k.jenis))
   const [carian, setCarian] = useState('')
 
   const pelajar = useMemo(() => {
@@ -165,7 +168,7 @@ export default function PapanUBKS() {
                     key={k.kod}
                     colSpan={13}
                     className="px-1 py-1.5 font-semibold border-b border-l border-border text-center"
-                    style={{ backgroundColor: warnaUntuk(k.kod).header, color: warnaUntuk(k.kod).headerTeks }}
+                    style={{ backgroundColor: warnaUntuk(k.jenis).header, color: warnaUntuk(k.jenis).headerTeks }}
                   >
                     {k.nama} ({k.kod})
                   </th>
@@ -178,14 +181,14 @@ export default function PapanUBKS() {
                       <th
                         key={`${k.kod}-${pj}`}
                         className="px-1 py-1.5 font-medium border-b border-border text-center"
-                        style={{ width: LEBAR.sel, backgroundColor: warnaUntuk(k.kod).sel, color: warnaUntuk(k.kod).headerTeks }}
+                        style={{ width: LEBAR.sel, backgroundColor: warnaUntuk(k.jenis).sel, color: warnaUntuk(k.jenis).headerTeks }}
                       >
                         {pj}
                       </th>
                     ))}
                     <th
                       className="px-1 py-1.5 font-semibold border-b border-l border-border text-center"
-                      style={{ width: LEBAR.jumlah, backgroundColor: warnaUntuk(k.kod).header, color: warnaUntuk(k.kod).headerTeks }}
+                      style={{ width: LEBAR.jumlah, backgroundColor: warnaUntuk(k.jenis).header, color: warnaUntuk(k.jenis).headerTeks }}
                     >
                       Jum.
                     </th>
@@ -201,7 +204,7 @@ export default function PapanUBKS() {
                   <td className="sticky z-10 bg-surface px-1 py-2 border-r border-border whitespace-nowrap text-inkmuted text-center" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>{p.tahunTingkatan}</td>
                   {kategoriSenarai.map((k) => {
                     const data = p.ikutKategori[k.kod]
-                    const warna = warnaUntuk(k.kod)
+                    const warna = warnaUntuk(k.jenis)
                     return (
                       <Fragment key={k.kod}>
                         {PERJUMPAAN_SENARAI.map((pj) => {

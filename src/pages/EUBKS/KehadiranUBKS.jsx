@@ -5,6 +5,7 @@ import { useUnitUBKSTahun } from '../../hooks/useUnitUBKS.js'
 import { useKehadiranUBKSTahun } from '../../hooks/useKehadiranUBKS.js'
 import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { todayISO } from '../../lib/dateUtils.js'
+import { kumpulUnitIkutKategori } from './kumpulUnitIkutKategori.js'
 import PapanUBKS from './PapanUBKS.jsx'
 import UnitKehadiranCard from './UnitKehadiranCard.jsx'
 import IsiKehadiranUBKSModal from './IsiKehadiranUBKSModal.jsx'
@@ -53,6 +54,7 @@ function IsiKehadiran({ user }) {
   const { senarai: kategoriSenarai } = useKategoriUBKS()
 
   const unitDitapis = unitSenarai.filter((u) => u.namaUnit?.toLowerCase().includes(carian.toLowerCase()))
+  const kumpulan = kumpulUnitIkutKategori(unitDitapis, kategoriSenarai)
 
   function labelKategori(kod) {
     return kategoriSenarai.find((k) => k.kod === kod)?.nama ?? kod
@@ -123,15 +125,22 @@ function IsiKehadiran({ user }) {
       ) : unitDitapis.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada unit dijumpai.</p>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-3">
-          {unitDitapis.map((u) => (
-            <UnitKehadiranCard
-              key={u.id}
-              unit={u}
-              rekod={rekodUntuk(u)}
-              kategoriLabel={labelKategori(u.kategoriUnit)}
-              onBuka={() => setUnitDibuka(u)}
-            />
+        <div className="space-y-6">
+          {kumpulan.map((kump) => (
+            <div key={kump.kod}>
+              <h3 className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">{kump.label} <span className="font-normal normal-case">({kump.units.length})</span></h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {kump.units.map((u) => (
+                  <UnitKehadiranCard
+                    key={u.id}
+                    unit={u}
+                    rekod={rekodUntuk(u)}
+                    kategoriLabel={labelKategori(u.kategoriUnit)}
+                    onBuka={() => setUnitDibuka(u)}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { collection, doc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'kehadiranUBKS'
@@ -43,6 +43,15 @@ export async function ambilKehadiranUnit(unitId) {
   const q = query(collection(db, KOLEKSI), where('unitId', '==', unitId))
   const snap = await getDocs(q)
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+// Rekod kehadiran SATU perjumpaan sahaja (ikut kunci sama dengan
+// Perancangan/Laporan) - untuk Laporan UBKS auto-isi "Bil. Ahli Hadir"
+// daripada kehadiran SEBENAR yang staff dah rekod (bukan reka angka).
+export async function muatkanKehadiranSatu(tahunSesi, unitId, perjumpaan) {
+  if (!isFirebaseConfigured) return null
+  const snap = await getDoc(doc(db, KOLEKSI, idRekod(tahunSesi, unitId, perjumpaan)))
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null
 }
 // senaraiKehadiran: [{ idMurid, nama, hadir: bool, adalahLF: bool }, ...]
 export async function simpanKehadiranUBKS(tahunSesi, unit, perjumpaan, tarikh, senaraiKehadiran, uid) {

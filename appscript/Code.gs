@@ -127,6 +127,10 @@ function doPost(e) {
       return kendalikanJanaAI(data)
     }
 
+    if (data.action === 'generateLaporanUBKS') {
+      return kendalikanJanaAILaporanUBKS(data)
+    }
+
     if (!data.base64Data || !data.fileName) {
       return jsonResponse({ error: 'Data fail tidak lengkap' })
     }
@@ -260,6 +264,88 @@ function kendalikanJanaAI(data) {
       kekuatan: hasil.kekuatan || '',
       kelemahan: hasil.kelemahan || '',
       penambahbaikan: hasil.penambahbaikan || '',
+    })
+  } catch (err) {
+    return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })
+  }
+}
+
+// Laporan UBKS - jana Laporan Aktiviti + Refleksi (dari Perancangan
+// ditick/Lain-lain) DAN pilih 2 Tajuk Sivik + tulis Aktiviti masing-masing
+// (dari senarai TETAP - dihantar terus dalam payload.senaraiSivik, bukan
+// AI cipta nilai bebas). Semua output MAKSIMUM 3 bullet - format
+// "1. ...\n2. ...\n3. ..." (boleh kurang, jangan lebih).
+function kendalikanJanaAILaporanUBKS(data) {
+  if (!GROQ_API_KEY) {
+    return jsonResponse({ error: 'AI belum disetup - GROQ_API_KEY tiada dalam Script Properties. Hubungi admin.' })
+  }
+
+  const d = data.payload || {}
+  const senaraiSivikTeks = (d.senaraiSivik || [])
+    .map(function (s) { return '- [' + s.nilai + '] ' + s.tajuk + ' (cadangan aktiviti asal: ' + s.aktiviti + ')' })
+    .join('\n')
+
+  const prompt =
+    'Anda adalah pembantu penulisan laporan aktiviti perjumpaan kokurikulum sekolah, dalam Bahasa Melayu formal, realistik dan kontekstual.\n\n' +
+    'Maklumat perjumpaan:\n' +
+    '- Unit          : ' + (d.unit || '(tiada maklumat)') + '\n' +
+    '- Tarikh        : ' + (d.tarikh || '(tiada maklumat)') + '\n' +
+    '- Hari          : ' + (d.hari || '(tiada maklumat)') + '\n' +
+    '- Masa          : ' + (d.masa || '(tiada maklumat)') + '\n' +
+    '- Tempat        : ' + (d.tempat || '(tiada maklumat)') + '\n' +
+    '- Bil. Ahli Hadir: ' + (d.bilAhliHadir || '(tiada maklumat)') + '\n' +
+    '- Aktiviti PIKeBM: ' + (d.pikebmTajuk || '(tiada)') + ' - ' + (d.pikebmObjektif || '') + '\n\n' +
+    'Apa yang dirancang/berlaku untuk perjumpaan ni (staff pilih/taip):\n' + (d.perancangan || '(tiada maklumat spesifik - anggar aktiviti biasa unit ni)') + '\n\n' +
+    'SENARAI TAJUK SIVIK DIBENARKAN (pilih TEPAT 2 sahaja dari senarai ni, JANGAN cipta tajuk baru):\n' +
+    senaraiSivikTeks + '\n\n' +
+    'ARAHAN:\n' +
+    '1. "laporanAktiviti" - huraikan apa yang berlaku sepanjang perjumpaan (berdasarkan perancangan di atas, anggap ia berjalan seperti dirancang).\n' +
+    '2. "refleksi" - penilaian ringkas hasil/keberkesanan perjumpaan.\n' +
+    '3. Pilih 2 tajuk PALING SESUAI dari senarai Sivik di atas (nama tajuk MESTI SAMA PERSIS dengan dalam senarai), tulis aktiviti sivik untuk setiap satu berdasarkan konteks perjumpaan ni (bukan salin terus cadangan asal, sesuaikan).\n' +
+    '4. SETIAP medan teks (laporanAktiviti, refleksi, aktiviti setiap sivik) MAKSIMUM 3 bullet, format "1. [ayat]\\n2. [ayat]\\n3. [ayat]" (boleh kurang 3, jangan lebih).\n' +
+    '5. Bahasa Melayu formal, ayat pendek dan jelas.\n\n' +
+    'OUTPUT - format JSON SAHAJA:\n' +
+    '{"laporanAktiviti":"...","refleksi":"...","sivik":[{"nilai":"...","tajuk":"...","aktiviti":"..."},{"nilai":"...","tajuk":"...","aktiviti":"..."}]}'
+
+  try {
+    const res = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + GROQ_API_KEY },
+      payload: JSON.stringify({
+        model: 'openai/gpt-oss-120b',
+        messages: [
+          { role: 'system', content: 'Anda pembantu penulisan laporan kokurikulum sekolah. Balas HANYA JSON sah. Tiada markdown.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.65,
+        max_tokens: 1100,
+        response_format: { type: 'json_object' },
+      }),
+      muteHttpExceptions: true,
+    })
+
+    const json = JSON.parse(res.getContentText())
+    if (res.getResponseCode() !== 200) {
+      const mesejRalat = (json && json.error && json.error.message) || ('HTTP ' + res.getResponseCode())
+      return jsonResponse({ error: 'Ralat Groq API: ' + mesejRalat })
+    }
+
+    let kandungan = json.choices[0].message.content.trim()
+    kandungan = kandungan.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
+
+    let hasil
+    try {
+      hasil = JSON.parse(kandungan)
+    } catch (pe) {
+      return jsonResponse({ error: 'Ralat format respons AI. Sila cuba lagi.' })
+    }
+
+    const sivik = Array.isArray(hasil.sivik) ? hasil.sivik.slice(0, 2) : []
+    return jsonResponse({
+      laporanAktiviti: hasil.laporanAktiviti || '',
+      refleksi: hasil.refleksi || '',
+      sivik: sivik.map(function (s) { return { nilai: s.nilai || '', tajuk: s.tajuk || '', aktiviti: s.aktiviti || '' } }),
     })
   } catch (err) {
     return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })

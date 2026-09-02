@@ -161,3 +161,47 @@ export async function janaAiOpr(dataProgram) {
   if (hasil.error) throw new Error(hasil.error)
   return hasil
 }
+
+// Jana Laporan Aktiviti/Refleksi/Nilai Sivik (Laporan UBKS) guna AI - sama
+// corak dengan janaAiOpr, laluan Apps Script berasingan (action berbeza)
+// supaya prompt/logik dua-dua bebas diubah tanpa ganggu satu sama lain.
+export async function janaAiLaporanUBKS(payload) {
+  if (!isDriveUploadConfigured) {
+    throw new Error('Ciri AI belum disetup (isi VITE_APPS_SCRIPT_URL dalam .env)')
+  }
+  if (!auth?.currentUser) {
+    throw new Error('Sesi log masuk tidak dijumpai. Sila log masuk semula.')
+  }
+
+  const idToken = await auth.currentUser.getIdToken()
+
+  const controller = new AbortController()
+  const masaTamat = setTimeout(() => controller.abort(), HAD_MASA_MS)
+
+  let res
+  try {
+    res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ idToken, action: 'generateLaporanUBKS', payload }),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('AI ambil masa terlalu lama (>45 saat). Cuba lagi.')
+    }
+    throw new Error('Gagal sambung ke pelayan AI. Semak sambungan internet anda dan cuba lagi.')
+  } finally {
+    clearTimeout(masaTamat)
+  }
+
+  let hasil
+  try {
+    hasil = await res.json()
+  } catch {
+    throw new Error('Pelayan AI pulangkan jawapan tak sah. Cuba lagi.')
+  }
+
+  if (hasil.error) throw new Error(hasil.error)
+  return hasil
+}

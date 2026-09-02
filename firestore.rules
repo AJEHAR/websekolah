@@ -371,5 +371,11 @@ service cloud.firestore {
       allow read: if isStaffDiluluskan();
       allow write: if isStaffDiluluskan();
     }
+
+    // Senarai rujukan Tajuk Sivik Dalam Kokurikulum - sama corak dengan PIKeBM.
+    match /sivikKokurikulum/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
   }
 }
