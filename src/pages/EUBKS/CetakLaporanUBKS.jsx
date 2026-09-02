@@ -1,5 +1,4 @@
 import PrintArea from '../../components/cetak/PrintArea.jsx'
-import { namaHari } from '../../lib/dateUtils.js'
 
 const KRIM = '#FCEFC7'
 const BIRU = '#1B0FB0'
@@ -15,14 +14,14 @@ function KotakKrim({ children, className = '' }) {
   )
 }
 
-function BarisJadual({ label, value }) {
+function BarisJadual({ label, value, flex = 1 }) {
   return (
-    <div className="flex border-b border-black last:border-b-0 overflow-hidden" style={{ flex: 1 }}>
+    <div className="flex border-b border-black last:border-b-0 overflow-hidden" style={{ flex }}>
       <div className="w-24 shrink-0 flex items-center justify-center border-r border-black px-1">
         <p className="text-xs font-medium text-black text-center">{label}</p>
       </div>
       <div className="flex-1 flex items-center px-2 overflow-hidden">
-        <p className="text-[11px] text-black leading-snug whitespace-pre-line">{value || ''}</p>
+        <p className="text-[11px] text-black leading-snug whitespace-pre-line">{(value || '').trim()}</p>
       </div>
     </div>
   )
@@ -30,7 +29,7 @@ function BarisJadual({ label, value }) {
 
 function GambarSlot({ src }) {
   return (
-    <div className="border-2 border-black overflow-hidden flex-1">
+    <div className="border-2 border-black overflow-hidden h-full w-full">
       {src ? <img src={src} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-[#EAF3FB]" />}
     </div>
   )
@@ -51,15 +50,6 @@ function BlokTandatanganCetak({ label, ttdUrl, nama }) {
   )
 }
 
-// Cuba tukar teks tarikh (ISO "YYYY-MM-DD" DARI <input type=date>, atau
-// teks bebas rekod lama) jadi nama hari - kalau format tak dikenali,
-// kosongkan sahaja (elak papar nama hari salah).
-function cubaNamaHari(tarikh) {
-  if (!tarikh) return ''
-  if (/^\d{4}-\d{2}-\d{2}$/.test(tarikh)) return namaHari(tarikh) || ''
-  return ''
-}
-
 // Sama - tukar ISO jadi DD/MM/YYYY untuk paparan. Dikira SENDIRI di sini
 // (bukan harap caller precompute) supaya konsisten tak kira cetak dari
 // borang (ada tarikhPaparan siap) atau terus dari senarai (rekod mentah
@@ -73,13 +63,17 @@ function cubaFormatTarikh(tarikh) {
   return tarikh // rekod lama/teks bebas - papar terus
 }
 
-// Replika TEPAT templat "Laporan Aktiviti Perjumpaan" rujukan - TETAP 1
-// muka A4 (height:297mm + overflow:hidden), susunan flex berkadar supaya
-// kekal isi penuh muka surat tak kira teks sikit/banyak (sama prinsip
-// dengan Cetak OPR).
+// Replika TEPAT templat "Laporan Aktiviti Perjumpaan" rujukan - kotak
+// SAIZ TETAP ikut nisbah templat asal sepenuhnya (bukan cuba regang/tolak
+// isi penuh muka surat lagi - itu keputusan reka bentuk saya awal yang
+// silap, bercanggah dengan "ikut templat" - lihat perbincangan). Tinggi
+// keseluruhan (297mm + overflow:hidden) kekal sebagai SILING/HAD MAKSIMUM
+// sahaja (jaring keselamatan elak jadi 2 muka surat kalau teks sangat
+// panjang) - BUKAN sasaran yang wajib dipenuhi. Kalau kandungan lebih
+// pendek dari 297mm, baki ruang jadi margin kosong biasa di penghujung
+// fizikal kertas (normal untuk dokumen cetak, tak menjejaskan apa-apa).
 export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
   const gambar = data.gambar || [null, null, null, null]
-  const hari = data.hari || cubaNamaHari(data.tarikh)
   // Sokong SEMUA bentuk data lama (nilaiTeras/nilaiAktiviti asal, ATAU
   // array sivik[] 2-slot dari versi interim, ATAU objek sivik tunggal
   // yang terkini) - cetak terus dari senarai (bypass migrate di borang
@@ -99,63 +93,63 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
           <p className="text-2xl font-extrabold text-white uppercase tracking-wide">Laporan Aktiviti Perjumpaan</p>
         </div>
 
-        <div className="p-6 flex-1 flex flex-col min-h-0">
-          <div className="flex border border-black divide-x divide-black mb-2 shrink-0" style={{ backgroundColor: KRIM }}>
+        <div className="p-6">
+          <div className="flex border border-black divide-x divide-black mb-2" style={{ backgroundColor: KRIM }}>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Bil. Perjumpaan : <span className="font-normal">{perjumpaan}</span></p></div>
-            <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Hari : <span className="font-normal">{hari}</span></p></div>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Tarikh : <span className="font-normal">{cubaFormatTarikh(data.tarikh)}</span></p></div>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Masa : <span className="font-normal">{data.masa}</span></p></div>
           </div>
 
-          <div className="flex border border-black divide-x divide-black mb-2 shrink-0">
+          <div className="flex border border-black divide-x divide-black mb-2">
             <KotakKrim className="border-0 py-1.5" >{`Tempat : ${data.tempat || ''}`}</KotakKrim>
             <KotakKrim className="border-0 py-1.5">{`Bil. Ahli Hadir : ${data.bilAhliHadir || ''}`}</KotakKrim>
           </div>
 
-          <div className="mb-3 shrink-0"><KotakKrim className="py-1.5">{`Guru Penasihat : ${data.guruPenasihat || ''}`}</KotakKrim></div>
+          <div className="mb-3"><KotakKrim className="py-1.5">{`Guru Penasihat : ${data.guruPenasihat || ''}`}</KotakKrim></div>
 
-          <div className="flex-1 flex gap-2 min-h-0">
-            <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex flex-col mb-2" style={{ flex: 3.5 }}>
+          {/* Kotak-kotak ni saiz TETAP, nisbah sepadan templat rujukan asal. */}
+          <div className="flex gap-2">
+            <div className="flex-1 flex flex-col">
+              <div className="flex flex-col mb-2" style={{ height: '46mm' }}>
                 <KotakKrim className="shrink-0">Laporan Aktiviti</KotakKrim>
                 <div className="flex-1 border border-t-0 border-black p-2 overflow-hidden">
-                  <p className="text-[11px] text-black whitespace-pre-line leading-snug">{data.laporanAktiviti}</p>
+                  <p className="text-[11px] text-black whitespace-pre-line leading-snug">{(data.laporanAktiviti || '').trim()}</p>
                 </div>
               </div>
 
-              <div className="flex flex-col mb-2" style={{ flex: 1.8 }}>
+              <div className="flex flex-col mb-2" style={{ height: '30mm' }}>
                 <KotakKrim className="shrink-0">Refleksi</KotakKrim>
                 <div className="flex-1 border border-t-0 border-black p-2 overflow-hidden">
-                  <p className="text-[11px] text-black whitespace-pre-line leading-snug">{data.refleksi}</p>
+                  <p className="text-[11px] text-black whitespace-pre-line leading-snug">{(data.refleksi || '').trim()}</p>
                 </div>
               </div>
 
-              <div className="flex flex-col mb-2" style={{ flex: 1.3 }}>
+              <div className="flex flex-col mb-2" style={{ height: '26mm' }}>
                 <KotakKrim className="shrink-0">Sisipan PIKeBM (10 minit)</KotakKrim>
                 <div className="flex-1 border border-t-0 border-black flex flex-col">
-                  <BarisJadual label="Tajuk" value={data.pikebmTajuk} />
-                  <BarisJadual label="Objektif" value={data.pikebmObjektif} />
+                  <BarisJadual label="Tajuk" value={data.pikebmTajuk} flex={1} />
+                  <BarisJadual label="Objektif" value={data.pikebmObjektif} flex={1.5} />
                 </div>
               </div>
 
-              <div className="flex flex-col" style={{ flex: 1.2 }}>
+              <div className="flex flex-col" style={{ height: '30mm' }}>
                 <KotakKrim className="shrink-0">Penerapan Nilai Sivik Dalam Kokurikulum</KotakKrim>
                 <div className="flex-1 border border-t-0 border-black flex flex-col">
-                  <BarisJadual label="Nilai Teras" value={[sivik.nilai, sivik.tajuk].filter(Boolean).join(' - ')} />
-                  <BarisJadual label="Aktiviti" value={sivik.aktiviti} />
+                  <BarisJadual label="Nilai Teras" value={[sivik.nilai, sivik.tajuk].filter(Boolean).join(' - ')} flex={1} />
+                  <BarisJadual label="Aktiviti" value={sivik.aktiviti} flex={2} />
                 </div>
               </div>
             </div>
 
             <div className="w-[110px] shrink-0 flex flex-col gap-2">
-              <GambarSlot src={gambar[0]} />
-              <GambarSlot src={gambar[1]} />
-              <GambarSlot src={gambar[2]} />
-              <GambarSlot src={gambar[3]} />
+              <div style={{ height: '46mm' }}><GambarSlot src={gambar[0]} /></div>
+              <div style={{ height: '30mm' }}><GambarSlot src={gambar[1]} /></div>
+              <div style={{ height: '26mm' }}><GambarSlot src={gambar[2]} /></div>
+              <div style={{ height: '30mm' }}><GambarSlot src={gambar[3]} /></div>
             </div>
           </div>
 
-          <div className="flex border border-black divide-x divide-black mt-3 shrink-0">
+          <div className="flex border border-black divide-x divide-black mt-4">
             <BlokTandatanganCetak label="Tandatangan Setiausaha" ttdUrl={data.ttdSetiausahaUrl} nama={data.namaSetiausaha} />
             <BlokTandatanganCetak label="Tandatangan Guru Penasihat" ttdUrl={data.ttdGuruUrl} nama={data.namaGuruTtd} />
             <BlokTandatanganCetak label="Tandatangan GPK Kokurikulum" ttdUrl={data.ttdGPKUrl} nama={data.namaGPK} />

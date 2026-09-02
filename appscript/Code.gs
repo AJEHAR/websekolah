@@ -300,12 +300,12 @@ function kendalikanJanaAILaporanUBKS(data) {
     '- Bil. Ahli Hadir: ' + (d.bilAhliHadir || '(tiada maklumat)') + '\n' +
     '- Aktiviti PIKeBM: ' + (d.pikebmTajuk || '(tiada)') + ' - ' + (d.pikebmObjektif || '') + '\n\n' +
     'Apa yang dirancang/berlaku untuk perjumpaan ni (staff pilih/taip):\n' + (d.perancangan || '(tiada maklumat spesifik - anggar aktiviti biasa unit ni)') + '\n\n' +
-    'SENARAI TAJUK SIVIK DIBENARKAN (pilih TEPAT 1 sahaja dari senarai ni, JANGAN cipta tajuk baru):\n' +
+    'SENARAI TAJUK SIVIK DIBENARKAN (WAJIB pilih TEPAT 1 dari senarai ni sahaja - salin nama tajuk PERSIS macam tertulis, JANGAN gabung/reka/ubah nama tajuk):\n' +
     senaraiSivikTeks + '\n\n' +
     'ARAHAN:\n' +
     '1. "laporanAktiviti" - huraikan apa yang berlaku sepanjang perjumpaan (berdasarkan perancangan di atas, anggap ia berjalan seperti dirancang).\n' +
     '2. "refleksi" - penilaian ringkas hasil/keberkesanan perjumpaan.\n' +
-    '3. Pilih 1 tajuk PALING SESUAI dari senarai Sivik di atas (nama tajuk MESTI SAMA PERSIS dengan dalam senarai), tulis aktiviti sivik untuk tajuk tu berdasarkan konteks perjumpaan ni (bukan salin terus cadangan asal, sesuaikan).\n' +
+    '3. WAJIB: medan "tajuk" dalam output MESTI SALAH SATU teks yang tertulis PERSIS dalam "SENARAI TAJUK SIVIK DIBENARKAN" di atas (salin-tampal, bukan taip semula/gabung dua tajuk/ubah ejaan). Tulis aktiviti sivik untuk tajuk tu berdasarkan konteks perjumpaan ni (bukan salin terus cadangan asal, sesuaikan).\n' +
     '4. SETIAP medan teks (laporanAktiviti, refleksi, aktiviti sivik) MAKSIMUM 3 bullet, format "1. [ayat]\\n2. [ayat]\\n3. [ayat]" (boleh kurang 3, jangan lebih).\n' +
     '5. Bahasa Melayu formal, ayat pendek dan jelas.\n\n' +
     'OUTPUT - format JSON SAHAJA:\n' +
@@ -345,11 +345,35 @@ function kendalikanJanaAILaporanUBKS(data) {
       return jsonResponse({ error: 'Ralat format respons AI. Sila cuba lagi.' })
     }
 
-    const sivik = Array.isArray(hasil.sivik) ? hasil.sivik.slice(0, 1) : []
+    const senaraiSivikAsal = d.senaraiSivik || []
+    const sivikMentah = Array.isArray(hasil.sivik) ? hasil.sivik.slice(0, 1) : []
+    const sivik = sivikMentah.map(function (s) {
+      // PENGESAHAN WAJIB: AI kadang "reka" tajuk/nilai sendiri walaupun
+      // arahan suruh pilih TEPAT dari senarai (contoh sebenar dijumpai:
+      // "Berjaya - Kerjasama" - bukan salah satu 44 tajuk rasmi). Padan
+      // balik ke senarai SEBENAR yang dihantar (case-insensitive/trim) -
+      // kalau tak jumpa langsung, guna entri PERTAMA senarai sebagai
+      // sandaran selamat (bukan biar tajuk palsu terus ke cetakan rasmi).
+      const tajukAI = String(s.tajuk || '').trim().toLowerCase()
+      let sepadan = null
+      for (let i = 0; i < senaraiSivikAsal.length; i++) {
+        if (String(senaraiSivikAsal[i].tajuk || '').trim().toLowerCase() === tajukAI) {
+          sepadan = senaraiSivikAsal[i]
+          break
+        }
+      }
+      if (!sepadan && senaraiSivikAsal.length > 0) sepadan = senaraiSivikAsal[0]
+      return {
+        nilai: sepadan ? sepadan.nilai : (s.nilai || '').trim(),
+        tajuk: sepadan ? sepadan.tajuk : (s.tajuk || '').trim(),
+        aktiviti: (s.aktiviti || '').trim(),
+      }
+    })
+
     return jsonResponse({
-      laporanAktiviti: hasil.laporanAktiviti || '',
-      refleksi: hasil.refleksi || '',
-      sivik: sivik.map(function (s) { return { nilai: s.nilai || '', tajuk: s.tajuk || '', aktiviti: s.aktiviti || '' } }),
+      laporanAktiviti: (hasil.laporanAktiviti || '').trim(),
+      refleksi: (hasil.refleksi || '').trim(),
+      sivik: sivik,
     })
   } catch (err) {
     return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })
@@ -409,7 +433,7 @@ function kendalikanJanaAyatSivik(data) {
       return jsonResponse({ error: 'Ralat format respons AI. Sila cuba lagi.' })
     }
 
-    return jsonResponse({ aktiviti: hasil.aktiviti || '' })
+    return jsonResponse({ aktiviti: (hasil.aktiviti || '').trim() })
   } catch (err) {
     return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })
   }

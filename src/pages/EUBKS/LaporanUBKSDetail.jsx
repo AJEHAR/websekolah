@@ -269,7 +269,7 @@ export default function LaporanUBKSDetail() {
         cadanganAsal: item?.aktiviti || '',
         laporanAktiviti: data.laporanAktiviti,
       })
-      ubahSivik('aktiviti', hasil.aktiviti || data.sivik.aktiviti)
+      ubahSivik('aktiviti', hasil.aktiviti?.trim() || data.sivik.aktiviti)
     } catch (err) {
       await amaran(err.message || 'Gagal jana ayat dengan AI. Sila cuba lagi.')
     } finally {
@@ -322,9 +322,9 @@ export default function LaporanUBKSDetail() {
       setDirty(true)
       setData((d) => ({
         ...d,
-        laporanAktiviti: hasil.laporanAktiviti || d.laporanAktiviti,
-        refleksi: hasil.refleksi || d.refleksi,
-        sivik: hasil.sivik?.[0] || d.sivik,
+        laporanAktiviti: hasil.laporanAktiviti?.trim() || d.laporanAktiviti,
+        refleksi: hasil.refleksi?.trim() || d.refleksi,
+        sivik: hasil.sivik?.[0] ? { ...hasil.sivik[0], aktiviti: hasil.sivik[0].aktiviti?.trim() || '' } : d.sivik,
       }))
     } catch (err) {
       await amaran(err.message || 'Gagal jana dengan AI. Sila cuba lagi.')
