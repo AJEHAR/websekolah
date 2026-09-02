@@ -5,6 +5,7 @@ import { todayISO, namaHari } from '../../lib/dateUtils.js'
 import { muatNaikKeDrive, janaAiLaporanUBKS, janaAiAktivitiSivik } from '../../lib/driveUpload.js'
 import { usePikebm } from '../../hooks/usePikebm.js'
 import { useSivikKokurikulum } from '../../hooks/useSivikKokurikulum.js'
+import { useProfilesList } from '../../hooks/useProfilesList.js'
 import { useUnitUBKSSatu, kemaskiniUnit } from '../../hooks/useUnitUBKS.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { useDialog } from '../../context/DialogContext.jsx'
@@ -129,6 +130,7 @@ export default function LaporanUBKSDetail() {
   const { unit, loading: loadingUnit } = useUnitUBKSSatu(unitId)
   const { senarai: senaraiPikebm } = usePikebm()
   const { senarai: senaraiSivik } = useSivikKokurikulum()
+  const { profiles } = useProfilesList()
   const [dataCetak, setDataCetak] = useCetak()
   const { konfirm, amaran } = useDialog()
 
@@ -192,6 +194,10 @@ export default function LaporanUBKSDetail() {
         const gpTeks = senaraiGpArr.map((g) => (g.tahunDarjah ? `${g.nama} (${g.tahunDarjah})` : g.nama)).join(', ')
         const namaGuruLalai = senaraiGpArr[0]?.nama || ''
         const namaSetiausahaLalai = setiausaha?.nama || ''
+        // GPK Kokurikulum - auto cari dari Profile staff yang jawatan dia
+        // "Penolong Kanan Kokurikulum" (nama rasmi jawatan tu dalam
+        // sistem Profile - biasanya seorang sahaja sekolah).
+        const namaGPKLalai = profiles.find((p) => p.jawatan === 'Penolong Kanan Kokurikulum')?.nama || ''
         setData({
           ...MEDAN_KOSONG,
           // Tarikh lalai TAHUN SEMASA (bukan cuba "auto dari Perancangan" -
@@ -204,9 +210,15 @@ export default function LaporanUBKSDetail() {
           ttdGuruUrl: cariTtdTersimpan(unit, namaGuruLalai) || '',
           namaSetiausaha: namaSetiausahaLalai,
           ttdSetiausahaUrl: cariTtdTersimpan(unit, namaSetiausahaLalai) || '',
+          namaGPK: namaGPKLalai,
           // Bil. Ahli Hadir - auto dari rekod KEHADIRAN SEBENAR (bukan reka
-          // angka) - kalau kehadiran perjumpaan ni belum direkod, kosong.
-          bilAhliHadir: kehadiran ? String(kehadiran.jumlahHadir ?? '') : '',
+          // angka), format "hadir/keseluruhan" (cth. "22/25") - kalau
+          // kehadiran perjumpaan ni belum direkod, cadang "0/{jumlah ahli
+          // unit semasa}" (sekurang-kurangnya penyebut betul, staff isi
+          // pengangka manual); kalau unit pun tiada ahli, kosong terus.
+          bilAhliHadir: kehadiran
+            ? `${kehadiran.jumlahHadir ?? 0}/${kehadiran.jumlahAhli ?? 0}`
+            : (unit.ahli?.length ? `0/${unit.ahli.length}` : ''),
         })
       }
       setMemuatkan(false)
@@ -292,9 +304,9 @@ export default function LaporanUBKSDetail() {
   async function janaAI() {
     // Amaran kalau dah ada kandungan (staff mungkin dah edit tangan lepas
     // jana AI kali pertama) - elak timpa kerja staff senyap-senyap.
-    const adaKandunganSediaAda = data.laporanAktiviti.trim() || data.refleksi.trim() || data.sivik.tajuk.trim() || data.sivik.aktiviti.trim()
+    const adaKandunganSediaAda = data.laporanAktiviti.trim() || data.refleksi.trim() || data.sivik.tajuk.trim() || data.sivik.aktiviti.trim() || data.pikebmTajuk.trim()
     if (adaKandunganSediaAda) {
-      const teruskan = await konfirm('Laporan Aktiviti/Refleksi/Nilai Sivik sedia ada akan DITIMPA hasil AI baru. Teruskan?', { bahaya: true })
+      const teruskan = await konfirm('Laporan Aktiviti/Refleksi/Sisipan PIKeBM/Nilai Sivik sedia ada akan DITIMPA hasil AI baru. Teruskan?', { bahaya: true })
       if (!teruskan) return
     }
 
@@ -313,10 +325,9 @@ export default function LaporanUBKSDetail() {
         masa: data.masa,
         tempat: data.tempat,
         bilAhliHadir: data.bilAhliHadir,
-        pikebmTajuk: data.pikebmTajuk,
-        pikebmObjektif: data.pikebmObjektif,
         perancangan: teksPerancangan,
         senaraiSivik: senaraiSivik.map((s) => ({ nilai: s.nilai, tajuk: s.tajuk, aktiviti: s.aktiviti })),
+        senaraiPikebm: senaraiPikebm.map((p) => ({ tajuk: p.tajuk, objektif: p.objektif })),
       })
 
       setDirty(true)
@@ -325,6 +336,14 @@ export default function LaporanUBKSDetail() {
         laporanAktiviti: hasil.laporanAktiviti?.trim() || d.laporanAktiviti,
         refleksi: hasil.refleksi?.trim() || d.refleksi,
         sivik: hasil.sivik?.[0] ? { ...hasil.sivik[0], aktiviti: hasil.sivik[0].aktiviti?.trim() || '' } : d.sivik,
+        // PIKeBM: Objektif SENTIASA ambil dari rujukan rasmi (bukan AI
+        // reka/tulis semula) - AI cuma tolong PILIH Tajuk paling sesuai,
+        // Objektif kekal wording tetap KPM (sama disiplin dengan Nilai
+        // Sivik: AI pilih, tak cipta).
+        pikebmTajuk: hasil.pikebmTajuk || d.pikebmTajuk,
+        pikebmObjektif: hasil.pikebmTajuk
+          ? (senaraiPikebm.find((p) => p.tajuk === hasil.pikebmTajuk)?.objektif ?? d.pikebmObjektif)
+          : d.pikebmObjektif,
       }))
     } catch (err) {
       await amaran(err.message || 'Gagal jana dengan AI. Sila cuba lagi.')
@@ -476,10 +495,10 @@ export default function LaporanUBKSDetail() {
           <Medan label="Tempat" value={data.tempat} onChange={(v) => u('tempat', v)} />
         </div>
         <Medan
-          label="Bil. Ahli Hadir (auto dari Kehadiran UBKS)"
+          label="Bil. Ahli Hadir (auto dari Kehadiran UBKS - format hadir/keseluruhan)"
           value={data.bilAhliHadir}
           onChange={(v) => u('bilAhliHadir', v)}
-          placeholder="Belum ada rekod Kehadiran untuk perjumpaan ni"
+          placeholder="cth. 22/25"
         />
         <Medan label="Guru Penasihat (ringkasan untuk teks laporan)" value={data.guruPenasihat} onChange={(v) => u('guruPenasihat', v)} />
 
@@ -631,13 +650,16 @@ export default function LaporanUBKSDetail() {
               onGunaTersimpan={() => u('ttdGuruUrl', cariTtdTersimpan(unit, data.namaGuruTtd) || '')}
               onPadamTtd={() => u('ttdGuruUrl', '')}
             />
-            <BlokTtd label="GPK Kokurikulum" nama={data.namaGPK} ttdUrl={data.ttdGPKUrl} onNama={(v) => u('namaGPK', v)} onTandatangan={() => setTunjukTtd('gpk')} onPadamTtd={() => u('ttdGPKUrl', '')} />
+            <BlokTtd label="GPK Kokurikulum (auto dari Profile)" nama={data.namaGPK} ttdUrl={data.ttdGPKUrl} onNama={(v) => u('namaGPK', v)} onTandatangan={() => setTunjukTtd('gpk')} onPadamTtd={() => u('ttdGPKUrl', '')} />
           </div>
           {!data.namaSetiausaha && (
             <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Setiausaha dilantik lagi untuk unit ni - pergi "Jawatankuasa UBKS" untuk lantik, atau taip nama terus.</p>
           )}
           {namaGuruPilihan.length === 0 && (
             <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada Guru Penasihat ditetapkan lagi untuk unit ni - pergi halaman Unit (Murid UBKS) untuk isi, atau taip nama terus.</p>
+          )}
+          {!data.namaGPK && (
+            <p className="text-[11px] text-inkmuted mt-2">⚠ Tiada staff dengan jawatan "Penolong Kanan Kokurikulum" dijumpai dalam Profile - pergi Panel Admin &gt; Profile untuk tetapkan, atau taip nama terus.</p>
           )}
         </div>
 

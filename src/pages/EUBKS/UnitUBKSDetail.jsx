@@ -8,7 +8,7 @@ import { useKategoriUBKS } from '../../hooks/useKategoriUBKS.js'
 import { useUnitUBKSSatu, kemaskiniUnit, padamUnit } from '../../hooks/useUnitUBKS.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { useDialog } from '../../context/DialogContext.jsx'
-import { senaraiGuru } from './unitHelpers.js'
+import { senaraiGuru, PALET_WARNA_LAPORAN, warnaLaporanUnit } from './unitHelpers.js'
 import ProfilMuridUBKSModal from './ProfilMuridUBKSModal.jsx'
 
 // Toast kecil "Tersimpan" - maklum balik ringkas lepas SETIAP tindakan
@@ -165,6 +165,13 @@ export default function UnitUBKSDetail() {
 
   async function ubahTahunDarjahGuru(nama, tahunDarjah) {
     await simpanSenaraiGuru(senaraiGuru(unit).map((g) => (g.nama === nama ? { ...g, tahunDarjah } : g)))
+  }
+
+  async function ubahWarnaLaporan(kod) {
+    if (!unit || kod === unit.warnaLaporan) return
+    await kemaskiniUnit(unit.id, { warnaLaporan: kod }, user.uid)
+    kilasTersimpan('warna')
+    muatSemula()
   }
 
   async function pilihGambar(e) {
@@ -442,6 +449,27 @@ export default function UnitUBKSDetail() {
             </div>
           )}
           <p className="text-[10px] text-inkmuted mt-2">Digunakan untuk auto-isi Laporan Aktiviti Perjumpaan unit ni. Isi "Tahun/Darjah" kalau guru tu incharge satu tahun/darjah tertentu sahaja.</p>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-border text-left">
+          <label className="flex items-center gap-2 text-xs font-medium text-inkmuted mb-2">
+            Warna Kepala Cetakan Laporan <Tersimpan tunjuk={tersimpanApa === 'warna'} />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {PALET_WARNA_LAPORAN.map((w) => (
+              <button
+                key={w.kod}
+                type="button"
+                onClick={() => isAdmin && ubahWarnaLaporan(w.kod)}
+                disabled={!isAdmin}
+                title={w.nama}
+                aria-label={w.nama}
+                className="h-8 w-8 rounded-full border-2"
+                style={{ backgroundColor: w.kod, borderColor: warnaLaporanUnit(unit) === w.kod ? '#1A1A1A' : 'transparent' }}
+              />
+            ))}
+          </div>
+          <p className="text-[10px] text-inkmuted mt-1.5">Kepala biru "Laporan Aktiviti Perjumpaan" dalam cetakan akan guna warna ni; kotak lain jadi putih.</p>
         </div>
       </div>
 

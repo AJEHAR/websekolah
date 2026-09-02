@@ -288,6 +288,9 @@ function kendalikanJanaAILaporanUBKS(data) {
   const senaraiSivikTeks = (d.senaraiSivik || [])
     .map(function (s) { return '- [' + s.nilai + '] ' + s.tajuk + ' (cadangan aktiviti asal: ' + s.aktiviti + ')' })
     .join('\n')
+  const senaraiPikebmTeks = (d.senaraiPikebm || [])
+    .map(function (p) { return '- ' + p.tajuk })
+    .join('\n')
 
   const prompt =
     'Anda adalah pembantu penulisan laporan aktiviti perjumpaan kokurikulum sekolah, dalam Bahasa Melayu formal, realistik dan kontekstual.\n\n' +
@@ -297,19 +300,21 @@ function kendalikanJanaAILaporanUBKS(data) {
     '- Hari          : ' + (d.hari || '(tiada maklumat)') + '\n' +
     '- Masa          : ' + (d.masa || '(tiada maklumat)') + '\n' +
     '- Tempat        : ' + (d.tempat || '(tiada maklumat)') + '\n' +
-    '- Bil. Ahli Hadir: ' + (d.bilAhliHadir || '(tiada maklumat)') + '\n' +
-    '- Aktiviti PIKeBM: ' + (d.pikebmTajuk || '(tiada)') + ' - ' + (d.pikebmObjektif || '') + '\n\n' +
+    '- Bil. Ahli Hadir: ' + (d.bilAhliHadir || '(tiada maklumat)') + '\n\n' +
     'Apa yang dirancang/berlaku untuk perjumpaan ni (staff pilih/taip):\n' + (d.perancangan || '(tiada maklumat spesifik - anggar aktiviti biasa unit ni)') + '\n\n' +
     'SENARAI TAJUK SIVIK DIBENARKAN (WAJIB pilih TEPAT 1 dari senarai ni sahaja - salin nama tajuk PERSIS macam tertulis, JANGAN gabung/reka/ubah nama tajuk):\n' +
     senaraiSivikTeks + '\n\n' +
+    'SENARAI TAJUK PIKeBM DIBENARKAN (WAJIB pilih TEPAT 1 dari senarai ni sahaja - salin nama tajuk PERSIS macam tertulis, JANGAN reka tajuk baru):\n' +
+    senaraiPikebmTeks + '\n\n' +
     'ARAHAN:\n' +
     '1. "laporanAktiviti" - huraikan apa yang berlaku sepanjang perjumpaan (berdasarkan perancangan di atas, anggap ia berjalan seperti dirancang).\n' +
     '2. "refleksi" - penilaian ringkas hasil/keberkesanan perjumpaan.\n' +
-    '3. WAJIB: medan "tajuk" dalam output MESTI SALAH SATU teks yang tertulis PERSIS dalam "SENARAI TAJUK SIVIK DIBENARKAN" di atas (salin-tampal, bukan taip semula/gabung dua tajuk/ubah ejaan). Tulis aktiviti sivik untuk tajuk tu berdasarkan konteks perjumpaan ni (bukan salin terus cadangan asal, sesuaikan).\n' +
-    '4. SETIAP medan teks (laporanAktiviti, refleksi, aktiviti sivik) MAKSIMUM 3 bullet, format "1. [ayat]\\n2. [ayat]\\n3. [ayat]" (boleh kurang 3, jangan lebih).\n' +
-    '5. Bahasa Melayu formal, ayat pendek dan jelas.\n\n' +
+    '3. WAJIB: medan "tajuk" dalam "sivik" MESTI SALAH SATU teks yang tertulis PERSIS dalam "SENARAI TAJUK SIVIK DIBENARKAN" (salin-tampal, bukan taip semula/gabung dua tajuk/ubah ejaan). Tulis aktiviti sivik untuk tajuk tu berdasarkan konteks perjumpaan ni (bukan salin terus cadangan asal, sesuaikan).\n' +
+    '4. WAJIB: "pikebmTajuk" MESTI SALAH SATU teks yang tertulis PERSIS dalam "SENARAI TAJUK PIKeBM DIBENARKAN" - pilih yang PALING SESUAI dengan konteks perjumpaan ni. JANGAN tulis objektif/huraian untuk PIKeBM - tajuk sahaja.\n' +
+    '5. SETIAP medan teks (laporanAktiviti, refleksi, aktiviti sivik) MAKSIMUM 3 bullet, format "1. [ayat]\\n2. [ayat]\\n3. [ayat]" (boleh kurang 3, jangan lebih).\n' +
+    '6. Bahasa Melayu formal, ayat pendek dan jelas.\n\n' +
     'OUTPUT - format JSON SAHAJA:\n' +
-    '{"laporanAktiviti":"...","refleksi":"...","sivik":[{"nilai":"...","tajuk":"...","aktiviti":"..."}]}'
+    '{"laporanAktiviti":"...","refleksi":"...","sivik":[{"nilai":"...","tajuk":"...","aktiviti":"..."}],"pikebmTajuk":"..."}'
 
   try {
     const res = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -370,9 +375,26 @@ function kendalikanJanaAILaporanUBKS(data) {
       }
     })
 
+    // PENGESAHAN WAJIB PIKeBM - sama disiplin dengan sivik di atas (padan
+    // balik ke senarai SEBENAR, sandaran ke entri pertama kalau tak jumpa).
+    const senaraiPikebmAsal = d.senaraiPikebm || []
+    let pikebmTajukSah = ''
+    if (senaraiPikebmAsal.length > 0) {
+      const tajukPikebmAI = String(hasil.pikebmTajuk || '').trim().toLowerCase()
+      let sepadanPikebm = null
+      for (let i = 0; i < senaraiPikebmAsal.length; i++) {
+        if (String(senaraiPikebmAsal[i].tajuk || '').trim().toLowerCase() === tajukPikebmAI) {
+          sepadanPikebm = senaraiPikebmAsal[i]
+          break
+        }
+      }
+      pikebmTajukSah = sepadanPikebm ? sepadanPikebm.tajuk : senaraiPikebmAsal[0].tajuk
+    }
+
     return jsonResponse({
       laporanAktiviti: (hasil.laporanAktiviti || '').trim(),
       refleksi: (hasil.refleksi || '').trim(),
+      pikebmTajuk: pikebmTajukSah,
       sivik: sivik,
     })
   } catch (err) {

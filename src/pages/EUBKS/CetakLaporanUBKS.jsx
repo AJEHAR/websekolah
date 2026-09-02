@@ -1,11 +1,15 @@
 import PrintArea from '../../components/cetak/PrintArea.jsx'
+import { warnaLaporanUnit } from './unitHelpers.js'
 
-const KRIM = '#FCEFC7'
-const BIRU = '#1B0FB0'
+// Kotak krim/kuning asal templat rujukan DITUKAR PUTIH (permintaan
+// pengguna) - cuma kepala biru "Laporan Aktiviti Perjumpaan" yang kekal
+// berwarna, kini boleh ditukar per-unit (unit.warnaLaporan, ditetapkan di
+// halaman Unit > Maklumat - lihat unitHelpers.js).
+const PUTIH = '#FFFFFF'
 
 function KotakKrim({ children, className = '' }) {
   return (
-    <div className={`border border-black text-center py-1 px-2 overflow-hidden ${className}`} style={{ backgroundColor: KRIM }}>
+    <div className={`border border-black text-center py-1 px-2 overflow-hidden ${className}`} style={{ backgroundColor: PUTIH }}>
       <p className="text-[11px] font-bold text-black">{children}</p>
     </div>
   )
@@ -35,7 +39,7 @@ function GambarSlot({ src }) {
 function BlokTandatanganCetak({ label, ttdUrl, nama }) {
   return (
     <div className="flex-1">
-      <div style={{ backgroundColor: KRIM }} className="text-center py-1 border-b border-black"><p className="text-[11px] font-bold text-black">{label}</p></div>
+      <div style={{ backgroundColor: PUTIH }} className="text-center py-1 border-b border-black"><p className="text-[11px] font-bold text-black">{label}</p></div>
       {/* Templat TETAP: (tandatangan) di atas, nama (kecil) di bawah -
           DUA-DUA sentiasa dipaparkan sekali (bukan salah satu sahaja) -
           staff perlu nampak nama walaupun dah ada gambar tandatangan. */}
@@ -79,12 +83,12 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
   return (
     <PrintArea>
       <div className="flex flex-col text-black" style={{ width: '210mm', height: '297mm', overflow: 'hidden' }}>
-        <div className="text-center py-5 shrink-0" style={{ backgroundColor: BIRU }}>
+        <div className="text-center py-5 shrink-0" style={{ backgroundColor: warnaLaporanUnit(unit) }}>
           <p className="text-2xl font-extrabold text-white uppercase tracking-wide">Laporan Aktiviti Perjumpaan</p>
         </div>
 
         <div className="p-6">
-          <div className="flex border border-black divide-x divide-black mb-2" style={{ backgroundColor: KRIM }}>
+          <div className="flex border border-black divide-x divide-black mb-2" style={{ backgroundColor: PUTIH }}>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Bil. Perjumpaan : <span className="font-normal">{perjumpaan}</span></p></div>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Tarikh : <span className="font-normal">{cubaFormatTarikh(data.tarikh)}</span></p></div>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Masa : <span className="font-normal">{data.masa}</span></p></div>
@@ -95,7 +99,10 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
             <div className="flex-1"><KotakKrim className="border-0">{`Bil. Ahli Hadir : ${data.bilAhliHadir || ''}`}</KotakKrim></div>
           </div>
 
-          <div className="mb-3"><KotakKrim>{`Guru Penasihat : ${data.guruPenasihat || ''}`}</KotakKrim></div>
+          <div className="mb-3 border border-black text-center py-2" style={{ backgroundColor: PUTIH }}>
+            <p className="text-[11px] font-bold text-black">Guru Penasihat:</p>
+            <p className="text-[11px] font-normal text-black">{data.guruPenasihat || ''}</p>
+          </div>
 
           {/* Kotak-kotak LEBAR PENUH - saiz tetap ikut nisbah templat. */}
           <div className="flex flex-col mb-2" style={{ height: '44mm' }}>
