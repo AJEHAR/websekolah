@@ -9,6 +9,7 @@ import { useDialog } from '../../context/DialogContext.jsx'
 import { senaraiLaporanUnit, padamLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
 import { usePikebm } from '../../hooks/usePikebm.js'
 import { kumpulUnitIkutKategori } from './kumpulUnitIkutKategori.js'
+import { namaFailLaporanUBKS } from './unitHelpers.js'
 import CetakLaporanUBKS from './CetakLaporanUBKS.jsx'
 import UrusPikebmModal from './UrusPikebmModal.jsx'
 
@@ -31,7 +32,7 @@ export default function LaporanUBKS() {
   const { senarai: unitSenarai, loading } = useUnitUBKSTahun(tahunSesi)
   const { senarai: kategoriSenarai } = useKategoriUBKS()
   const { senarai: senaraiPikebm, muatSemula: muatSemulaPikebm } = usePikebm()
-  const [dataCetak, setDataCetak] = useCetak()
+  const [dataCetak, setDataCetak] = useCetak((d) => namaFailLaporanUBKS({ unit: d.unit }))
 
   const [unitDibuka, setUnitDibuka] = useState(null)
   const [statusLaporan, setStatusLaporan] = useState({})

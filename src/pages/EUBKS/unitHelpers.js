@@ -42,3 +42,16 @@ export const PALET_WARNA_LAPORAN = [
 export function warnaLaporanUnit(unit) {
   return unit?.warnaLaporan || PALET_WARNA_LAPORAN[0].kod
 }
+
+// Nama cadangan fail cetak Laporan UBKS - format: CBA4082-{UNIT}-{tahun}-{tarikh jana}
+// "Tarikh jana" = tarikh SEBENAR staff cetak/simpan PDF (hari ni), bukan
+// tarikh perjumpaan dalam laporan - ini nama FAIL, bukan kandungan laporan.
+export function namaFailLaporanUBKS({ unit }) {
+  const namaUnit = (unit?.namaUnit || 'UNIT').toUpperCase().trim().replace(/\s+/g, '_')
+  const tahun = unit?.tahunSesi || ''
+  const sekarang = new Date()
+  const dd = String(sekarang.getDate()).padStart(2, '0')
+  const mm = String(sekarang.getMonth() + 1).padStart(2, '0')
+  const yyyy = sekarang.getFullYear()
+  return `CBA4082-${namaUnit}-${tahun}-${dd}${mm}${yyyy}`
+}

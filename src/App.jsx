@@ -1,68 +1,77 @@
-import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import ButangTerapung from './components/ButangTerapung.jsx'
 import Home from './pages/Home.jsx'
-import Galeri from './pages/Galeri.jsx'
-import Hubungi from './pages/Hubungi.jsx'
-import TetapanHubungiPage from './pages/TetapanHubungiPage.jsx'
-import Profile from './pages/Profile/Profile.jsx'
-import SenaraiKeberadaanSaya from './pages/Profile/SenaraiKeberadaanSaya.jsx'
-import KeberadaanLayout from './pages/Keberadaan/KeberadaanLayout.jsx'
-import KeberadaanHub from './pages/Keberadaan/KeberadaanHub.jsx'
-import Daftar from './pages/Keberadaan/Daftar.jsx'
-import HariIni from './pages/Keberadaan/HariIni.jsx'
-import Esok from './pages/Keberadaan/Esok.jsx'
-import Log from './pages/Keberadaan/Log.jsx'
-import BeritaLayout from './pages/Berita/BeritaLayout.jsx'
-import BeritaList from './pages/Berita/BeritaList.jsx'
-import BeritaDetail from './pages/Berita/BeritaDetail.jsx'
-import AdminLayout from './pages/Admin/AdminLayout.jsx'
-import AdminHub from './pages/Admin/AdminHub.jsx'
-import StafAdminPage from './pages/Admin/StafAdminPage.jsx'
-import SenaraiSekatanPage from './pages/Admin/SenaraiSekatanPage.jsx'
-import Blok3KPage from './pages/Admin/Blok3KPage.jsx'
-import LajurMuridPage from './pages/Admin/LajurMuridPage.jsx'
-import KategoriUBKSPage from './pages/Admin/KategoriUBKSPage.jsx'
-import PanitiaRPTPage from './pages/Admin/PanitiaRPTPage.jsx'
-import KategoriRPTPage from './pages/Admin/KategoriRPTPage.jsx'
-import LatarHubPage from './pages/Admin/LatarHubPage.jsx'
-import ResetDataPage from './pages/Admin/ResetDataPage.jsx'
-import GuruBertugasLayout from './pages/GuruBertugas/GuruBertugasLayout.jsx'
-import GuruBertugasHub from './pages/GuruBertugas/GuruBertugasHub.jsx'
-import Kumpulan from './pages/GuruBertugas/Kumpulan.jsx'
-import Laporan3K from './pages/GuruBertugas/Laporan3K.jsx'
-import LaporanBanci from './pages/GuruBertugas/LaporanBanci.jsx'
-import LaporanHarian from './pages/GuruBertugas/LaporanHarian.jsx'
-import LaporanPerhimpunan from './pages/GuruBertugas/LaporanPerhimpunan.jsx'
-import MaklumatMuridLayout from './pages/MaklumatMurid/MaklumatMuridLayout.jsx'
-import MaklumatMuridHub from './pages/MaklumatMurid/MaklumatMuridHub.jsx'
-import DaftarMasuk from './pages/MaklumatMurid/DaftarMasuk.jsx'
-import DaftarKeluar from './pages/MaklumatMurid/DaftarKeluar.jsx'
-import SemakanMurid from './pages/MaklumatMurid/SemakanMurid.jsx'
-import Analisis from './pages/MaklumatMurid/Analisis.jsx'
-import KehadiranMurid from './pages/MaklumatMurid/KehadiranMurid.jsx'
-import KehadiranRMT from './pages/MaklumatMurid/PapanRMT.jsx'
-import EUBKSLayout from './pages/EUBKS/EUBKSLayout.jsx'
-import EUBKSHub from './pages/EUBKS/EUBKSHub.jsx'
-import MuridUBKS from './pages/EUBKS/MuridUBKS.jsx'
-import UnitUBKSDetail from './pages/EUBKS/UnitUBKSDetail.jsx'
-import ProfilMuridUBKS from './pages/EUBKS/ProfilMuridUBKS.jsx'
-import JawatankuasaUBKS from './pages/EUBKS/JawatankuasaUBKS.jsx'
-import KehadiranUBKS from './pages/EUBKS/KehadiranUBKS.jsx'
-import LaporanUBKS from './pages/EUBKS/LaporanUBKS.jsx'
-import LaporanUBKSDetail from './pages/EUBKS/LaporanUBKSDetail.jsx'
-import PerancanganUBKS from './pages/EUBKS/PerancanganUBKS.jsx'
-import KurikulumLayout from './pages/Kurikulum/KurikulumLayout.jsx'
-import KurikulumHub from './pages/Kurikulum/KurikulumHub.jsx'
-import BorangPLC from './pages/Kurikulum/BorangPLC.jsx'
-import RPI from './pages/Kurikulum/RPI.jsx'
-import RPT from './pages/Kurikulum/RPT.jsx'
-import TemplateKertasKerja from './pages/Kurikulum/TemplateKertasKerja.jsx'
-import SuratSpi from './components/SuratSpi.jsx'
-import OPR from './pages/Kurikulum/OPR.jsx'
-import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext.jsx'
 import { useAksesStatus } from './hooks/useAksesStatus.js'
+
+// PENTING - code-splitting: sebelum ni SEMUA ~60 page dimuat serentak
+// dalam SATU fail JS (bundle dah cecah 1.6MB) - punca app rasa perlahan
+// terutama pada peranti kurang berkuasa/rangkaian perlahan (iPad dsb),
+// sebab keseluruhan fail tu kena muat turun+parse+jalankan SEBELUM apa-apa
+// pun boleh dipaparkan, walaupun staff cuma nak buka SATU page je. Guna
+// lazy() - setiap page jadi fail JS berasingan, dimuat turun HANYA bila
+// staff benar-benar navigate ke situ. Navbar/Home/ButangTerapung kekal
+// dimuat terus (kecil, perlu untuk paparan pertama).
+const Galeri = lazy(() => import('./pages/Galeri.jsx'))
+const Hubungi = lazy(() => import('./pages/Hubungi.jsx'))
+const TetapanHubungiPage = lazy(() => import('./pages/TetapanHubungiPage.jsx'))
+const Profile = lazy(() => import('./pages/Profile/Profile.jsx'))
+const SenaraiKeberadaanSaya = lazy(() => import('./pages/Profile/SenaraiKeberadaanSaya.jsx'))
+const KeberadaanLayout = lazy(() => import('./pages/Keberadaan/KeberadaanLayout.jsx'))
+const KeberadaanHub = lazy(() => import('./pages/Keberadaan/KeberadaanHub.jsx'))
+const Daftar = lazy(() => import('./pages/Keberadaan/Daftar.jsx'))
+const HariIni = lazy(() => import('./pages/Keberadaan/HariIni.jsx'))
+const Esok = lazy(() => import('./pages/Keberadaan/Esok.jsx'))
+const Log = lazy(() => import('./pages/Keberadaan/Log.jsx'))
+const BeritaLayout = lazy(() => import('./pages/Berita/BeritaLayout.jsx'))
+const BeritaList = lazy(() => import('./pages/Berita/BeritaList.jsx'))
+const BeritaDetail = lazy(() => import('./pages/Berita/BeritaDetail.jsx'))
+const AdminLayout = lazy(() => import('./pages/Admin/AdminLayout.jsx'))
+const AdminHub = lazy(() => import('./pages/Admin/AdminHub.jsx'))
+const StafAdminPage = lazy(() => import('./pages/Admin/StafAdminPage.jsx'))
+const SenaraiSekatanPage = lazy(() => import('./pages/Admin/SenaraiSekatanPage.jsx'))
+const Blok3KPage = lazy(() => import('./pages/Admin/Blok3KPage.jsx'))
+const LajurMuridPage = lazy(() => import('./pages/Admin/LajurMuridPage.jsx'))
+const KategoriUBKSPage = lazy(() => import('./pages/Admin/KategoriUBKSPage.jsx'))
+const PanitiaRPTPage = lazy(() => import('./pages/Admin/PanitiaRPTPage.jsx'))
+const KategoriRPTPage = lazy(() => import('./pages/Admin/KategoriRPTPage.jsx'))
+const LatarHubPage = lazy(() => import('./pages/Admin/LatarHubPage.jsx'))
+const ResetDataPage = lazy(() => import('./pages/Admin/ResetDataPage.jsx'))
+const GuruBertugasLayout = lazy(() => import('./pages/GuruBertugas/GuruBertugasLayout.jsx'))
+const GuruBertugasHub = lazy(() => import('./pages/GuruBertugas/GuruBertugasHub.jsx'))
+const Kumpulan = lazy(() => import('./pages/GuruBertugas/Kumpulan.jsx'))
+const Laporan3K = lazy(() => import('./pages/GuruBertugas/Laporan3K.jsx'))
+const LaporanBanci = lazy(() => import('./pages/GuruBertugas/LaporanBanci.jsx'))
+const LaporanHarian = lazy(() => import('./pages/GuruBertugas/LaporanHarian.jsx'))
+const LaporanPerhimpunan = lazy(() => import('./pages/GuruBertugas/LaporanPerhimpunan.jsx'))
+const MaklumatMuridLayout = lazy(() => import('./pages/MaklumatMurid/MaklumatMuridLayout.jsx'))
+const MaklumatMuridHub = lazy(() => import('./pages/MaklumatMurid/MaklumatMuridHub.jsx'))
+const DaftarMasuk = lazy(() => import('./pages/MaklumatMurid/DaftarMasuk.jsx'))
+const DaftarKeluar = lazy(() => import('./pages/MaklumatMurid/DaftarKeluar.jsx'))
+const SemakanMurid = lazy(() => import('./pages/MaklumatMurid/SemakanMurid.jsx'))
+const Analisis = lazy(() => import('./pages/MaklumatMurid/Analisis.jsx'))
+const KehadiranMurid = lazy(() => import('./pages/MaklumatMurid/KehadiranMurid.jsx'))
+const KehadiranRMT = lazy(() => import('./pages/MaklumatMurid/PapanRMT.jsx'))
+const EUBKSLayout = lazy(() => import('./pages/EUBKS/EUBKSLayout.jsx'))
+const EUBKSHub = lazy(() => import('./pages/EUBKS/EUBKSHub.jsx'))
+const MuridUBKS = lazy(() => import('./pages/EUBKS/MuridUBKS.jsx'))
+const UnitUBKSDetail = lazy(() => import('./pages/EUBKS/UnitUBKSDetail.jsx'))
+const ProfilMuridUBKS = lazy(() => import('./pages/EUBKS/ProfilMuridUBKS.jsx'))
+const JawatankuasaUBKS = lazy(() => import('./pages/EUBKS/JawatankuasaUBKS.jsx'))
+const KehadiranUBKS = lazy(() => import('./pages/EUBKS/KehadiranUBKS.jsx'))
+const LaporanUBKS = lazy(() => import('./pages/EUBKS/LaporanUBKS.jsx'))
+const LaporanUBKSDetail = lazy(() => import('./pages/EUBKS/LaporanUBKSDetail.jsx'))
+const PerancanganUBKS = lazy(() => import('./pages/EUBKS/PerancanganUBKS.jsx'))
+const KurikulumLayout = lazy(() => import('./pages/Kurikulum/KurikulumLayout.jsx'))
+const KurikulumHub = lazy(() => import('./pages/Kurikulum/KurikulumHub.jsx'))
+const BorangPLC = lazy(() => import('./pages/Kurikulum/BorangPLC.jsx'))
+const RPI = lazy(() => import('./pages/Kurikulum/RPI.jsx'))
+const RPT = lazy(() => import('./pages/Kurikulum/RPT.jsx'))
+const TemplateKertasKerja = lazy(() => import('./pages/Kurikulum/TemplateKertasKerja.jsx'))
+const SuratSpi = lazy(() => import('./components/SuratSpi.jsx'))
+const OPR = lazy(() => import('./pages/Kurikulum/OPR.jsx'))
 
 // Kawal akaun yang belum LENGKAP diluluskan - dua kes:
 // 1. 'belum-profile' (staff kali pertama log masuk, tak ada profile
@@ -80,9 +89,6 @@ import { useAksesStatus } from './hooks/useAksesStatus.js'
 // berasingan daripada aliran kelulusan profile staff.
 // Laluan yang tetap terbuka kepada SESIAPA sahaja (tak kira log masuk ke
 // tidak) - Utama + kandungan awam (Berita/Galeri/Hubungi, walaupun tak
-// dipautkan dalam nav sekarang, URL tu masih patut boleh dicapai terus).
-// Laluan yang tetap terbuka kepada SESIAPA sahaja (tak kira log masuk ke
-// tidak) - Utama + kandungan awam (Berita/Galeri/Hubungi, walaupun tak
 // dipautkan dalam nav sekarang, URL tu masih patut boleh dicapai terus) +
 // /profil (papar skrin Log Masuk/Daftar sahaja untuk pengunjung belum log
 // masuk - lihat Profile.jsx, TIADA data sebenar terdedah, sifar Firestore
@@ -97,12 +103,6 @@ function PenggeraAksesTerhad({ children }) {
   const { status, loading } = useAksesStatus(user)
   const location = useLocation()
 
-  // Pengunjung belum log masuk LANGSUNG (bukan status "menunggu" - itu
-  // staff yang DAH log masuk tapi belum lulus, kes lain) - hadkan ke
-  // laluan awam sahaja. Elak dia "jumpa" page dalaman (walaupun cuma
-  // nampak skrin "sila log masuk", bukan data sebenar) sekadar dengan
-  // taip/ikut URL terus - selaras dengan nav yang dah sorok nama page
-  // tu (Navbar.jsx) supaya pengalaman konsisten merentasi kedua-dua.
   if (!user) {
     if (!adalahLaluanAwam(location.pathname)) {
       return <Navigate to="/" replace />
@@ -123,6 +123,17 @@ function PenggeraAksesTerhad({ children }) {
   return children
 }
 
+// Ditunjuk sekejap semasa fail page (chunk) sedang dimuat turun - biasanya
+// kekal <1 saat pada rangkaian sekolah biasa (setiap page kecil selepas
+// dipecah), tapi tetap perlu supaya skrin tak kosong sekejap.
+function MemuatkanPage() {
+  return (
+    <div className="flex items-center justify-center py-24">
+      <div className="h-8 w-8 border-2 border-border border-t-brand-red rounded-full animate-spin" />
+    </div>
+  )
+}
+
 export default function App() {
   const { user } = useAuth()
   return (
@@ -130,11 +141,10 @@ export default function App() {
       <Navbar />
       <div className="flex-1">
         <PenggeraAksesTerhad>
+        <Suspense fallback={<MemuatkanPage />}>
         <Routes>
           <Route path="/" element={<Home />} />
 
-          {/* Berita/Galeri/Hubungi: route kekal (tak dipadam), cuma dibuang dari nav.
-              Boleh diakses terus via URL kalau perlu, atau padam terus kalau tak diperlukan lagi. */}
           <Route path="/berita" element={<BeritaLayout />}>
             <Route index element={<BeritaList />} />
             <Route path=":slug" element={<BeritaDetail />} />
@@ -145,7 +155,6 @@ export default function App() {
 
           <Route path="/profil" element={<Profile />} />
 
-          {/* Keberadaan - tab pills (Hari Ini/Esok/Log/Saya) dalam satu layout */}
           <Route path="/keberadaan" element={<KeberadaanLayout />}>
             <Route index element={<KeberadaanHub />} />
             <Route path="daftar" element={<Daftar />} />
@@ -155,8 +164,6 @@ export default function App() {
             <Route path="saya" element={<SenaraiKeberadaanSaya />} />
           </Route>
 
-          {/* Panel Admin - "Staf/Admin" (dulu 3 page berasingan: Staff/
-              Menunggu Kelulusan/Pentadbir, digabung jadi 1 page bertab) */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminHub />} />
             <Route path="staff" element={<StafAdminPage />} />
@@ -172,7 +179,6 @@ export default function App() {
             <Route path="reset-data" element={<ResetDataPage />} />
           </Route>
 
-          {/* Guru Bertugas - tab pills (Kumpulan/Laporan 3K/Laporan Banci/Laporan Harian) */}
           <Route path="/guru-bertugas" element={<GuruBertugasLayout />}>
             <Route index element={<GuruBertugasHub />} />
             <Route path="kumpulan" element={<Kumpulan />} />
@@ -182,11 +188,6 @@ export default function App() {
             <Route path="perhimpunan" element={<LaporanPerhimpunan />} />
           </Route>
 
-          {/* HEM - Daftar Masuk/Keluar, Maklumat Asas, Kehadiran
-              Murid & RMT (dulu seksyen berasingan "eBanci" - digabung sini
-              sebab sama-sama kerja guru kelas berkaitan rekod murid, bukan
-              tugas guru bertugas - lihat Laporan Banci di bawah Guru
-              Bertugas untuk peranan yang berbeza: pemantauan merentas kelas) */}
           <Route path="/maklumat-murid" element={<MaklumatMuridLayout />}>
             <Route index element={<MaklumatMuridHub />} />
             <Route path="analisis" element={<Analisis />} />
@@ -199,8 +200,6 @@ export default function App() {
             <Route path="opr" element={<OPR seksyen="hem" />} />
           </Route>
 
-          {/* URL lama "/ebanci/*" (seksyen dah digabung ke HEM) -
-              redirect supaya pautan/bookmark sedia ada staff tak terus mati. */}
           <Route path="/ebanci" element={<Navigate to="/maklumat-murid" replace />} />
           <Route path="/ebanci/kehadiran-murid" element={<Navigate to="/maklumat-murid/kehadiran-murid" replace />} />
           <Route path="/ebanci/papan-rmt" element={<Navigate to="/maklumat-murid/kehadiran-rmt" replace />} />
@@ -219,7 +218,6 @@ export default function App() {
             <Route path="surat-spi" element={<SuratSpi seksyen="koku" />} />
           </Route>
 
-          {/* KURI - hub dengan akses pantas, + sub-page (pengisian ditambah kemudian) */}
           <Route path="/kurikulum" element={<KurikulumLayout />}>
             <Route index element={<KurikulumHub />} />
             <Route path="borang-plc" element={<BorangPLC />} />
@@ -227,13 +225,13 @@ export default function App() {
             <Route path="rpt" element={<RPT />} />
             <Route path="template-kertas-kerja" element={<TemplateKertasKerja />} />
             <Route path="surat-spi" element={<SuratSpi seksyen="kurikulum" />} />
-            {/* URL lama "koleksi-pekeliling" - redirect supaya bookmark sedia ada tak terus mati. */}
             <Route path="koleksi-pekeliling" element={<Navigate to="/kurikulum/surat-spi" replace />} />
             <Route path="opr" element={<OPR seksyen="kurikulum" />} />
           </Route>
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}
         </Routes>
+        </Suspense>
         </PenggeraAksesTerhad>
       </div>
       {user && <ButangTerapung />}

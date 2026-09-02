@@ -12,7 +12,7 @@ import { useDialog } from '../../context/DialogContext.jsx'
 import { muatkanLaporanUBKS, simpanLaporanUBKS, padamLaporanUBKS } from '../../hooks/useLaporanUBKS.js'
 import { muatkanPerancangan } from '../../hooks/usePerancanganUBKS.js'
 import { muatkanKehadiranSatu } from '../../hooks/useKehadiranUBKS.js'
-import { senaraiGuru, cariTtdTersimpan, upsertTtdTersimpan } from './unitHelpers.js'
+import { senaraiGuru, cariTtdTersimpan, upsertTtdTersimpan, namaFailLaporanUBKS } from './unitHelpers.js'
 import PemotongGambarModal from '../Kurikulum/PemotongGambarModal.jsx'
 
 // Nisbah lebar:tinggi bingkai gambar SEBENAR dalam cetakan (4 gambar
@@ -121,7 +121,7 @@ export default function LaporanUBKSDetail() {
   const { senarai: senaraiPikebm } = usePikebm()
   const { senarai: senaraiSivik } = useSivikKokurikulum()
   const { profiles } = useProfilesList()
-  const [dataCetak, setDataCetak] = useCetak()
+  const [dataCetak, setDataCetak] = useCetak((d) => namaFailLaporanUBKS({ unit: d.unit }))
   const { konfirm, amaran } = useDialog()
 
   const [data, setData] = useState(MEDAN_KOSONG)
