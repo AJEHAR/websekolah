@@ -30,7 +30,7 @@ function BarisJadual({ label, value, flex = 1 }) {
 
 function GambarSlot({ src }) {
   return (
-    <div className="border-2 border-black overflow-hidden flex-1 h-full">
+    <div className="border border-black overflow-hidden flex-1 h-full">
       {src ? <img src={src} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-[#EAF3FB]" />}
     </div>
   )
@@ -38,7 +38,7 @@ function GambarSlot({ src }) {
 
 function BlokTandatanganCetak({ label, ttdUrl, nama }) {
   return (
-    <div className="flex-1">
+    <div className="flex-1 border-r border-black last:border-r-0">
       <div style={{ backgroundColor: PUTIH }} className="text-center py-1 border-b border-black"><p className="text-[11px] font-bold text-black">{label}</p></div>
       {/* Templat TETAP: (tandatangan) di atas, nama (kecil) di bawah -
           DUA-DUA sentiasa dipaparkan sekali (bukan salah satu sahaja) -
@@ -88,14 +88,14 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
         </div>
 
         <div className="p-6">
-          <div className="flex border border-black divide-x divide-black mb-2" style={{ backgroundColor: PUTIH }}>
-            <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Bil. Perjumpaan : <span className="font-normal">{perjumpaan}</span></p></div>
-            <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Tarikh : <span className="font-normal">{cubaFormatTarikh(data.tarikh)}</span></p></div>
+          <div className="flex border border-black mb-2" style={{ backgroundColor: PUTIH }}>
+            <div className="flex-1 text-center py-1.5 border-r border-black"><p className="text-[11px] font-bold text-black">Bil. Perjumpaan : <span className="font-normal">{perjumpaan}</span></p></div>
+            <div className="flex-1 text-center py-1.5 border-r border-black"><p className="text-[11px] font-bold text-black">Tarikh : <span className="font-normal">{cubaFormatTarikh(data.tarikh)}</span></p></div>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Masa : <span className="font-normal">{data.masa}</span></p></div>
           </div>
 
-          <div className="flex border border-black divide-x divide-black mb-2" style={{ backgroundColor: PUTIH }}>
-            <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Tempat : <span className="font-normal">{data.tempat || ''}</span></p></div>
+          <div className="flex border border-black mb-2" style={{ backgroundColor: PUTIH }}>
+            <div className="flex-1 text-center py-1.5 border-r border-black"><p className="text-[11px] font-bold text-black">Tempat : <span className="font-normal">{data.tempat || ''}</span></p></div>
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Bil. Ahli Hadir : <span className="font-normal">{data.bilAhliHadir || ''}</span></p></div>
           </div>
 
@@ -143,7 +143,7 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
             <GambarSlot src={gambar[3]} />
           </div>
 
-          <div className="flex border border-black divide-x divide-black">
+          <div className="flex border border-black">
             <BlokTandatanganCetak label="Tandatangan Setiausaha" ttdUrl={data.ttdSetiausahaUrl} nama={data.namaSetiausaha} />
             <BlokTandatanganCetak label="Tandatangan Guru Penasihat" ttdUrl={data.ttdGuruUrl} nama={data.namaGuruTtd} />
             <BlokTandatanganCetak label="Tandatangan GPK Kokurikulum" ttdUrl={data.ttdGPKUrl} nama={data.namaGPK} />
