@@ -4,7 +4,12 @@ import { X, Check } from 'lucide-react'
 // Alat crop gambar (canvas) - staff boleh laraskan kotak crop (geser +
 // besarkan/kecilkan sudut) sebelum sahkan. Pulangkan blob JPEG hasil crop
 // melalui onSah(blob).
-export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah, onGagal }) {
+// nisbah = lebar/tinggi bingkai DESTINASI sebenar (cth. bingkai Laporan
+// UBKS 1.6, OPR/lain 1 = segi empat sama) - PENTING kotak crop ikut
+// nisbah SAMA PERSIS dengan bingkai output, kalau tidak apa staff nampak
+// semasa crop tak akan sepadan hasil akhir (gambar "terpotong" secara
+// mengejut bila dipaparkan dalam bingkai lain bentuk).
+export default function PemotongGambarModal({ open, gambarSrc, nisbah = 1, onTutup, onSah, onGagal }) {
   const imgRef = useRef(null)
   const kontenaRef = useRef(null)
   const [saizImej, setSaizImej] = useState({ lebar: 0, tinggi: 0 })
@@ -34,9 +39,16 @@ export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah, o
           const y = Math.max(0, Math.min(saizImej.tinggi - seret.kotakMula.tinggi, seret.kotakMula.y + dy))
           return { ...k, x, y }
         }
-        // besarkan (sudut kanan-bawah)
-        const lebar = Math.max(40, Math.min(saizImej.lebar - seret.kotakMula.x, seret.kotakMula.lebar + dx))
-        const tinggi = Math.max(40, Math.min(saizImej.tinggi - seret.kotakMula.y, seret.kotakMula.tinggi + dy))
+        // besarkan (sudut kanan-bawah) - nisbah DIKUNCI (bukan bebas
+        // lagi) - lebar ikut seretan staff, tinggi dikira drpd nisbah,
+        // supaya kotak crop kekal SAMA BENTUK dengan bingkai output akhir.
+        const lebarMaksima = saizImej.lebar - seret.kotakMula.x
+        const tinggiMaksima = saizImej.tinggi - seret.kotakMula.y
+        let lebar = Math.max(40, seret.kotakMula.lebar + dx)
+        let tinggi = lebar / nisbah
+        // Had oleh sempadan imej (lebar ATAU tinggi, ambil yang lebih ketat)
+        if (lebar > lebarMaksima) { lebar = lebarMaksima; tinggi = lebar / nisbah }
+        if (tinggi > tinggiMaksima) { tinggi = tinggiMaksima; lebar = tinggi * nisbah }
         return { ...k, lebar, tinggi }
       })
     }
@@ -51,7 +63,7 @@ export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah, o
       window.removeEventListener('touchmove', gerak)
       window.removeEventListener('touchend', lepas)
     }
-  }, [seret, saizImej])
+  }, [seret, saizImej, nisbah])
 
   if (!open) return null
 
@@ -62,9 +74,17 @@ export default function PemotongGambarModal({ open, gambarSrc, onTutup, onSah, o
     const lebar = img.naturalWidth * skala
     const tinggi = img.naturalHeight * skala
     setSaizImej({ lebar, tinggi })
-    // Kotak crop lalai - kotak segi empat sama di tengah, 70% saiz terkecil
-    const saizKotak = Math.min(lebar, tinggi) * 0.7
-    setKotak({ x: (lebar - saizKotak) / 2, y: (tinggi - saizKotak) / 2, lebar: saizKotak, tinggi: saizKotak })
+    // Kotak crop lalai - ikut NISBAH bingkai destinasi (bukan sentiasa
+    // segi empat sama lagi), 80% saiz maksimum yang muat dalam gambar.
+    let kotakLebar, kotakTinggi
+    if (lebar / tinggi > nisbah) {
+      kotakTinggi = tinggi * 0.8
+      kotakLebar = kotakTinggi * nisbah
+    } else {
+      kotakLebar = lebar * 0.8
+      kotakTinggi = kotakLebar / nisbah
+    }
+    setKotak({ x: (lebar - kotakLebar) / 2, y: (tinggi - kotakTinggi) / 2, lebar: kotakLebar, tinggi: kotakTinggi })
   }
 
   function posEvent(e) {

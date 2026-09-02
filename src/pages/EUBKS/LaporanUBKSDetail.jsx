@@ -14,6 +14,14 @@ import { muatkanPerancangan } from '../../hooks/usePerancanganUBKS.js'
 import { muatkanKehadiranSatu } from '../../hooks/useKehadiranUBKS.js'
 import { senaraiGuru, cariTtdTersimpan, upsertTtdTersimpan } from './unitHelpers.js'
 import PemotongGambarModal from '../Kurikulum/PemotongGambarModal.jsx'
+
+// Nisbah lebar:tinggi bingkai gambar SEBENAR dalam cetakan (4 gambar
+// sebaris melintang, 210mm lebar muka surat - padding - gap, bahagi 4,
+// tinggi baris tetap 30mm) - dikira: (210-2*6.35-3*2.12)/4/30 ≈ 1.59.
+// PENTING kekal SAMA PERSIS dengan CetakLaporanUBKS.jsx punya bingkai -
+// kalau salah satu berubah, dua-dua kena dikemaskini bersama supaya crop
+// yang staff nampak sentiasa sepadan hasil cetakan akhir.
+const NISBAH_GAMBAR_LAPORAN = 1.59
 import TandatanganModal from '../Kurikulum/TandatanganModal.jsx'
 import CetakLaporanUBKS from './CetakLaporanUBKS.jsx'
 
@@ -594,7 +602,7 @@ export default function LaporanUBKSDetail() {
           <p className="text-[11px] text-inkmuted mb-2">Tekan <Move size={10} className="inline" /> bila-bila untuk laras kedudukan gambar tanpa upload semula.</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="relative aspect-square rounded-card border-2 border-dashed border-border bg-base overflow-hidden">
+              <div key={i} className="relative rounded-card border-2 border-dashed border-border bg-base overflow-hidden" style={{ aspectRatio: NISBAH_GAMBAR_LAPORAN }}>
                 {data.gambar[i] ? (
                   <>
                     <img src={data.gambar[i]} alt="" className="w-full h-full object-cover" />
@@ -684,6 +692,7 @@ export default function LaporanUBKSDetail() {
       <PemotongGambarModal
         open={slotCrop !== null}
         gambarSrc={gambarMentah}
+        nisbah={NISBAH_GAMBAR_LAPORAN}
         onTutup={() => setSlotCrop(null)}
         onSah={crophasilSah}
         onGagal={(mesej) => { setSlotCrop(null); setRalat(mesej) }}

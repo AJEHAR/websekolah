@@ -94,9 +94,9 @@ export default function CetakLaporanUBKS({ data, unit, perjumpaan }) {
             <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Masa : <span className="font-normal">{data.masa}</span></p></div>
           </div>
 
-          <div className="flex border border-black divide-x divide-black mb-2">
-            <div className="flex-1"><KotakKrim className="border-0">{`Tempat : ${data.tempat || ''}`}</KotakKrim></div>
-            <div className="flex-1"><KotakKrim className="border-0">{`Bil. Ahli Hadir : ${data.bilAhliHadir || ''}`}</KotakKrim></div>
+          <div className="flex border border-black divide-x divide-black mb-2" style={{ backgroundColor: PUTIH }}>
+            <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Tempat : <span className="font-normal">{data.tempat || ''}</span></p></div>
+            <div className="flex-1 text-center py-1.5"><p className="text-[11px] font-bold text-black">Bil. Ahli Hadir : <span className="font-normal">{data.bilAhliHadir || ''}</span></p></div>
           </div>
 
           <div className="mb-3 border border-black text-center py-2" style={{ backgroundColor: PUTIH }}>
