@@ -10,6 +10,7 @@ export const NAV_ITEMS = [
       { label: 'RPI', to: '/kurikulum/rpi' },
       { label: 'RPT', to: '/kurikulum/rpt' },
       { label: 'Template Kertas Kerja', to: '/kurikulum/template-kertas-kerja' },
+      { label: 'OPPM', to: '/kurikulum/oppm' },
       { label: 'Surat/SPI', to: '/kurikulum/surat-spi' },
       { label: 'OPR', to: '/kurikulum/opr' },
       // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -

@@ -377,5 +377,12 @@ service cloud.firestore {
       allow read: if isStaffDiluluskan();
       allow write: if isStaffDiluluskan();
     }
+
+    // OPPM (One Page Project Manager) - untuk mana-mana projek/jawatankuasa
+    // sekolah, bukan khusus Panitia.
+    match /oppm/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Camera, Trash2, Plus, Star, Check, Search, Users, Award, Pencil, X } from 'lucide-react'
+import { ArrowLeft, Camera, Trash2, Plus, Star, Check, Search, Users, Award, Pencil, X, FileText } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useMuridList } from '../../hooks/useMurid.js'
 import { useProfilesList } from '../../hooks/useProfilesList.js'
@@ -306,9 +306,14 @@ export default function UnitUBKSDetail() {
 
   return (
     <div className="max-w-2xl">
-      <Link to="/eubks/murid-ubks" className="inline-flex items-center gap-1.5 text-xs text-inkmuted hover:text-ink mb-4">
-        <ArrowLeft size={14} /> Murid UBKS
-      </Link>
+      <div className="flex items-center justify-between mb-4">
+        <Link to="/eubks/murid-ubks" className="inline-flex items-center gap-1.5 text-xs text-inkmuted hover:text-ink">
+          <ArrowLeft size={14} /> Murid UBKS
+        </Link>
+        <Link to={`/eubks/fail-unit/${unit.id}`} className="inline-flex items-center gap-1.5 text-xs text-brand-red font-semibold">
+          <FileText size={14} /> Fail Unit (Nazir)
+        </Link>
+      </div>
 
       {/* Kad hero - infografik identiti unit */}
       <div className="rounded-card border border-border bg-surface p-6 mb-4 text-center">

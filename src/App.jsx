@@ -63,6 +63,7 @@ const JawatankuasaUBKS = lazy(() => import('./pages/EUBKS/JawatankuasaUBKS.jsx')
 const KehadiranUBKS = lazy(() => import('./pages/EUBKS/KehadiranUBKS.jsx'))
 const LaporanUBKS = lazy(() => import('./pages/EUBKS/LaporanUBKS.jsx'))
 const LaporanUBKSDetail = lazy(() => import('./pages/EUBKS/LaporanUBKSDetail.jsx'))
+const FailUnit = lazy(() => import('./pages/EUBKS/FailUnit.jsx'))
 const PerancanganUBKS = lazy(() => import('./pages/EUBKS/PerancanganUBKS.jsx'))
 const KurikulumLayout = lazy(() => import('./pages/Kurikulum/KurikulumLayout.jsx'))
 const KurikulumHub = lazy(() => import('./pages/Kurikulum/KurikulumHub.jsx'))
@@ -70,6 +71,8 @@ const BorangPLC = lazy(() => import('./pages/Kurikulum/BorangPLC.jsx'))
 const RPI = lazy(() => import('./pages/Kurikulum/RPI.jsx'))
 const RPT = lazy(() => import('./pages/Kurikulum/RPT.jsx'))
 const TemplateKertasKerja = lazy(() => import('./pages/Kurikulum/TemplateKertasKerja.jsx'))
+const OPPM = lazy(() => import('./pages/Kurikulum/OPPM.jsx'))
+const OPPMDetail = lazy(() => import('./pages/Kurikulum/OPPMDetail.jsx'))
 const SuratSpi = lazy(() => import('./components/SuratSpi.jsx'))
 const OPR = lazy(() => import('./pages/Kurikulum/OPR.jsx'))
 
@@ -213,6 +216,7 @@ export default function App() {
             <Route path="kehadiran-ubks" element={<KehadiranUBKS />} />
             <Route path="laporan-ubks" element={<LaporanUBKS />} />
             <Route path="laporan-ubks/:unitId/:perjumpaan" element={<LaporanUBKSDetail />} />
+            <Route path="fail-unit/:unitId" element={<FailUnit />} />
             <Route path="perancangan-ubks" element={<PerancanganUBKS />} />
             <Route path="opr" element={<OPR seksyen="koku" />} />
             <Route path="surat-spi" element={<SuratSpi seksyen="koku" />} />
@@ -224,6 +228,8 @@ export default function App() {
             <Route path="rpi" element={<RPI />} />
             <Route path="rpt" element={<RPT />} />
             <Route path="template-kertas-kerja" element={<TemplateKertasKerja />} />
+            <Route path="oppm" element={<OPPM />} />
+            <Route path="oppm/:id" element={<OPPMDetail />} />
             <Route path="surat-spi" element={<SuratSpi seksyen="kurikulum" />} />
             <Route path="koleksi-pekeliling" element={<Navigate to="/kurikulum/surat-spi" replace />} />
             <Route path="opr" element={<OPR seksyen="kurikulum" />} />

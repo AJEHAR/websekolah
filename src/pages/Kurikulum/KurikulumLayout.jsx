@@ -12,6 +12,12 @@ const TAJUK_SUBPAGE = {
   '/kurikulum/template-kertas-kerja': 'Template Kertas Kerja',
   '/kurikulum/surat-spi': 'Surat/SPI',
   '/kurikulum/opr': 'OPR',
+  '/kurikulum/oppm': 'OPPM',
+}
+
+function tajukSubpage(pathname) {
+  if (pathname.startsWith('/kurikulum/oppm/')) return 'OPPM'
+  return TAJUK_SUBPAGE[pathname] ?? ''
 }
 
 export default function KurikulumLayout() {
@@ -35,7 +41,7 @@ export default function KurikulumLayout() {
           </Link>
           <h1 className="text-xl sm:text-2xl font-bold text-ink">KURI</h1>
           <p className="text-xs text-inkmuted mt-1 mb-5">
-            {TAJUK_SUBPAGE[location.pathname] ?? ''}
+            {tajukSubpage(location.pathname)}
           </p>
           <Outlet context={{ user }} />
         </div>
