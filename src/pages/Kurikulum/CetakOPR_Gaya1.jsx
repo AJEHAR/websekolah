@@ -41,10 +41,12 @@ function BarisLogo({ logo }) {
 export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, subHeader2 }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
   const unit = rekod.unit || 'PROGRAM'
-  // {Unit} dalam sub-tajuk boleh-edit digantikan nama Unit laporan ni -
-  // kosong = guna teks lalai sistem (sama corak dengan Gaya 2).
-  const teksSub1 = (subHeader1 || 'Program {Unit}').replace(/\{Unit\}/gi, unit)
-  const teksSub2 = (subHeader2 || 'One Page Report (OPR) {Unit}').replace(/\{Unit\}/gi, unit)
+  // {Unit} dalam sub-tajuk boleh-edit digantikan nama Unit laporan ni.
+  // PENTING: TIADA teks lalai lagi (dulu "Program {Unit}" dsb) - kalau
+  // tetapan kosong, medan kosong terus (tak papar baris tu langsung),
+  // ikut arahan pengguna "jangan hardcode perkataan lain".
+  const teksSub1 = subHeader1 ? subHeader1.replace(/\{Unit\}/gi, unit) : ''
+  const teksSub2 = subHeader2 ? subHeader2.replace(/\{Unit\}/gi, unit) : ''
 
   return (
     <PrintArea>
@@ -56,21 +58,27 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
           backgroundSize: 'cover', backgroundPosition: 'center',
         }}
       >
-        {/* Panel putih legap membungkus KESELURUHAN kepala (logo/nama
-            sekolah/sub-tajuk) - elak teks bertindih terus dengan gambar
-            tema latar belakang (sukar/mustahil dibaca kalau tema gelap). */}
-        <div className="bg-white/90 p-3 rounded mb-2.5 shrink-0">
-          <div className="flex items-start justify-between mb-2">
-            <div className="w-24" />
-            <div className="flex-1"><BarisLogo logo={logo} /></div>
-            <div className="border-2 border-black px-4 py-2 min-w-[110px] text-center">
-              <p className="text-sm font-bold text-black">{rekod.unit || '-'}</p>
-            </div>
+        {/* Logo & badge Unit TERAPUNG terus atas latar belakang (bukan
+            dalam panel putih Nama Sekolah) - ikut keputusan reka bentuk
+            (rujukan gambar pengguna). Badge Unit kekal ada latar putih
+            sendiri (kotak kecil) untuk kekal jelas dibaca. */}
+        <div className="flex items-start justify-between mb-2.5 shrink-0">
+          <div className="w-24" />
+          <div className="flex-1"><BarisLogo logo={logo} /></div>
+          <div className="border-2 border-black bg-white/90 px-4 py-2 min-w-[110px] text-center">
+            <p className="text-sm font-bold text-black">{rekod.unit || '-'}</p>
           </div>
+        </div>
 
-          <p className="text-center text-sm font-bold text-black mb-1">{namaSekolah || NAMA_SEKOLAH}</p>
-          <p className="text-center text-xs font-bold text-black uppercase mb-1">{teksSub1}</p>
-          <p className="text-center text-xs font-bold text-black uppercase">{teksSub2}</p>
+        {/* Panel putih legap - Nama Sekolah (atas, bold, lebih besar) +
+            sub-tajuk (bawah, TAK bold, lebih kecil) - susunan & saiz
+            diselaraskan (dulu Gaya 2 terbalik/salah saiz - dah dibetulkan
+            supaya SAMA dengan Gaya 1). Baris sub-tajuk kosong TAK dipapar
+            langsung (bukan kekal ruang kosong). */}
+        <div className="bg-white/90 p-3 rounded mb-2.5 shrink-0 text-center">
+          <p className="text-sm font-bold text-black">{namaSekolah || NAMA_SEKOLAH}</p>
+          {teksSub1 && <p className="text-[11px] font-normal text-black uppercase mt-1">{teksSub1}</p>}
+          {teksSub2 && <p className="text-[11px] font-normal text-black uppercase mt-0.5">{teksSub2}</p>}
         </div>
 
         <div className="grid grid-cols-3 gap-0 border-2 border-black divide-x-2 divide-black mb-2.5 shrink-0">
@@ -117,15 +125,15 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
             ))}
           </div>
 
-          <div className={`grid gap-6 shrink-0 bg-white/90 p-3 rounded ${rekod.disahkanAktif ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <div className="text-center">
+          <div className={`grid gap-4 shrink-0 ${rekod.disahkanAktif ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <div className="bg-white/90 rounded p-3 text-center">
               <p className="text-xs font-semibold text-black mb-3">Disediakan Oleh :</p>
               {rekod.tandaTanganDisediakanUrl && <img src={rekod.tandaTanganDisediakanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
               <p className="text-xs font-semibold text-black">{rekod.namaDisediakan || '-'}</p>
               <p className="text-[10px] text-gray-600">{rekod.jawatanDisediakan}</p>
             </div>
             {rekod.disahkanAktif && (
-              <div className="text-center">
+              <div className="bg-white/90 rounded p-3 text-center">
                 <p className="text-xs font-semibold text-black mb-3">Disahkan Oleh :</p>
                 {rekod.tandaTanganDisahkanUrl && <img src={rekod.tandaTanganDisahkanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
                 <p className="text-xs font-semibold text-black">{rekod.namaDisahkan || '-'}</p>

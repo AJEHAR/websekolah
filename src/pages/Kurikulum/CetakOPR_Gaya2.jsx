@@ -41,8 +41,10 @@ function BarisLogo({ logo }) {
 export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, subHeader2 }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
   const unit = rekod.unit || 'PROGRAM'
-  const teksSub1 = (subHeader1 || 'Program {Unit}').replace(/\{Unit\}/gi, unit)
-  const teksSub2 = (subHeader2 || 'One Page Report (OPR) {Unit}').replace(/\{Unit\}/gi, unit)
+  // PENTING: TIADA teks lalai lagi (dulu "Program {Unit}" dsb) - kosong =
+  // medan kosong terus, tak papar baris tu langsung.
+  const teksSub1 = subHeader1 ? subHeader1.replace(/\{Unit\}/gi, unit) : ''
+  const teksSub2 = subHeader2 ? subHeader2.replace(/\{Unit\}/gi, unit) : ''
 
   return (
     <PrintArea>
@@ -54,24 +56,31 @@ export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, s
           backgroundSize: 'cover', backgroundPosition: 'center',
         }}
       >
-        {/* Panel putih legap membungkus KESELURUHAN kepala - elak teks
-            bertindih terus dengan gambar tema latar belakang. */}
-        <div className="p-5 pb-3 shrink-0 bg-white/90">
-          <div className="flex items-start justify-between mb-1.5">
+        <div className="p-5 pb-3 shrink-0">
+          {/* Logo & badge Unit TERAPUNG terus atas latar belakang - sama
+              corak dengan Gaya 1 (rujukan gambar pengguna). */}
+          <div className="flex items-start justify-between mb-2.5">
             <div className="w-24" />
             <div className="flex-1"><BarisLogo logo={logo} /></div>
-            <div className="border-2 border-black px-4 py-2 min-w-[110px] text-center">
+            <div className="border-2 border-black bg-white/90 px-4 py-2 min-w-[110px] text-center">
               <p className="text-sm font-bold text-black uppercase">{unit}</p>
             </div>
           </div>
-          <p className="text-center text-sm font-bold text-black uppercase mb-1">{teksSub1}</p>
-          <p className="text-center text-xs font-bold text-black mb-1">{namaSekolah || NAMA_SEKOLAH}</p>
-          <p className="text-center text-xs font-bold text-black uppercase mb-2.5">{teksSub2}</p>
+
+          {/* Panel putih - Nama Sekolah (atas, bold, lebih besar) +
+              sub-tajuk (bawah, TAK bold, lebih kecil) - susunan & saiz
+              diselaraskan supaya SAMA dengan Gaya 1 (asalnya terbalik -
+              sub-tajuk 1 di atas dengan saiz lebih besar - bug dibetulkan). */}
+          <div className="bg-white/90 p-3 rounded mb-2.5 text-center">
+            <p className="text-sm font-bold text-black">{namaSekolah || NAMA_SEKOLAH}</p>
+            {teksSub1 && <p className="text-[11px] font-normal text-black uppercase mt-1">{teksSub1}</p>}
+            {teksSub2 && <p className="text-[11px] font-normal text-black uppercase mt-0.5">{teksSub2}</p>}
+          </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <div className="border-2 border-black p-2 text-center rounded"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
-            <div className="border-2 border-black p-2 text-center rounded"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
-            <div className="border-2 border-black p-2 text-center rounded"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
+            <div className="border-2 border-black bg-white/90 p-2 text-center rounded"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
+            <div className="border-2 border-black bg-white/90 p-2 text-center rounded"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
+            <div className="border-2 border-black bg-white/90 p-2 text-center rounded"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
           </div>
         </div>
 
@@ -110,15 +119,15 @@ export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, s
             </div>
           </div>
 
-          <div className={`grid gap-6 shrink-0 bg-white/90 p-3 rounded ${rekod.disahkanAktif ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <div className="text-center">
+          <div className={`grid gap-4 shrink-0 ${rekod.disahkanAktif ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <div className="bg-white/90 rounded p-3 text-center">
               <p className="text-xs font-semibold text-black mb-3">Disediakan Oleh :</p>
               {rekod.tandaTanganDisediakanUrl && <img src={rekod.tandaTanganDisediakanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
               <p className="text-xs font-semibold text-black">{rekod.namaDisediakan || '-'}</p>
               <p className="text-[10px] text-gray-600">{rekod.jawatanDisediakan}</p>
             </div>
             {rekod.disahkanAktif && (
-              <div className="text-center">
+              <div className="bg-white/90 rounded p-3 text-center">
                 <p className="text-xs font-semibold text-black mb-3">Disahkan Oleh :</p>
                 {rekod.tandaTanganDisahkanUrl && <img src={rekod.tandaTanganDisahkanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
                 <p className="text-xs font-semibold text-black">{rekod.namaDisahkan || '-'}</p>
