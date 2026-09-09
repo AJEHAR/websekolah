@@ -55,13 +55,22 @@ input:focus-visible {
   .print-page-break {
     page-break-after: always;
   }
-  /* Landskap - untuk jadual lebar (Papan RMT, Papan UBKS). Sokong Chrome/Edge
-     (named pages) - fallback pengguna pilih Landskap manual dalam dialog cetak
-     kalau pelayar tak sokong. */
+  /* PENTING: peraturan ni MESTI wujud - tanpanya, pelayar guna margin
+     LALAI sendiri (~1-2.5cm ikut pelayar/OS) di sekeliling setiap muka
+     surat cetak, walaupun kandungan .print-area dah ditetapkan tepat
+     210mm x 297mm dalam kod. Margin lalai pelayar ni PAKSA kandungan
+     dikecilkan/disusun semula supaya muat dalam ruang bercetak yang lebih
+     kecil - punca sebenar "kotak-kotak tak penuh A4" yang dilaporkan.
+     margin:0 di sini pastikan .print-area kawal 100% ruang muka surat. */
+  @page {
+    size: A4;
+    margin: 0;
+  }
   .cetak-landskap {
     page: landskap;
   }
   @page landskap {
     size: A4 landscape;
+    margin: 0;
   }
 }

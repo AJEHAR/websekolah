@@ -13,7 +13,7 @@ function SenaraiPeluru({ teks }) {
 
 function Kotak({ label, children, flex = 1 }) {
   return (
-    <div className="border-2 border-black bg-white p-2.5 overflow-hidden" style={{ flex }}>
+    <div className="border-2 border-black bg-white/90 p-2.5 overflow-hidden" style={{ flex }}>
       <p className="text-xs font-bold text-black mb-1">{label}</p>
       {children}
     </div>
@@ -59,7 +59,7 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
         {/* Panel putih legap membungkus KESELURUHAN kepala (logo/nama
             sekolah/sub-tajuk) - elak teks bertindih terus dengan gambar
             tema latar belakang (sukar/mustahil dibaca kalau tema gelap). */}
-        <div className="bg-white p-3 rounded mb-2.5 shrink-0">
+        <div className="bg-white/90 p-3 rounded mb-2.5 shrink-0">
           <div className="flex items-start justify-between mb-2">
             <div className="w-24" />
             <div className="flex-1"><BarisLogo logo={logo} /></div>
@@ -74,18 +74,18 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
         </div>
 
         <div className="grid grid-cols-3 gap-0 border-2 border-black divide-x-2 divide-black mb-2.5 shrink-0">
-          <div className="bg-white p-2.5 text-center"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
-          <div className="bg-white p-2.5 text-center"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
-          <div className="bg-white p-2.5 text-center"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
+          <div className="bg-white/90 p-2.5 text-center"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
+          <div className="bg-white/90 p-2.5 text-center"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
+          <div className="bg-white/90 p-2.5 text-center"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
         </div>
 
-        <div className="border-2 border-black bg-white p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">
+        <div className="border-2 border-black bg-white/90 p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">
           <p className="text-xs font-bold text-black">Nama Program: <span className="font-normal">{rekod.nama}</span></p>
         </div>
 
         <div className="grid grid-cols-2 gap-0 border-2 border-black divide-x-2 divide-black mb-2.5 shrink-0">
-          <div className="bg-white p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
-          <div className="bg-white p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
+          <div className="bg-white/90 p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
+          <div className="bg-white/90 p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
         </div>
 
         {/* Bahagian bawah ni flex:1 - isi baki ruang muka surat SENTIASA
@@ -117,17 +117,17 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-6 shrink-0 bg-white p-3 rounded">
-            <div>
+          <div className={`grid gap-6 shrink-0 bg-white/90 p-3 rounded ${rekod.disahkanAktif ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <div className="text-center">
               <p className="text-xs font-semibold text-black mb-3">Disediakan Oleh :</p>
-              {rekod.tandaTanganDisediakanUrl && <img src={rekod.tandaTanganDisediakanUrl} alt="" className="h-10 object-contain mb-1" />}
+              {rekod.tandaTanganDisediakanUrl && <img src={rekod.tandaTanganDisediakanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
               <p className="text-xs font-semibold text-black">{rekod.namaDisediakan || '-'}</p>
               <p className="text-[10px] text-gray-600">{rekod.jawatanDisediakan}</p>
             </div>
             {rekod.disahkanAktif && (
-              <div>
+              <div className="text-center">
                 <p className="text-xs font-semibold text-black mb-3">Disahkan Oleh :</p>
-                {rekod.tandaTanganDisahkanUrl && <img src={rekod.tandaTanganDisahkanUrl} alt="" className="h-10 object-contain mb-1" />}
+                {rekod.tandaTanganDisahkanUrl && <img src={rekod.tandaTanganDisahkanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
                 <p className="text-xs font-semibold text-black">{rekod.namaDisahkan || '-'}</p>
                 <p className="text-[10px] text-gray-600">{rekod.jawatanDisahkan}</p>
               </div>
