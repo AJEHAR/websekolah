@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Printer, Search, Settings, Upload } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { useLaporanOPR, tambahLaporanOPR, kemaskiniLaporanOPR, padamLaporanOPR } from '../../hooks/useLaporanOPR.js'
 import { useOprUnit } from '../../hooks/useOprUnit.js'
@@ -16,6 +17,19 @@ import UrusLogoOPRModal from './UrusLogoOPRModal.jsx'
 import UrusNamaSekolahOPRModal from './UrusNamaSekolahOPRModal.jsx'
 import ImportOPRModal from './ImportOPRModal.jsx'
 
+// OPR guna nilai seksyen literal 'kurikulum'/'hem'/'koku' (lihat
+// src/App.jsx) - TAPI peranan admin SEBENAR bahagian tu dalam sistem
+// ialah 'kurikulum'/'murid'/'ubks' (nama berbeza!). Pemetaan ni MESTI
+// sepadan PERSIS dengan fungsi isAdminOpr() dalam firestore.rules - kalau
+// tidak, UI akan sorok/tunjuk butang secara SALAH berbanding kebenaran
+// sebenar (cth. tunjuk butang tapi Firestore tetap tolak, atau sorok
+// butang daripada admin sebenar).
+function peranSeksyenOpr(seksyen) {
+  if (seksyen === 'hem') return 'murid'
+  if (seksyen === 'koku') return 'ubks'
+  return seksyen
+}
+
 // OPR - komponen DIKONGSI antara sub-page KURI/HEM/KOKU (sama corak
 // dengan Surat/SPI, komponents/SuratSpi.jsx) - "seksyen" tentukan koleksi
 // data mana dipapar/disimpan. Data (laporan, tag Unit, latar belakang,
@@ -24,11 +38,13 @@ import ImportOPRModal from './ImportOPRModal.jsx'
 export default function OPR({ seksyen }) {
   const { user } = useOutletContext()
   const { konfirm } = useDialog()
+  const { adaSeksyen } = useIsAdmin(user)
+  const bolehUrusTetapan = adaSeksyen(peranSeksyenOpr(seksyen))
   const { senarai, loading, muatSemula } = useLaporanOPR(seksyen)
   const { senarai: senaraiUnit, muatSemula: muatSemulaUnit } = useOprUnit(seksyen)
   const { senarai: senaraiLatarBelakang, muatSemula: muatSemulaLatarBelakang } = useOprLatarBelakang(seksyen)
   const { logo, muatSemula: muatSemulaLogo } = useOprLogo(seksyen)
-  const { namaSekolah, muatSemula: muatSemulaNamaSekolah } = useOprNamaSekolah(seksyen)
+  const { namaSekolah, subHeader1, subHeader2, muatSemula: muatSemulaNamaSekolah } = useOprNamaSekolah(seksyen)
   const [dataCetak, setDataCetak] = useCetak()
 
   const [modeForm, setModeForm] = useState(false)
@@ -108,7 +124,7 @@ export default function OPR({ seksyen }) {
           onBatal={() => { setModeForm(false); setRekodEdit(null) }}
           menyimpan={menyimpan}
         />
-        {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} />}
+        {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} />}
       </div>
     )
   }
@@ -137,12 +153,16 @@ export default function OPR({ seksyen }) {
         <button onClick={() => setTunjukLatar(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
           <Settings size={14} /> Latar
         </button>
-        <button onClick={() => setTunjukLogo(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
-          <Settings size={14} /> Logo
-        </button>
-        <button onClick={() => setTunjukNamaSekolah(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
-          <Settings size={14} /> Nama Sekolah
-        </button>
+        {bolehUrusTetapan && (
+          <>
+            <button onClick={() => setTunjukLogo(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
+              <Settings size={14} /> Logo
+            </button>
+            <button onClick={() => setTunjukNamaSekolah(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
+              <Settings size={14} /> Nama Sekolah
+            </button>
+          </>
+        )}
         <button onClick={() => setTunjukImport(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
           <Upload size={14} /> Import CSV
         </button>
@@ -182,10 +202,10 @@ export default function OPR({ seksyen }) {
       <UrusUnitOPRModal open={tunjukUnit} senarai={senaraiUnit} seksyen={seksyen} user={user} onClose={() => setTunjukUnit(false)} onSelesai={muatSemulaUnit} />
       <UrusLatarBelakangOPRModal open={tunjukLatar} senarai={senaraiLatarBelakang} seksyen={seksyen} user={user} onClose={() => setTunjukLatar(false)} onSelesai={muatSemulaLatarBelakang} />
       <UrusLogoOPRModal open={tunjukLogo} logo={logo} seksyen={seksyen} user={user} onClose={() => setTunjukLogo(false)} onSelesai={muatSemulaLogo} />
-      <UrusNamaSekolahOPRModal open={tunjukNamaSekolah} namaSekolah={namaSekolah} seksyen={seksyen} user={user} onClose={() => setTunjukNamaSekolah(false)} onSelesai={muatSemulaNamaSekolah} />
+      <UrusNamaSekolahOPRModal open={tunjukNamaSekolah} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} seksyen={seksyen} user={user} onClose={() => setTunjukNamaSekolah(false)} onSelesai={muatSemulaNamaSekolah} />
       <ImportOPRModal open={tunjukImport} seksyen={seksyen} onClose={() => setTunjukImport(false)} user={user} onSelesai={muatSemula} />
 
-      {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} />}
+      {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} />}
     </div>
   )
 }

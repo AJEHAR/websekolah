@@ -39,6 +39,18 @@ service cloud.firestore {
       return adaRekodAdmin() && (('super' in peranan()) || (seksyen in peranan()));
     }
 
+    // OPR digunakan merentasi KURI/HEM/KOKU dengan nilai "seksyen" literal
+    // 'kurikulum'/'hem'/'koku' (lihat src/App.jsx) - TAPI peranan admin
+    // SEBENAR yang ditetapkan dalam sistem untuk bahagian tu ialah
+    // 'kurikulum'/'murid'/'ubks' (nama berbeza! disahkan dari corak
+    // sedia ada match /murid/, /unitUBKS/ dsb). PENTING guna fungsi ni
+    // (bukan isAdminSeksyen terus dengan nilai OPR punya seksyen) - kalau
+    // tidak, admin HEM/KOKU akan terkunci keluar sepenuhnya (tiada
+    // sesiapa pun dilantik peranan literal 'hem'/'koku').
+    function isAdminOpr(seksyenOpr) {
+      return isAdminSeksyen(seksyenOpr == 'hem' ? 'murid' : (seksyenOpr == 'koku' ? 'ubks' : seksyenOpr));
+    }
+
     function isPemilik(emelDokumen) {
       return request.auth != null && request.auth.token.email == emelDokumen;
     }
@@ -323,7 +335,11 @@ service cloud.firestore {
 
     match /oprTetapan/{docId} {
       allow read: if isStaffDiluluskan();
-      allow write: if isStaffDiluluskan();
+      // DIKUNCI ke admin bahagian sahaja (Logo & Nama Sekolah/Sub-tajuk
+      // kesan kepada SEMUA cetakan OPR bahagian tu, bukan setakat rekod
+      // sendiri - sebelum ni mana-mana staff diluluskan boleh tukar,
+      // diketatkan atas permintaan pengguna).
+      allow write: if isAdminOpr(request.resource.data.seksyen);
     }
 
     match /takwimUnit/{docId} {

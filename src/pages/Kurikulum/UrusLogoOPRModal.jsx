@@ -23,7 +23,7 @@ export default function UrusLogoOPRModal({ open, logo, seksyen, user, onClose, o
     setRalat(null)
     setMemuatNaik(true)
     try {
-      const hasil = await muatNaikKeDrive(fail, 'opr')
+      const hasil = await muatNaikKeDrive(fail, 'opr', { mampatkan: false })
       setSenarai((s) => [...s, hasil.url])
     } catch (err) {
       setRalat(err.message || 'Gagal muat naik.')

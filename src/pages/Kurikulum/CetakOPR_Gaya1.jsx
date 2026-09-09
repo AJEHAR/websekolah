@@ -13,7 +13,7 @@ function SenaraiPeluru({ teks }) {
 
 function Kotak({ label, children, flex = 1 }) {
   return (
-    <div className="border-2 border-black p-2.5 overflow-hidden" style={{ flex }}>
+    <div className="border-2 border-black bg-white p-2.5 overflow-hidden" style={{ flex }}>
       <p className="text-xs font-bold text-black mb-1">{label}</p>
       {children}
     </div>
@@ -38,8 +38,13 @@ function BarisLogo({ logo }) {
 // kandungan). Teks lebih panjang dari muat dalam kotak akan dipotong
 // (overflow hidden) - PASTIKAN kekal 1 muka surat sahaja bila cetak,
 // tidak "melimpah" ke muka surat ke-2.
-export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah }) {
+export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, subHeader2 }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
+  const unit = rekod.unit || 'PROGRAM'
+  // {Unit} dalam sub-tajuk boleh-edit digantikan nama Unit laporan ni -
+  // kosong = guna teks lalai sistem (sama corak dengan Gaya 2).
+  const teksSub1 = (subHeader1 || 'Program {Unit}').replace(/\{Unit\}/gi, unit)
+  const teksSub2 = (subHeader2 || 'One Page Report (OPR) {Unit}').replace(/\{Unit\}/gi, unit)
 
   return (
     <PrintArea>
@@ -51,29 +56,36 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah }) {
           backgroundSize: 'cover', backgroundPosition: 'center',
         }}
       >
-        <div className="flex items-start justify-between mb-2 shrink-0">
-          <div className="w-24" />
-          <div className="flex-1"><BarisLogo logo={logo} /></div>
-          <div className="border-2 border-black px-4 py-2 min-w-[110px] text-center">
-            <p className="text-sm font-bold text-black">{rekod.unit || '-'}</p>
+        {/* Panel putih legap membungkus KESELURUHAN kepala (logo/nama
+            sekolah/sub-tajuk) - elak teks bertindih terus dengan gambar
+            tema latar belakang (sukar/mustahil dibaca kalau tema gelap). */}
+        <div className="bg-white p-3 rounded mb-2.5 shrink-0">
+          <div className="flex items-start justify-between mb-2">
+            <div className="w-24" />
+            <div className="flex-1"><BarisLogo logo={logo} /></div>
+            <div className="border-2 border-black px-4 py-2 min-w-[110px] text-center">
+              <p className="text-sm font-bold text-black">{rekod.unit || '-'}</p>
+            </div>
           </div>
-        </div>
 
-        <p className="text-center text-sm font-bold text-black mb-3 shrink-0">{namaSekolah || NAMA_SEKOLAH}</p>
+          <p className="text-center text-sm font-bold text-black mb-1">{namaSekolah || NAMA_SEKOLAH}</p>
+          <p className="text-center text-xs font-bold text-black uppercase mb-1">{teksSub1}</p>
+          <p className="text-center text-xs font-bold text-black uppercase">{teksSub2}</p>
+        </div>
 
         <div className="grid grid-cols-3 gap-0 border-2 border-black divide-x-2 divide-black mb-2.5 shrink-0">
-          <div className="p-2.5 text-center"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
-          <div className="p-2.5 text-center"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
-          <div className="p-2.5 text-center"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
+          <div className="bg-white p-2.5 text-center"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
+          <div className="bg-white p-2.5 text-center"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
+          <div className="bg-white p-2.5 text-center"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
         </div>
 
-        <div className="border-2 border-black p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">
+        <div className="border-2 border-black bg-white p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">
           <p className="text-xs font-bold text-black">Nama Program: <span className="font-normal">{rekod.nama}</span></p>
         </div>
 
         <div className="grid grid-cols-2 gap-0 border-2 border-black divide-x-2 divide-black mb-2.5 shrink-0">
-          <div className="p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
-          <div className="p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
+          <div className="bg-white p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
+          <div className="bg-white p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
         </div>
 
         {/* Bahagian bawah ni flex:1 - isi baki ruang muka surat SENTIASA
@@ -105,7 +117,7 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah }) {
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-6 shrink-0">
+          <div className="grid grid-cols-2 gap-6 shrink-0 bg-white p-3 rounded">
             <div>
               <p className="text-xs font-semibold text-black mb-3">Disediakan Oleh :</p>
               {rekod.tandaTanganDisediakanUrl && <img src={rekod.tandaTanganDisediakanUrl} alt="" className="h-10 object-contain mb-1" />}

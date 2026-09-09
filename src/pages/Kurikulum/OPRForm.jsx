@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles, Upload, X, PenLine, Plus, Move, Printer } from 'lucide-react'
 import { muatNaikKeDrive, janaAiOpr } from '../../lib/driveUpload.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 import PemotongGambarModal from './PemotongGambarModal.jsx'
 import TandatanganModal from './TandatanganModal.jsx'
 
@@ -37,6 +38,8 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   const [ralat, setRalat] = useState(null)
   const [menjanaAI, setMenjanaAI] = useState(false)
   const [mencetak, setMencetak] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const { konfirm } = useDialog()
 
   const [slotCrop, setSlotCrop] = useState(null) // index slot gambar sedang di-crop
   const [gambarMentah, setGambarMentah] = useState(null) // src gambar sebelum crop
@@ -45,7 +48,26 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   const [memuatNaikTtd, setMemuatNaikTtd] = useState(false)
 
   function u(kunci, nilai) {
+    setDirty(true)
     setData((d) => ({ ...d, [kunci]: nilai }))
+  }
+
+  // Amaran kalau tinggalkan page (tutup tab/refresh) sedangkan ada
+  // perubahan belum Simpan - elak kerja hilang senyap (borang OPR ada
+  // banyak medan, boleh makan masa lama untuk isi semula).
+  useEffect(() => {
+    function amaranKeluar(e) {
+      if (!dirty) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', amaranKeluar)
+    return () => window.removeEventListener('beforeunload', amaranKeluar)
+  }, [dirty])
+
+  async function batal() {
+    if (dirty && !(await konfirm('Ada perubahan belum disimpan. Tinggalkan borang ni tanpa simpan?', { bahaya: true }))) return
+    onBatal()
   }
 
   async function janaAI() {
@@ -88,6 +110,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     try {
       const fail = new File([blob], `gambar-opr-${i}.jpg`, { type: 'image/jpeg' })
       const hasil = await muatNaikKeDrive(fail, 'opr')
+      setDirty(true)
       setData((d) => {
         const gambar = [...d.gambar]
         gambar[i] = hasil.url
@@ -101,6 +124,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   }
 
   function buangGambar(i) {
+    setDirty(true)
     setData((d) => {
       const gambar = [...d.gambar]
       gambar[i] = null
@@ -128,6 +152,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     if (!data.nama.trim()) return setRalat('Sila isi Nama Program.')
     try {
       await onSimpan(data)
+      setDirty(false)
     } catch (err) {
       setRalat(err.message || 'Gagal simpan. Sila cuba lagi.')
     }
@@ -144,6 +169,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     setMencetak(true)
     try {
       await onCetak(data)
+      setDirty(false)
     } catch (err) {
       setRalat(err.message || 'Gagal simpan sebelum cetak. Sila cuba lagi.')
     } finally {
@@ -341,14 +367,14 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
 
       {ralat && <p className="text-sm text-brand-red">{ralat}</p>}
 
-      <div className="flex gap-3 pt-2 border-t border-border">
+      <div className="flex gap-3 pt-2 border-t border-border sticky bottom-0 bg-surface pb-2">
         <button onClick={hantar} disabled={menyimpan} className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
           {menyimpan ? 'Menyimpan…' : 'Simpan Laporan'}
         </button>
         <button onClick={cetak} disabled={mencetak} className="h-12 px-4 rounded-card border border-border text-sm font-medium text-ink flex items-center gap-1.5 disabled:opacity-60">
           <Printer size={15} /> {mencetak ? 'Menyediakan…' : 'Cetak'}
         </button>
-        <button onClick={onBatal} className="h-12 px-5 rounded-card border border-border text-sm font-medium text-ink">
+        <button onClick={batal} className="h-12 px-5 rounded-card border border-border text-sm font-medium text-ink">
           Batal
         </button>
       </div>
