@@ -24,6 +24,7 @@ const MEDAN_KOSONG = {
   tunjukSeksyenBadge: true,
   latarBelakangUrl: '',
   layoutCetak: 'gaya1',
+  kotakOpacity: 70,
 }
 
 function Medan({ label, value, onChange, textarea, placeholder }) {
@@ -239,6 +240,22 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
             <option key={l.id} value={l.gambarUrl}>{l.namaTema}</option>
           ))}
         </select>
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-medium text-ink">Kelutsinaran Kotak (Transparency)</label>
+            <span className="text-xs font-bold text-brand-red">{data.kotakOpacity}%</span>
+          </div>
+          <input
+            type="range"
+            min="20"
+            max="100"
+            step="5"
+            value={data.kotakOpacity}
+            onChange={(e) => u('kotakOpacity', Number(e.target.value))}
+            className="w-full accent-brand-red"
+          />
+          <p className="text-[10px] text-inkmuted mt-1">Lebih rendah = latar belakang lebih nampak menerusi kotak. Lebih tinggi = teks lebih senang dibaca.</p>
+        </div>
       </div>
 
       <div>

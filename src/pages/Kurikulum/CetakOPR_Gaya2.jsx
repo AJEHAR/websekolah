@@ -1,8 +1,10 @@
 import PrintArea from '../../components/cetak/PrintArea.jsx'
 import { NAMA_SEKOLAH } from './rpiConstants.js'
 
-// Tiada bullet ⚫ langsung (list-none) - staff nyatakan tak nak bullet
-// kelihatan sama sekali dalam senarai kandungan.
+function gayaKotak(opacity) {
+  return { backgroundColor: `rgba(255,255,255,${(opacity ?? 70) / 100})` }
+}
+
 function SenaraiPeluru({ teks }) {
   const baris = (teks ?? '').split('\n').map((b) => b.trim()).filter(Boolean)
   if (baris.length === 0) return <p className="text-[11px] text-gray-400">-</p>
@@ -13,14 +15,10 @@ function SenaraiPeluru({ teks }) {
   )
 }
 
-// SEMUA kotak kandungan - TIADA garis hitam lagi (border dibuang atas
-// arahan pengguna), gantikan bayang lembut (shadow) untuk kekal jelas
-// berasingan tanpa garis tegas - SAMA gaya dengan panel header (bucu
-// bulat + transparent + tiada garis).
-function Kotak({ label, children }) {
+function Kotak({ label, children, opacity }) {
   return (
-    <div className="bg-white/90 rounded-xl shadow-md p-2 overflow-hidden" style={{ flex: 1 }}>
-      <p className="text-xs font-bold text-black mb-1">{label}</p>
+    <div className="rounded-xl shadow-md p-2 overflow-hidden" style={{ flex: 1, ...gayaKotak(opacity) }}>
+      <p className="text-xs font-bold text-black mb-1 text-center">{label}</p>
       {children}
     </div>
   )
@@ -43,23 +41,20 @@ function labelSeksyen(seksyen) {
   return 'KURIKULUM'
 }
 
-function ChipMaklumat({ label, nilai }) {
+function ChipMaklumat({ label, nilai, opacity }) {
   return (
-    <div className="flex-1 bg-white/90 rounded-xl shadow-md p-2.5 text-center">
+    <div className="flex-1 rounded-xl shadow-md p-2.5 text-center" style={gayaKotak(opacity)}>
       <p className="text-xs font-bold text-black">{label}:</p>
       <p className="text-xs font-semibold text-black mt-0.5">{nilai || ''}</p>
     </div>
   )
 }
 
-// Gambar - flex-1 SAMA RATA (bukan nisbah 4:3 tetap lagi) - PUNCA bug
-// "gambar ke-4 kecil": nisbah tetap boleh jadi lebih tinggi dari ruang
-// diperuntukkan, overflow-hidden yang cuba elak tindihan tu sebenarnya
-// MEMOTONG gambar terakhir. flex-1 sama rata JAMIN semua 4 dapat 1/4
-// tinggi TEPAT - tiada potong, tiada tindih, semua SAMA BESAR dijamin.
-function GambarSlot({ src, posisi }) {
+// Bayang LEBIH KUAT (shadow-lg) berbanding kotak teks (shadow-md) - beri
+// hierarki visual "terapung" lebih tinggi untuk gambar.
+function GambarSlot({ src, posisi, opacity }) {
   return (
-    <div className="flex-1 min-h-0 bg-white/90 rounded-xl shadow-md overflow-hidden">
+    <div className="flex-1 min-h-0 rounded-xl shadow-lg overflow-hidden" style={gayaKotak(opacity)}>
       {src ? (
         <img src={src} alt="" className="w-full h-full object-cover" style={{ objectPosition: posisi ?? '50% 50%' }} />
       ) : (
@@ -69,13 +64,13 @@ function GambarSlot({ src, posisi }) {
   )
 }
 
-// Gaya 2 - "Kepala Bersempadan". TETAP 1 muka A4 SENTIASA (tinggi TETAP
-// 297mm, overflow:hidden pada bekas utama).
+// Gaya 2 - "Kepala Bersempadan". TETAP 1 muka A4 SENTIASA.
 export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, subHeader2, seksyen }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
   const unit = rekod.unit || 'PROGRAM'
   const teksSub1 = subHeader1 ? subHeader1.replace(/\{Unit\}/gi, unit) : ''
   const teksSub2 = subHeader2 ? subHeader2.replace(/\{Unit\}/gi, unit) : ''
+  const opacity = rekod.kotakOpacity
 
   return (
     <PrintArea>
@@ -97,53 +92,53 @@ export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, s
             )}
           </div>
 
-          <div className="bg-white/90 rounded-xl shadow-md p-3 mb-2.5 text-center">
+          <div className="rounded-xl shadow-md p-3 mb-2.5 text-center" style={gayaKotak(opacity)}>
             <p className="text-sm font-bold text-black">{namaSekolah || NAMA_SEKOLAH}</p>
             {teksSub1 && <p className="text-[11px] font-normal text-black uppercase mt-1">{teksSub1}</p>}
             {teksSub2 && <p className="text-[11px] font-normal text-black uppercase mt-0.5">{teksSub2}</p>}
           </div>
 
           <div className="flex gap-2">
-            <ChipMaklumat label="Hari" nilai={rekod.hari} />
-            <ChipMaklumat label="Tarikh" nilai={rekod.tarikh} />
-            <ChipMaklumat label="Masa" nilai={rekod.masa} />
+            <ChipMaklumat label="Hari" nilai={rekod.hari} opacity={opacity} />
+            <ChipMaklumat label="Tarikh" nilai={rekod.tarikh} opacity={opacity} />
+            <ChipMaklumat label="Masa" nilai={rekod.masa} opacity={opacity} />
           </div>
         </div>
 
         <div className="p-5 pt-3 flex-1 flex flex-col min-h-0">
-          <div className="bg-white/90 rounded-xl shadow-md p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">
+          <div className="rounded-xl shadow-md p-2.5 text-center mb-2.5 shrink-0 overflow-hidden" style={gayaKotak(opacity)}>
             <p className="text-xs font-bold text-black">Nama Program: <span className="font-normal">{rekod.nama}</span></p>
           </div>
 
           <div className="flex gap-2 mb-3 shrink-0">
-            <div className="flex-1 bg-white/90 rounded-xl shadow-md p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
-            <div className="flex-1 bg-white/90 rounded-xl shadow-md p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
+            <div className="flex-1 rounded-xl shadow-md p-2.5 text-center overflow-hidden" style={gayaKotak(opacity)}><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
+            <div className="flex-1 rounded-xl shadow-md p-2.5 text-center overflow-hidden" style={gayaKotak(opacity)}><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
           </div>
 
           <div className="flex-1 flex gap-3 min-h-0 mb-3">
             <div className="flex flex-col gap-2 min-h-0" style={{ flex: 2 }}>
-              <Kotak label="Objektif Program:"><SenaraiPeluru teks={rekod.objektif} /></Kotak>
-              <Kotak label="Aktiviti"><SenaraiPeluru teks={rekod.aktiviti} /></Kotak>
-              <Kotak label="Kekuatan"><SenaraiPeluru teks={rekod.kekuatan} /></Kotak>
-              <Kotak label="Kelemahan"><SenaraiPeluru teks={rekod.kelemahan} /></Kotak>
-              <Kotak label="Penambahbaikan"><SenaraiPeluru teks={rekod.penambahbaikan} /></Kotak>
+              <Kotak label="Objektif Program:" opacity={opacity}><SenaraiPeluru teks={rekod.objektif} /></Kotak>
+              <Kotak label="Aktiviti" opacity={opacity}><SenaraiPeluru teks={rekod.aktiviti} /></Kotak>
+              <Kotak label="Kekuatan" opacity={opacity}><SenaraiPeluru teks={rekod.kekuatan} /></Kotak>
+              <Kotak label="Kelemahan" opacity={opacity}><SenaraiPeluru teks={rekod.kelemahan} /></Kotak>
+              <Kotak label="Penambahbaikan" opacity={opacity}><SenaraiPeluru teks={rekod.penambahbaikan} /></Kotak>
             </div>
             <div className="flex flex-col gap-2 min-h-0" style={{ flex: 0.75 }}>
               {(gambarDiisi.length > 0 ? gambarDiisi : [null, null, null, null]).map((g, i) => (
-                <GambarSlot key={i} src={g ? (g.url ?? g) : null} posisi={g?.posisi} />
+                <GambarSlot key={i} src={g ? (g.url ?? g) : null} posisi={g?.posisi} opacity={opacity} />
               ))}
             </div>
           </div>
 
           <div className="flex gap-4 shrink-0">
-            <div className={`bg-white/90 rounded-xl shadow-md p-3 text-center ${rekod.disahkanAktif ? 'flex-1' : ''}`} style={!rekod.disahkanAktif ? { width: '40%' } : undefined}>
+            <div className={`rounded-xl shadow-md p-3 text-center ${rekod.disahkanAktif ? 'flex-1' : ''}`} style={{ ...gayaKotak(opacity), ...(!rekod.disahkanAktif ? { width: '40%' } : {}) }}>
               <p className="text-xs font-semibold text-black mb-3">Disediakan Oleh :</p>
               {rekod.tandaTanganDisediakanUrl && <img src={rekod.tandaTanganDisediakanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
               <p className="text-xs font-semibold text-black">{rekod.namaDisediakan || '-'}</p>
               <p className="text-[10px] text-gray-600">{rekod.jawatanDisediakan}</p>
             </div>
             {rekod.disahkanAktif && (
-              <div className="flex-1 bg-white/90 rounded-xl shadow-md p-3 text-center">
+              <div className="flex-1 rounded-xl shadow-md p-3 text-center" style={gayaKotak(opacity)}>
                 <p className="text-xs font-semibold text-black mb-3">Disahkan Oleh :</p>
                 {rekod.tandaTanganDisahkanUrl && <img src={rekod.tandaTanganDisahkanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
                 <p className="text-xs font-semibold text-black">{rekod.namaDisahkan || '-'}</p>
