@@ -18,7 +18,7 @@ function SenaraiPeluru({ teks }) {
 // pengguna "semua kotak sama seperti header".
 function Kotak({ label, children, flex = 1 }) {
   return (
-    <div className="border-2 border-black bg-white/90 rounded-xl p-2.5 overflow-hidden" style={{ flex }}>
+    <div className="bg-white/90 rounded-xl shadow-md p-2.5 overflow-hidden" style={{ flex }}>
       <p className="text-xs font-bold text-black mb-1">{label}</p>
       {children}
     </div>
@@ -46,7 +46,7 @@ function labelSeksyen(seksyen) {
 
 function ChipMaklumat({ label, nilai }) {
   return (
-    <div className="flex-1 bg-white/90 rounded-xl p-2.5 text-center">
+    <div className="flex-1 bg-white/90 rounded-xl shadow-md p-2.5 text-center">
       <p className="text-xs font-bold text-black">{label}:</p>
       <p className="text-xs font-semibold text-black mt-0.5">{nilai || ''}</p>
     </div>
@@ -82,7 +82,7 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
           )}
         </div>
 
-        <div className="bg-white/90 p-3 rounded-xl mb-2.5 shrink-0 text-center">
+        <div className="bg-white/90 rounded-xl shadow-md p-3 mb-2.5 shrink-0 text-center">
           <p className="text-sm font-bold text-black">{namaSekolah || NAMA_SEKOLAH}</p>
           {teksSub1 && <p className="text-[11px] font-normal text-black uppercase mt-1">{teksSub1}</p>}
           {teksSub2 && <p className="text-[11px] font-normal text-black uppercase mt-0.5">{teksSub2}</p>}
@@ -94,13 +94,13 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
           <ChipMaklumat label="Masa" nilai={rekod.masa} />
         </div>
 
-        <div className="border-2 border-black bg-white/90 rounded-xl p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">
+        <div className="bg-white/90 rounded-xl shadow-md p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">
           <p className="text-xs font-bold text-black">Nama Program: <span className="font-normal">{rekod.nama}</span></p>
         </div>
 
         <div className="flex gap-2 mb-2.5 shrink-0">
-          <div className="flex-1 border-2 border-black bg-white/90 rounded-xl p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
-          <div className="flex-1 border-2 border-black bg-white/90 rounded-xl p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
+          <div className="flex-1 bg-white/90 rounded-xl shadow-md p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
+          <div className="flex-1 bg-white/90 rounded-xl shadow-md p-2.5 text-center overflow-hidden"><p className="text-xs font-bold text-black">Kumpulan Sasaran: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
         </div>
 
         {/* Bahagian bawah ni flex:1 - isi baki ruang muka surat SENTIASA. */}
@@ -122,24 +122,24 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
           <div className="flex gap-2 mb-3 overflow-hidden" style={{ flex: 4 }}>
             {(gambarDiisi.length > 0 ? gambarDiisi : [null, null, null, null]).map((g, i) => (
               g ? (
-                <div key={i} className="flex-1 border-2 border-black rounded-xl overflow-hidden">
+                <div key={i} className="flex-1 bg-white/90 rounded-xl shadow-md overflow-hidden">
                   <img src={g.url ?? g} alt="" className="w-full h-full object-cover" style={{ objectPosition: g.posisi ?? '50% 50%' }} />
                 </div>
               ) : (
-                <div key={i} className="flex-1 border-2 border-dashed border-gray-300 rounded-xl" />
+                <div key={i} className="flex-1 bg-[#EAF3FB] rounded-xl shadow-md" />
               )
             ))}
           </div>
 
-          <div className={`grid gap-4 shrink-0 ${rekod.disahkanAktif ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <div className="bg-white/90 rounded-xl p-3 text-center">
+          <div className="flex gap-4 shrink-0">
+            <div className={`bg-white/90 rounded-xl shadow-md p-3 text-center ${rekod.disahkanAktif ? 'flex-1' : ''}`} style={!rekod.disahkanAktif ? { width: '40%' } : undefined}>
               <p className="text-xs font-semibold text-black mb-3">Disediakan Oleh :</p>
               {rekod.tandaTanganDisediakanUrl && <img src={rekod.tandaTanganDisediakanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
               <p className="text-xs font-semibold text-black">{rekod.namaDisediakan || '-'}</p>
               <p className="text-[10px] text-gray-600">{rekod.jawatanDisediakan}</p>
             </div>
             {rekod.disahkanAktif && (
-              <div className="bg-white/90 rounded-xl p-3 text-center">
+              <div className="flex-1 bg-white/90 rounded-xl shadow-md p-3 text-center">
                 <p className="text-xs font-semibold text-black mb-3">Disahkan Oleh :</p>
                 {rekod.tandaTanganDisahkanUrl && <img src={rekod.tandaTanganDisahkanUrl} alt="" className="h-10 object-contain mb-1 mx-auto" />}
                 <p className="text-xs font-semibold text-black">{rekod.namaDisahkan || '-'}</p>

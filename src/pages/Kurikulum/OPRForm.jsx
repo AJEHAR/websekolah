@@ -5,6 +5,15 @@ import { useDialog } from '../../context/DialogContext.jsx'
 import PemotongGambarModal from './PemotongGambarModal.jsx'
 import TandatanganModal from './TandatanganModal.jsx'
 
+// Nisbah crop gambar OPR - PENTING: 4 gambar yang sama DIKONGSI antara
+// Gaya 1 (baris melintang) dan Gaya 2 (lajur sempit) - dua bingkai
+// destinasi ni BENTUK BERBEZA (Gaya 1 lebih landskap, Gaya 2 lebih
+// sempit/tinggi), jadi TAK MUNGKIN padan 100% kedua-duanya serentak
+// (staff pilih Gaya lepas upload gambar, bukan sebelum). 1.4 dipilih
+// sebagai titik tengah munasabah - lebih tepat dari segi empat sama
+// (nisbah 1 asal), tapi bukan jaminan sempurna untuk kedua-dua Gaya.
+const NISBAH_GAMBAR_OPR = 1.4
+
 const MEDAN_KOSONG = {
   unit: '', nama: '', hari: '', tarikh: '', masa: '', tempat: '', sasaran: '',
   objektif: '', aktiviti: '', kekuatan: '', kelemahan: '', penambahbaikan: '',
@@ -300,7 +309,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
         <p className="text-[11px] text-inkmuted mb-2">Tekan ikon <Move size={10} className="inline" /> pada gambar bila-bila untuk laras semula kedudukan/fokus, tanpa perlu upload semula.</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="relative aspect-square rounded-card border-2 border-dashed border-border bg-base overflow-hidden">
+            <div key={i} className="relative rounded-card border-2 border-dashed border-border bg-base overflow-hidden" style={{ aspectRatio: NISBAH_GAMBAR_OPR }}>
               {data.gambar[i] ? (
                 <>
                   <img src={data.gambar[i]} alt="" className="w-full h-full object-cover" />
@@ -397,6 +406,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
       <PemotongGambarModal
         open={slotCrop !== null}
         gambarSrc={gambarMentah}
+        nisbah={NISBAH_GAMBAR_OPR}
         onTutup={() => setSlotCrop(null)}
         onSah={crophasilSah}
         onGagal={(mesej) => { setSlotCrop(null); setRalat(mesej) }}
