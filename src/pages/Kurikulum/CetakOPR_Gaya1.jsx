@@ -31,6 +31,27 @@ function BarisLogo({ logo }) {
   )
 }
 
+// Label paparan untuk pill badge seksyen - "seksyen" ialah nilai literal
+// 'kurikulum'/'hem'/'koku' (lihat src/App.jsx), TAK sama dengan label
+// paparan yang staff biasa nampak di nav (KURI/HEM/KOKU penuh).
+function labelSeksyen(seksyen) {
+  if (seksyen === 'hem') return 'HEM'
+  if (seksyen === 'koku') return 'KOKURIKULUM'
+  return 'KURIKULUM'
+}
+
+// Chip Hari/Tarikh/Masa - kotak BERASINGAN (bukan satu grid dibahagi),
+// penjuru bulat lembut, label hitam atas + nilai BIRU bawah - ikut
+// rujukan reka bentuk pengguna.
+function ChipMaklumat({ label, nilai }) {
+  return (
+    <div className="flex-1 bg-white/90 rounded-xl p-2.5 text-center">
+      <p className="text-xs font-bold text-black">{label}:</p>
+      <p className="text-xs font-semibold mt-0.5" style={{ color: '#1D4ED8' }}>{nilai || ''}</p>
+    </div>
+  )
+}
+
 // Gaya 1 - "Kotak Ringkas". TETAP 1 muka A4 SENTIASA (tinggi TETAP
 // 297mm, overflow:hidden) - susun atur guna flex-column dengan flex-basis
 // berkadar mengikut templat rujukan, supaya kekal isi PENUH muka surat
@@ -38,7 +59,7 @@ function BarisLogo({ logo }) {
 // kandungan). Teks lebih panjang dari muat dalam kotak akan dipotong
 // (overflow hidden) - PASTIKAN kekal 1 muka surat sahaja bila cetak,
 // tidak "melimpah" ke muka surat ke-2.
-export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, subHeader2 }) {
+export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, subHeader2, seksyen }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
   const unit = rekod.unit || 'PROGRAM'
   // {Unit} dalam sub-tajuk boleh-edit digantikan nama Unit laporan ni.
@@ -58,15 +79,21 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
           backgroundSize: 'cover', backgroundPosition: 'center',
         }}
       >
-        {/* Logo & badge Unit TERAPUNG terus atas latar belakang (bukan
-            dalam panel putih Nama Sekolah) - ikut keputusan reka bentuk
-            (rujukan gambar pengguna). Badge Unit kekal ada latar putih
-            sendiri (kotak kecil) untuk kekal jelas dibaca. */}
+        {/* Logo & badge (pill seksyen + Unit) TERAPUNG terus atas latar
+            belakang (bukan dalam panel putih Nama Sekolah) - ikut
+            keputusan reka bentuk (rujukan gambar pengguna). Pill seksyen
+            di atas, badge Unit di bawahnya - dua-dua kekal ada latar
+            putih sendiri untuk jelas dibaca. */}
         <div className="flex items-start justify-between mb-2.5 shrink-0">
           <div className="w-24" />
           <div className="flex-1"><BarisLogo logo={logo} /></div>
-          <div className="border-2 border-black bg-white/90 px-4 py-2 min-w-[110px] text-center">
-            <p className="text-sm font-bold text-black">{rekod.unit || '-'}</p>
+          <div className="flex flex-col items-end gap-1.5">
+            {rekod.tunjukSeksyenBadge && (
+              <span className="rounded-full border border-black bg-white/90 px-3 py-1 text-[10px] font-bold text-black">{labelSeksyen(seksyen)}</span>
+            )}
+            <div className="border-2 border-black bg-white/90 px-4 py-2 min-w-[110px] text-center">
+              <p className="text-sm font-bold text-black">{rekod.unit || '-'}</p>
+            </div>
           </div>
         </div>
 
@@ -75,16 +102,19 @@ export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah, subHeader1, s
             diselaraskan (dulu Gaya 2 terbalik/salah saiz - dah dibetulkan
             supaya SAMA dengan Gaya 1). Baris sub-tajuk kosong TAK dipapar
             langsung (bukan kekal ruang kosong). */}
-        <div className="bg-white/90 p-3 rounded mb-2.5 shrink-0 text-center">
+        <div className="bg-white/90 p-3 rounded-xl mb-2.5 shrink-0 text-center">
           <p className="text-sm font-bold text-black">{namaSekolah || NAMA_SEKOLAH}</p>
           {teksSub1 && <p className="text-[11px] font-normal text-black uppercase mt-1">{teksSub1}</p>}
           {teksSub2 && <p className="text-[11px] font-normal text-black uppercase mt-0.5">{teksSub2}</p>}
         </div>
 
-        <div className="grid grid-cols-3 gap-0 border-2 border-black divide-x-2 divide-black mb-2.5 shrink-0">
-          <div className="bg-white/90 p-2.5 text-center"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
-          <div className="bg-white/90 p-2.5 text-center"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
-          <div className="bg-white/90 p-2.5 text-center"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
+        {/* Chip Hari/Tarikh/Masa - kotak berasingan, penjuru bulat, nilai
+            biru - ikut rujukan reka bentuk (bukan grid tunggal dibahagi
+            garis lagi). */}
+        <div className="flex gap-2 mb-2.5 shrink-0">
+          <ChipMaklumat label="Hari" nilai={rekod.hari} />
+          <ChipMaklumat label="Tarikh" nilai={rekod.tarikh} />
+          <ChipMaklumat label="Masa" nilai={rekod.masa} />
         </div>
 
         <div className="border-2 border-black bg-white/90 p-2.5 text-center mb-2.5 shrink-0 overflow-hidden">

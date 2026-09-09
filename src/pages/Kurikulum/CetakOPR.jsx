@@ -5,7 +5,7 @@ import CetakOPR_Gaya2 from './CetakOPR_Gaya2.jsx'
 // pilihan staff (ditetapkan dalam OPRForm.jsx). Rekod LAMA (sebelum ciri
 // pilih gaya ni wujud) tiada medan ni langsung - lalai ke 'gaya1' supaya
 // laporan sedia ada tetap cetak macam biasa, tak berubah tiba-tiba.
-export default function CetakOPR({ rekod, logo, namaSekolah, subHeader1, subHeader2 }) {
-  if (rekod.layoutCetak === 'gaya2') return <CetakOPR_Gaya2 rekod={rekod} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} />
-  return <CetakOPR_Gaya1 rekod={rekod} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} />
+export default function CetakOPR({ rekod, logo, namaSekolah, subHeader1, subHeader2, seksyen }) {
+  if (rekod.layoutCetak === 'gaya2') return <CetakOPR_Gaya2 rekod={rekod} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} seksyen={seksyen} />
+  return <CetakOPR_Gaya1 rekod={rekod} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} seksyen={seksyen} />
 }

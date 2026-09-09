@@ -124,7 +124,7 @@ export default function OPR({ seksyen }) {
           onBatal={() => { setModeForm(false); setRekodEdit(null) }}
           menyimpan={menyimpan}
         />
-        {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} />}
+        {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} seksyen={seksyen} />}
       </div>
     )
   }
@@ -205,7 +205,7 @@ export default function OPR({ seksyen }) {
       <UrusNamaSekolahOPRModal open={tunjukNamaSekolah} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} seksyen={seksyen} user={user} onClose={() => setTunjukNamaSekolah(false)} onSelesai={muatSemulaNamaSekolah} />
       <ImportOPRModal open={tunjukImport} seksyen={seksyen} onClose={() => setTunjukImport(false)} user={user} onSelesai={muatSemula} />
 
-      {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} />}
+      {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} subHeader1={subHeader1} subHeader2={subHeader2} seksyen={seksyen} />}
     </div>
   )
 }

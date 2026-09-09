@@ -31,6 +31,21 @@ function BarisLogo({ logo }) {
   )
 }
 
+function labelSeksyen(seksyen) {
+  if (seksyen === 'hem') return 'HEM'
+  if (seksyen === 'koku') return 'KOKURIKULUM'
+  return 'KURIKULUM'
+}
+
+function ChipMaklumat({ label, nilai }) {
+  return (
+    <div className="flex-1 bg-white/90 rounded-xl p-2.5 text-center">
+      <p className="text-xs font-bold text-black">{label}:</p>
+      <p className="text-xs font-semibold mt-0.5" style={{ color: '#1D4ED8' }}>{nilai || ''}</p>
+    </div>
+  )
+}
+
 // Gaya 2 - "Kepala Bersempadan" (dulu "Kepala Hijau" - warna latar
 // #1B4D2E DIBUANG atas permintaan pengguna, teks tukar putih->hitam
 // supaya kekal boleh dibaca; susunan/reka bentuk KEKAL SAMA). TETAP 1
@@ -38,7 +53,7 @@ function BarisLogo({ logo }) {
 // kotak) & kanan (4 gambar) SAMA-SAMA flex:1 mengisi baki ruang penuh,
 // kekal besar walaupun teks/gambar sikit. Tajuk "PROGRAM {unit}"/OPR
 // {unit} dinamik ikut Unit dipilih.
-export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, subHeader2 }) {
+export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, subHeader2, seksyen }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
   const unit = rekod.unit || 'PROGRAM'
   // PENTING: TIADA teks lalai lagi (dulu "Program {Unit}" dsb) - kosong =
@@ -57,13 +72,18 @@ export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, s
         }}
       >
         <div className="p-5 pb-3 shrink-0">
-          {/* Logo & badge Unit TERAPUNG terus atas latar belakang - sama
-              corak dengan Gaya 1 (rujukan gambar pengguna). */}
+          {/* Logo & badge (pill seksyen + Unit) TERAPUNG terus atas latar
+              belakang - sama corak dengan Gaya 1 (rujukan gambar pengguna). */}
           <div className="flex items-start justify-between mb-2.5">
             <div className="w-24" />
             <div className="flex-1"><BarisLogo logo={logo} /></div>
-            <div className="border-2 border-black bg-white/90 px-4 py-2 min-w-[110px] text-center">
-              <p className="text-sm font-bold text-black uppercase">{unit}</p>
+            <div className="flex flex-col items-end gap-1.5">
+              {rekod.tunjukSeksyenBadge && (
+                <span className="rounded-full border border-black bg-white/90 px-3 py-1 text-[10px] font-bold text-black">{labelSeksyen(seksyen)}</span>
+              )}
+              <div className="border-2 border-black bg-white/90 px-4 py-2 min-w-[110px] text-center">
+                <p className="text-sm font-bold text-black uppercase">{unit}</p>
+              </div>
             </div>
           </div>
 
@@ -71,16 +91,18 @@ export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah, subHeader1, s
               sub-tajuk (bawah, TAK bold, lebih kecil) - susunan & saiz
               diselaraskan supaya SAMA dengan Gaya 1 (asalnya terbalik -
               sub-tajuk 1 di atas dengan saiz lebih besar - bug dibetulkan). */}
-          <div className="bg-white/90 p-3 rounded mb-2.5 text-center">
+          <div className="bg-white/90 p-3 rounded-xl mb-2.5 text-center">
             <p className="text-sm font-bold text-black">{namaSekolah || NAMA_SEKOLAH}</p>
             {teksSub1 && <p className="text-[11px] font-normal text-black uppercase mt-1">{teksSub1}</p>}
             {teksSub2 && <p className="text-[11px] font-normal text-black uppercase mt-0.5">{teksSub2}</p>}
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="border-2 border-black bg-white/90 p-2 text-center rounded"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
-            <div className="border-2 border-black bg-white/90 p-2 text-center rounded"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
-            <div className="border-2 border-black bg-white/90 p-2 text-center rounded"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
+          {/* Chip Hari/Tarikh/Masa - kotak berasingan, penjuru bulat, nilai
+              biru - ikut rujukan reka bentuk. */}
+          <div className="flex gap-2">
+            <ChipMaklumat label="Hari" nilai={rekod.hari} />
+            <ChipMaklumat label="Tarikh" nilai={rekod.tarikh} />
+            <ChipMaklumat label="Masa" nilai={rekod.masa} />
           </div>
         </div>
 

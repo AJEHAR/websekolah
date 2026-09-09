@@ -12,6 +12,7 @@ const MEDAN_KOSONG = {
   namaDisediakan: '', jawatanDisediakan: '', tandaTanganDisediakanUrl: '',
   namaDisahkan: '', jawatanDisahkan: '', tandaTanganDisahkanUrl: '',
   disahkanAktif: true,
+  tunjukSeksyenBadge: true,
   latarBelakangUrl: '',
   layoutCetak: 'gaya1',
 }
@@ -244,6 +245,20 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
             </select>
           </div>
           <Medan label="Nama Program" value={data.nama} onChange={(v) => u('nama', v)} />
+
+          <div className="flex items-center justify-between p-3 rounded-card border border-border">
+            <span className="text-xs font-medium text-ink">Papar Pill Badge Seksyen (KURIKULUM/HEM/KOKURIKULUM) di kepala cetakan</span>
+            <button
+              type="button"
+              onClick={() => u('tunjukSeksyenBadge', !data.tunjukSeksyenBadge)}
+              role="switch"
+              aria-checked={data.tunjukSeksyenBadge}
+              className={`relative h-6 w-11 rounded-full transition-colors shrink-0 ml-3 ${data.tunjukSeksyenBadge ? 'bg-brand-red' : 'bg-border'}`}
+            >
+              <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${data.tunjukSeksyenBadge ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
           <div className="grid grid-cols-3 gap-2">
             <Medan label="Hari" value={data.hari} onChange={(v) => u('hari', v)} />
             <Medan label="Tarikh" value={data.tarikh} onChange={(v) => u('tarikh', v)} placeholder="14 Mei 2026" />
