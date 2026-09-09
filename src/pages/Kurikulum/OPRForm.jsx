@@ -255,7 +255,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
               aria-checked={data.tunjukSeksyenBadge}
               className={`relative h-6 w-11 rounded-full transition-colors shrink-0 ml-3 ${data.tunjukSeksyenBadge ? 'bg-brand-red' : 'bg-border'}`}
             >
-              <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${data.tunjukSeksyenBadge ? 'translate-x-6' : 'translate-x-1'}`} />
+              <span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${data.tunjukSeksyenBadge ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
 
@@ -361,7 +361,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
               aria-checked={data.disahkanAktif}
               className={`relative h-6 w-11 rounded-full transition-colors ${data.disahkanAktif ? 'bg-brand-red' : 'bg-border'}`}
             >
-              <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${data.disahkanAktif ? 'translate-x-6' : 'translate-x-1'}`} />
+              <span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${data.disahkanAktif ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
           {data.disahkanAktif && (

@@ -51,7 +51,7 @@ function SuisPendaftaran({ user }) {
         aria-checked={dibuka}
         className={`shrink-0 relative h-7 w-12 rounded-full transition-colors disabled:opacity-60 ${dibuka ? 'bg-green-600' : 'bg-border'}`}
       >
-        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${dibuka ? 'translate-x-6' : 'translate-x-1'}`} />
+        <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${dibuka ? 'translate-x-5' : 'translate-x-0'}`} />
       </button>
     </div>
   )
