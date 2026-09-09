@@ -38,7 +38,7 @@ function BarisLogo({ logo }) {
 // kandungan). Teks lebih panjang dari muat dalam kotak akan dipotong
 // (overflow hidden) - PASTIKAN kekal 1 muka surat sahaja bila cetak,
 // tidak "melimpah" ke muka surat ke-2.
-export default function CetakOPR_Gaya1({ rekod, logo }) {
+export default function CetakOPR_Gaya1({ rekod, logo, namaSekolah }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
 
   return (
@@ -59,7 +59,7 @@ export default function CetakOPR_Gaya1({ rekod, logo }) {
           </div>
         </div>
 
-        <p className="text-center text-sm font-bold text-black mb-3 shrink-0">{NAMA_SEKOLAH}</p>
+        <p className="text-center text-sm font-bold text-black mb-3 shrink-0">{namaSekolah || NAMA_SEKOLAH}</p>
 
         <div className="grid grid-cols-3 gap-0 border-2 border-black divide-x-2 divide-black mb-2.5 shrink-0">
           <div className="p-2.5 text-center"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
@@ -96,7 +96,9 @@ export default function CetakOPR_Gaya1({ rekod, logo }) {
           <div className="flex gap-2 mb-3" style={{ flex: 4 }}>
             {(gambarDiisi.length > 0 ? gambarDiisi : [null, null, null, null]).map((g, i) => (
               g ? (
-                <img key={i} src={g.url ?? g} alt="" className="flex-1 border-2 border-black object-cover" style={{ objectPosition: g.posisi ?? '50% 50%' }} />
+                <div key={i} className="flex-1 border-2 border-black overflow-hidden">
+                  <img src={g.url ?? g} alt="" className="w-full h-full object-cover" style={{ objectPosition: g.posisi ?? '50% 50%' }} />
+                </div>
               ) : (
                 <div key={i} className="flex-1 border-2 border-dashed border-gray-300" />
               )

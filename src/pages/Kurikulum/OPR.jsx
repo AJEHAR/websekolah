@@ -7,11 +7,13 @@ import { useLaporanOPR, tambahLaporanOPR, kemaskiniLaporanOPR, padamLaporanOPR }
 import { useOprUnit } from '../../hooks/useOprUnit.js'
 import { useOprLatarBelakang } from '../../hooks/useOprLatarBelakang.js'
 import { useOprLogo } from '../../hooks/useOprLogo.js'
+import { useOprNamaSekolah } from '../../hooks/useOprNamaSekolah.js'
 import OPRForm from './OPRForm.jsx'
 import CetakOPR from './CetakOPR.jsx'
 import UrusUnitOPRModal from './UrusUnitOPRModal.jsx'
 import UrusLatarBelakangOPRModal from './UrusLatarBelakangOPRModal.jsx'
 import UrusLogoOPRModal from './UrusLogoOPRModal.jsx'
+import UrusNamaSekolahOPRModal from './UrusNamaSekolahOPRModal.jsx'
 import ImportOPRModal from './ImportOPRModal.jsx'
 
 // OPR - komponen DIKONGSI antara sub-page KURI/HEM/KOKU (sama corak
@@ -26,6 +28,7 @@ export default function OPR({ seksyen }) {
   const { senarai: senaraiUnit, muatSemula: muatSemulaUnit } = useOprUnit(seksyen)
   const { senarai: senaraiLatarBelakang, muatSemula: muatSemulaLatarBelakang } = useOprLatarBelakang(seksyen)
   const { logo, muatSemula: muatSemulaLogo } = useOprLogo(seksyen)
+  const { namaSekolah, muatSemula: muatSemulaNamaSekolah } = useOprNamaSekolah(seksyen)
   const [dataCetak, setDataCetak] = useCetak()
 
   const [modeForm, setModeForm] = useState(false)
@@ -35,6 +38,7 @@ export default function OPR({ seksyen }) {
   const [tunjukUnit, setTunjukUnit] = useState(false)
   const [tunjukLatar, setTunjukLatar] = useState(false)
   const [tunjukLogo, setTunjukLogo] = useState(false)
+  const [tunjukNamaSekolah, setTunjukNamaSekolah] = useState(false)
   const [tunjukImport, setTunjukImport] = useState(false)
 
   const disenarai = senarai.filter((r) =>
@@ -67,6 +71,24 @@ export default function OPR({ seksyen }) {
     }
   }
 
+  // Cetak terus dari borang - simpan (tambah/kemaskini) TANPA tutup
+  // borang (staff terus nampak pratonton cetak, tak perlu keluar-masuk
+  // senarai). Untuk rekod BAHARU, kemaskini rekodEdit selepas simpan
+  // supaya "Simpan Laporan" seterusnya (kalau staff edit lagi lepas
+  // cetak) KEMASKINI rekod sama - elak cipta rekod pendua.
+  async function cetakDariForm(data) {
+    if (rekodEdit) {
+      await kemaskiniLaporanOPR(rekodEdit.id, data, user.uid)
+      muatSemula()
+      setDataCetak(data)
+    } else {
+      const idBaru = await tambahLaporanOPR(seksyen, data, user.uid)
+      setRekodEdit({ id: idBaru, ...data })
+      muatSemula()
+      setDataCetak(data)
+    }
+  }
+
   async function padam(id) {
     if (!(await konfirm('Padam laporan OPR ini? Tindakan ini tidak boleh dibatalkan.', { bahaya: true }))) return
     await padamLaporanOPR(id)
@@ -82,9 +104,11 @@ export default function OPR({ seksyen }) {
           senaraiUnit={senaraiUnit}
           senaraiLatarBelakang={senaraiLatarBelakang}
           onSimpan={simpan}
+          onCetak={cetakDariForm}
           onBatal={() => { setModeForm(false); setRekodEdit(null) }}
           menyimpan={menyimpan}
         />
+        {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} />}
       </div>
     )
   }
@@ -115,6 +139,9 @@ export default function OPR({ seksyen }) {
         </button>
         <button onClick={() => setTunjukLogo(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
           <Settings size={14} /> Logo
+        </button>
+        <button onClick={() => setTunjukNamaSekolah(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
+          <Settings size={14} /> Nama Sekolah
         </button>
         <button onClick={() => setTunjukImport(true)} className="h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink flex items-center gap-1.5">
           <Upload size={14} /> Import CSV
@@ -155,9 +182,10 @@ export default function OPR({ seksyen }) {
       <UrusUnitOPRModal open={tunjukUnit} senarai={senaraiUnit} seksyen={seksyen} user={user} onClose={() => setTunjukUnit(false)} onSelesai={muatSemulaUnit} />
       <UrusLatarBelakangOPRModal open={tunjukLatar} senarai={senaraiLatarBelakang} seksyen={seksyen} user={user} onClose={() => setTunjukLatar(false)} onSelesai={muatSemulaLatarBelakang} />
       <UrusLogoOPRModal open={tunjukLogo} logo={logo} seksyen={seksyen} user={user} onClose={() => setTunjukLogo(false)} onSelesai={muatSemulaLogo} />
+      <UrusNamaSekolahOPRModal open={tunjukNamaSekolah} namaSekolah={namaSekolah} seksyen={seksyen} user={user} onClose={() => setTunjukNamaSekolah(false)} onSelesai={muatSemulaNamaSekolah} />
       <ImportOPRModal open={tunjukImport} seksyen={seksyen} onClose={() => setTunjukImport(false)} user={user} onSelesai={muatSemula} />
 
-      {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} />}
+      {dataCetak && <CetakOPR rekod={dataCetak} logo={logo} namaSekolah={namaSekolah} />}
     </div>
   )
 }

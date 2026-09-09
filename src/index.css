@@ -30,6 +30,15 @@ input:focus-visible {
    Dipakai oleh setiap komponen CetakLaporan*. Elak perlu tambah print:hidden
    kat setiap layout/page satu-satu - satu peraturan global cukup. */
 @media print {
+  /* PENTING: pelayar SECARA LALAI buang semua background-image/
+     background-color semasa cetak (jimat dakwat), walaupun pengguna dah
+     pilih latar belakang dalam OPR/Laporan - punca "latar belakang
+     hilang bila cetak" yang dilaporkan. print-color-adjust:exact paksa
+     pelayar KEKALKAN warna/latar bila cetak. */
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
   body * {
     visibility: hidden;
   }

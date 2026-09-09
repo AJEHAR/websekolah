@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sparkles, Upload, X, PenLine, Plus, Move } from 'lucide-react'
+import { Sparkles, Upload, X, PenLine, Plus, Move, Printer } from 'lucide-react'
 import { muatNaikKeDrive, janaAiOpr } from '../../lib/driveUpload.js'
 import PemotongGambarModal from './PemotongGambarModal.jsx'
 import TandatanganModal from './TandatanganModal.jsx'
@@ -32,10 +32,11 @@ function Medan({ label, value, onChange, textarea, placeholder }) {
   )
 }
 
-export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, onSimpan, onBatal, menyimpan }) {
+export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, onSimpan, onCetak, onBatal, menyimpan }) {
   const [data, setData] = useState({ ...MEDAN_KOSONG, ...dataAwal })
   const [ralat, setRalat] = useState(null)
   const [menjanaAI, setMenjanaAI] = useState(false)
+  const [mencetak, setMencetak] = useState(false)
 
   const [slotCrop, setSlotCrop] = useState(null) // index slot gambar sedang di-crop
   const [gambarMentah, setGambarMentah] = useState(null) // src gambar sebelum crop
@@ -132,6 +133,24 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     }
   }
 
+  // Cetak TERUS dari borang (staff sebelum ni WAJIB Simpan dulu, keluar
+  // borang, cari rekod dalam senarai, baru boleh Cetak - aliran menyusahkan
+  // yang dilaporkan). Sekarang: auto-simpan (tambah/kemaskini ikut keadaan
+  // semasa di OPR.jsx), borang KEKAL TERBUKA (tak navigate keluar), terus
+  // papar pratonton cetak - sama corak dengan Laporan UBKS.
+  async function cetak() {
+    setRalat(null)
+    if (!data.nama.trim()) return setRalat('Sila isi Nama Program sebelum cetak.')
+    setMencetak(true)
+    try {
+      await onCetak(data)
+    } catch (err) {
+      setRalat(err.message || 'Gagal simpan sebelum cetak. Sila cuba lagi.')
+    } finally {
+      setMencetak(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -160,14 +179,14 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
             style={{ borderColor: data.layoutCetak === 'gaya2' ? '#C8102E' : '#E5E5E5' }}
           >
             <div className="h-20 rounded bg-white border border-border mb-2 overflow-hidden flex flex-col">
-              <div className="h-5 shrink-0" style={{ backgroundColor: '#1B4D2E' }} />
+              <div className="h-5 shrink-0 border-b-2 border-black" />
               <div className="flex-1 p-1.5 flex gap-1">
                 <div className="flex-1 bg-gray-100 rounded-sm" />
                 <div className="w-4 bg-gray-200 rounded-sm" />
               </div>
             </div>
-            <p className="text-xs font-semibold text-ink">Gaya 2 - Kepala Hijau</p>
-            <p className="text-[10px] text-inkmuted">Kepala hijau ikut Unit, gambar sekolum di kanan</p>
+            <p className="text-xs font-semibold text-ink">Gaya 2 - Kepala Bersempadan</p>
+            <p className="text-[10px] text-inkmuted">Kepala ikut Unit, gambar sekolum di kanan</p>
           </button>
         </div>
       </div>
@@ -325,6 +344,9 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
       <div className="flex gap-3 pt-2 border-t border-border">
         <button onClick={hantar} disabled={menyimpan} className="flex-1 h-12 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
           {menyimpan ? 'Menyimpan…' : 'Simpan Laporan'}
+        </button>
+        <button onClick={cetak} disabled={mencetak} className="h-12 px-4 rounded-card border border-border text-sm font-medium text-ink flex items-center gap-1.5 disabled:opacity-60">
+          <Printer size={15} /> {mencetak ? 'Menyediakan…' : 'Cetak'}
         </button>
         <button onClick={onBatal} className="h-12 px-5 rounded-card border border-border text-sm font-medium text-ink">
           Batal

@@ -31,11 +31,14 @@ function BarisLogo({ logo }) {
   )
 }
 
-// Gaya 2 - "Kepala Hijau". TETAP 1 muka A4 SENTIASA (tinggi TETAP 297mm,
-// overflow:hidden) - lajur kiri (5 kotak) & kanan (4 gambar) SAMA-SAMA
-// flex:1 mengisi baki ruang penuh, kekal besar walaupun teks/gambar
-// sikit. Tajuk "PROGRAM {unit}"/OPR {unit} dinamik ikut Unit dipilih.
-export default function CetakOPR_Gaya2({ rekod, logo }) {
+// Gaya 2 - "Kepala Bersempadan" (dulu "Kepala Hijau" - warna latar
+// #1B4D2E DIBUANG atas permintaan pengguna, teks tukar putih->hitam
+// supaya kekal boleh dibaca; susunan/reka bentuk KEKAL SAMA). TETAP 1
+// muka A4 SENTIASA (tinggi TETAP 297mm, overflow:hidden) - lajur kiri (5
+// kotak) & kanan (4 gambar) SAMA-SAMA flex:1 mengisi baki ruang penuh,
+// kekal besar walaupun teks/gambar sikit. Tajuk "PROGRAM {unit}"/OPR
+// {unit} dinamik ikut Unit dipilih.
+export default function CetakOPR_Gaya2({ rekod, logo, namaSekolah }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
   const unit = rekod.unit || 'PROGRAM'
 
@@ -49,7 +52,7 @@ export default function CetakOPR_Gaya2({ rekod, logo }) {
           backgroundSize: 'cover', backgroundPosition: 'center',
         }}
       >
-        <div className="p-5 pb-3 shrink-0" style={{ backgroundColor: '#1B4D2E' }}>
+        <div className="p-5 pb-3 shrink-0">
           <div className="flex items-start justify-between mb-1.5">
             <div className="w-24" />
             <div className="flex-1"><BarisLogo logo={logo} /></div>
@@ -57,14 +60,14 @@ export default function CetakOPR_Gaya2({ rekod, logo }) {
               <p className="text-sm font-bold text-black uppercase">{unit}</p>
             </div>
           </div>
-          <p className="text-center text-sm font-bold text-white uppercase mb-1">Program {unit}</p>
-          <p className="text-center text-xs font-bold text-white mb-1">{NAMA_SEKOLAH}</p>
-          <p className="text-center text-xs font-bold text-white uppercase mb-2.5">One Page Report (OPR) {unit}</p>
+          <p className="text-center text-sm font-bold text-black uppercase mb-1">Program {unit}</p>
+          <p className="text-center text-xs font-bold text-black mb-1">{namaSekolah || NAMA_SEKOLAH}</p>
+          <p className="text-center text-xs font-bold text-black uppercase mb-2.5">One Page Report (OPR) {unit}</p>
 
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white p-2 text-center rounded"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
-            <div className="bg-white p-2 text-center rounded"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
-            <div className="bg-white p-2 text-center rounded"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
+            <div className="border-2 border-black p-2 text-center rounded"><p className="text-xs font-bold text-black">Hari : <span className="font-normal">{rekod.hari || ''}</span></p></div>
+            <div className="border-2 border-black p-2 text-center rounded"><p className="text-xs font-bold text-black">Tarikh : <span className="font-normal">{rekod.tarikh || ''}</span></p></div>
+            <div className="border-2 border-black p-2 text-center rounded"><p className="text-xs font-bold text-black">Masa : <span className="font-normal">{rekod.masa || ''}</span></p></div>
           </div>
         </div>
 
@@ -89,7 +92,9 @@ export default function CetakOPR_Gaya2({ rekod, logo }) {
             <div className="flex-1 flex flex-col gap-2">
               {(gambarDiisi.length > 0 ? gambarDiisi : [null, null, null, null]).map((g, i) => (
                 g ? (
-                  <img key={i} src={g.url ?? g} alt="" className="flex-1 border-2 border-black object-cover" style={{ objectPosition: g.posisi ?? '50% 50%' }} />
+                  <div key={i} className="flex-1 border-2 border-black overflow-hidden">
+                    <img src={g.url ?? g} alt="" className="w-full h-full object-cover" style={{ objectPosition: g.posisi ?? '50% 50%' }} />
+                  </div>
                 ) : (
                   <div key={i} className="flex-1 border-2 border-dashed border-gray-300" />
                 )
@@ -115,7 +120,6 @@ export default function CetakOPR_Gaya2({ rekod, logo }) {
           </div>
         </div>
 
-        <div className="shrink-0" style={{ height: '10px', backgroundColor: '#1B4D2E' }} />
       </div>
     </PrintArea>
   )
