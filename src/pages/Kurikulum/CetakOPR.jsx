@@ -1,16 +1,20 @@
 import CetakOPR_Gaya1 from './CetakOPR_Gaya1.jsx'
 import CetakOPR_Gaya2 from './CetakOPR_Gaya2.jsx'
+import CetakOPR_Gaya3 from './CetakOPR_Gaya3.jsx'
 import CetakOPR_Gaya4 from './CetakOPR_Gaya4.jsx'
 import CetakOPR_Gaya5 from './CetakOPR_Gaya5.jsx'
 import CetakOPR_Gaya6 from './CetakOPR_Gaya6.jsx'
 
-// Router antara gaya cetakan OPR - rekod.layoutCetak simpan pilihan
+// Router antara templat cetakan OPR - rekod.layoutCetak simpan pilihan
 // staff (ditetapkan dalam OPRForm.jsx). Rekod LAMA (sebelum ciri pilih
-// gaya ni wujud, ATAU rekod guna 'gaya3' yang dah DIBUANG) - lalai ke
-// 'gaya1' supaya laporan sedia ada tetap cetak, tak pernah error/kosong.
+// templat ni wujud) tiada medan ni langsung - lalai ke 'gaya1'. NOTA:
+// ID dalaman ('gaya1'..'gaya6') KEKAL SAMA walaupun label dipaparkan
+// kepada staff dah tukar ke "Templat 1..5" - elak pecahkan rekod sedia
+// ada yang dah simpan nilai layoutCetak lama.
 const GAYA = {
   gaya1: CetakOPR_Gaya1,
   gaya2: CetakOPR_Gaya2,
+  gaya3: CetakOPR_Gaya3,
   gaya4: CetakOPR_Gaya4,
   gaya5: CetakOPR_Gaya5,
   gaya6: CetakOPR_Gaya6,

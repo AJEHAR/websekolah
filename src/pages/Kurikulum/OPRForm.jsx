@@ -189,11 +189,12 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   }
 
   const PILIHAN_GAYA = [
-    { id: 'gaya1', nama: 'Gaya 1 - Kotak Ringkas', ket: 'Kotak bersempadan lembut, gambar 4 sebaris' },
-    { id: 'gaya2', nama: 'Gaya 2 - Kepala Bersempadan', ket: 'Kandungan kiri, gambar lajur sempit kanan' },
-    { id: 'gaya4', nama: 'Gaya 4 - Bingkai Bulat', ket: '4 gambar dalam bingkai bulat/oval' },
-    { id: 'gaya5', nama: 'Gaya 5 - Filem Menegak', ket: '4 gambar tersusun menegak, lebih dominan' },
-    { id: 'gaya6', nama: 'Gaya 6 - Bingkai Heksagon', ket: '4 gambar dalam bingkai heksagon' },
+    { id: 'gaya1', nama: 'Templat 1 - Kotak Ringkas', ket: 'Kotak bersempadan lembut, gambar 4 sebaris', contoh: '/opr-templat/templat1.jpg' },
+    { id: 'gaya2', nama: 'Templat 2 - Kepala Bersempadan', ket: 'Kandungan kiri, gambar lajur sempit kanan', contoh: '/opr-templat/templat2.jpg' },
+    { id: 'gaya4', nama: 'Templat 3 - Bingkai Bulat', ket: '4 gambar dalam bingkai bulat/oval', contoh: '/opr-templat/templat3.jpg' },
+    { id: 'gaya5', nama: 'Templat 4 - Filem Menegak', ket: '4 gambar tersusun menegak, lebih dominan', contoh: '/opr-templat/templat4.jpg' },
+    { id: 'gaya6', nama: 'Templat 5 - Bingkai Heksagon', ket: '4 gambar dalam bingkai heksagon', contoh: '/opr-templat/templat5.jpg' },
+    { id: 'gaya3', nama: 'Templat 6 - Bucu Senget', ket: '4 gambar bingkai parallelogram, kesan dinamik', contoh: '/opr-templat/templat6.jpg' },
   ]
 
   return (
@@ -209,8 +210,8 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
               className="rounded-card border-2 p-3 text-left"
               style={{ borderColor: data.layoutCetak === g.id ? '#C8102E' : '#E5E5E5' }}
             >
-              <div className="h-20 rounded bg-white border border-border mb-2 p-1.5 flex flex-col items-center justify-center">
-                <span className="text-[10px] text-inkmuted font-semibold">{g.nama.split(' - ')[0]}</span>
+              <div className="h-20 rounded bg-white border border-border mb-2 overflow-hidden">
+                <img src={g.contoh} alt={g.nama} className="w-full h-full object-cover object-top" />
               </div>
               <p className="text-xs font-semibold text-ink">{g.nama}</p>
               <p className="text-[10px] text-inkmuted">{g.ket}</p>

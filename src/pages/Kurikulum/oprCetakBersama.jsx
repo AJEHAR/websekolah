@@ -129,6 +129,21 @@ export function GambarSlotHeksagon({ src, posisi, opacity, className = 'flex-1' 
   )
 }
 
+// Bingkai BUCU SENGET (parallelogram) - guna clip-path (teknik SAMA
+// dengan heksagon yang dah terbukti berfungsi). filter:drop-shadow
+// (bukan box-shadow) - ikut bentuk sebenar lepas clip.
+const SENGET_CLIP = 'polygon(12% 0%, 100% 0%, 88% 100%, 0% 100%)'
+export function GambarSlotSenget({ src, posisi, opacity, className = 'flex-1 min-h-0' }) {
+  return (
+    <div
+      className={`${className} overflow-hidden`}
+      style={{ ...gayaKotak(opacity), clipPath: SENGET_CLIP, WebkitClipPath: SENGET_CLIP, filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.25))' }}
+    >
+      {src ? <img src={src} alt="" className="w-full h-full object-cover" style={{ objectPosition: posisi ?? '50% 50%' }} /> : <div className="w-full h-full bg-[#EAF3FB]" />}
+    </div>
+  )
+}
+
 // Blok Hari/Tarikh/Masa (3 chip) - baris standard dikongsi.
 export function BarisChip({ rekod, opacity }) {
   return (
