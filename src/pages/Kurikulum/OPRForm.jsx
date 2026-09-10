@@ -210,7 +210,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
               className="rounded-card border-2 p-3 text-left"
               style={{ borderColor: data.layoutCetak === g.id ? '#C8102E' : '#E5E5E5' }}
             >
-              <div className="h-20 rounded bg-white border border-border mb-2 overflow-hidden">
+              <div className="rounded bg-white border border-border mb-2 overflow-hidden" style={{ aspectRatio: '210 / 297' }}>
                 <img src={g.contoh} alt={g.nama} className="w-full h-full object-cover object-top" />
               </div>
               <p className="text-xs font-semibold text-ink">{g.nama}</p>
