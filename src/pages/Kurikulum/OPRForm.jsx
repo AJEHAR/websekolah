@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Sparkles, Upload, X, PenLine, Plus, Move, Printer } from 'lucide-react'
+import { Sparkles, Upload, X, PenLine, Plus, Move, Printer, Eye } from 'lucide-react'
 import { muatNaikKeDrive, janaAiOpr } from '../../lib/driveUpload.js'
 import { useDialog } from '../../context/DialogContext.jsx'
 import PemotongGambarModal from './PemotongGambarModal.jsx'
@@ -50,6 +50,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   const [menjanaAI, setMenjanaAI] = useState(false)
   const [mencetak, setMencetak] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [pratontonTemplat, setPratontonTemplat] = useState(null) // templat dipilih untuk dilihat penuh (lightbox)
   const { konfirm } = useDialog()
 
   const [slotCrop, setSlotCrop] = useState(null) // index slot gambar sedang di-crop
@@ -203,19 +204,26 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
         <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">1. Gaya Cetakan</p>
         <div className="grid grid-cols-2 gap-3">
           {PILIHAN_GAYA.map((g) => (
-            <button
+            <div
               key={g.id}
-              type="button"
               onClick={() => u('layoutCetak', g.id)}
-              className="rounded-card border-2 p-3 text-left"
+              className="relative rounded-card border-2 p-2.5 text-left cursor-pointer"
               style={{ borderColor: data.layoutCetak === g.id ? '#C8102E' : '#E5E5E5' }}
             >
-              <div className="rounded bg-white border border-border mb-2 overflow-hidden" style={{ aspectRatio: '210 / 297' }}>
+              <div className="h-16 rounded bg-white border border-border mb-2 overflow-hidden">
                 <img src={g.contoh} alt={g.nama} className="w-full h-full object-cover object-top" />
               </div>
-              <p className="text-xs font-semibold text-ink">{g.nama}</p>
-              <p className="text-[10px] text-inkmuted">{g.ket}</p>
-            </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setPratontonTemplat(g) }}
+                aria-label={`Lihat contoh penuh ${g.nama}`}
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white shadow flex items-center justify-center text-inkmuted"
+              >
+                <Eye size={14} />
+              </button>
+              <p className="text-xs font-semibold text-ink leading-snug">{g.nama}</p>
+              <p className="text-[10px] text-inkmuted leading-snug">{g.ket}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -425,6 +433,31 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
         onTutup={() => setTunjukTandatangan(null)}
         onSah={tandatanganSah}
       />
+
+      {/* Lightbox pratonton templat - kotak kecil dalam grid supaya padat
+          untuk telefon (dulu setiap kotak nisbah A4 penuh - terlalu
+          panjang di skrin kecil), tekan ikon mata untuk lihat contoh
+          PENUH sahaja bila perlu. */}
+      {pratontonTemplat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPratontonTemplat(null)}>
+          <div className="max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-white">{pratontonTemplat.nama}</p>
+              <button type="button" onClick={() => setPratontonTemplat(null)} aria-label="Tutup" className="p-1.5 rounded-full bg-white/20 text-white">
+                <X size={16} />
+              </button>
+            </div>
+            <img src={pratontonTemplat.contoh} alt={pratontonTemplat.nama} className="w-full rounded-card" />
+            <button
+              type="button"
+              onClick={() => { u('layoutCetak', pratontonTemplat.id); setPratontonTemplat(null) }}
+              className="w-full h-11 mt-3 rounded-card bg-brand-red text-white text-sm font-semibold"
+            >
+              Guna Templat Ini
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
