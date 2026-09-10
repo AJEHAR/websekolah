@@ -3,6 +3,18 @@ import { Sparkles, Upload, X, PenLine, Plus, Move, Printer, Eye } from 'lucide-r
 import { muatNaikKeDrive, janaAiOpr } from '../../lib/driveUpload.js'
 import { useDialog } from '../../context/DialogContext.jsx'
 import PemotongGambarModal from './PemotongGambarModal.jsx'
+// Import terus (bukan laluan rentetan ke public/) - Vite automatik
+// tambah "hash" unik pada nama fail ikut KANDUNGAN semasa build. Kalau
+// gambar ni digantikan lagi kemudian, hash berubah = URL baharu = tiada
+// isu cache lapuk pelayar/GitHub Pages LANGSUNG (punca "templat 6 tak
+// berubah walaupun dah deploy" yang dilaporkan - laluan public/ punya
+// nama fail tetap, jadi pelayar simpan cache lama).
+import contohTemplat1 from '../../assets/opr-templat/templat1.jpg'
+import contohTemplat2 from '../../assets/opr-templat/templat2.jpg'
+import contohTemplat3 from '../../assets/opr-templat/templat3.jpg'
+import contohTemplat4 from '../../assets/opr-templat/templat4.jpg'
+import contohTemplat5 from '../../assets/opr-templat/templat5.jpg'
+import contohTemplat6 from '../../assets/opr-templat/templat6.jpg'
 import TandatanganModal from './TandatanganModal.jsx'
 
 // Nisbah crop gambar OPR - PENTING: 4 gambar yang sama DIKONGSI antara
@@ -190,12 +202,12 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   }
 
   const PILIHAN_GAYA = [
-    { id: 'gaya1', nama: 'Templat 1 - Kotak Ringkas', ket: 'Kotak bersempadan lembut, gambar 4 sebaris', contoh: '/opr-templat/templat1.jpg' },
-    { id: 'gaya2', nama: 'Templat 2 - Kepala Bersempadan', ket: 'Kandungan kiri, gambar lajur sempit kanan', contoh: '/opr-templat/templat2.jpg' },
-    { id: 'gaya4', nama: 'Templat 3 - Bingkai Bulat', ket: '4 gambar dalam bingkai bulat/oval', contoh: '/opr-templat/templat3.jpg' },
-    { id: 'gaya5', nama: 'Templat 4 - Filem Menegak', ket: '4 gambar tersusun menegak, lebih dominan', contoh: '/opr-templat/templat4.jpg' },
-    { id: 'gaya6', nama: 'Templat 5 - Bingkai Heksagon', ket: '4 gambar dalam bingkai heksagon', contoh: '/opr-templat/templat5.jpg' },
-    { id: 'gaya3', nama: 'Templat 6 - Bucu Senget', ket: '4 gambar bingkai parallelogram, kesan dinamik', contoh: '/opr-templat/templat6.jpg' },
+    { id: 'gaya1', nama: 'Templat 1 - Kotak Ringkas', ket: 'Kotak bersempadan lembut, gambar 4 sebaris', contoh: contohTemplat1 },
+    { id: 'gaya2', nama: 'Templat 2 - Kepala Bersempadan', ket: 'Kandungan kiri, gambar lajur sempit kanan', contoh: contohTemplat2 },
+    { id: 'gaya4', nama: 'Templat 3 - Bingkai Bulat', ket: '4 gambar dalam bingkai bulat/oval', contoh: contohTemplat3 },
+    { id: 'gaya5', nama: 'Templat 4 - Filem Menegak', ket: '4 gambar tersusun menegak, lebih dominan', contoh: contohTemplat4 },
+    { id: 'gaya6', nama: 'Templat 5 - Bingkai Heksagon', ket: '4 gambar dalam bingkai heksagon', contoh: contohTemplat5 },
+    { id: 'gaya3', nama: 'Templat 6 - Bucu Senget', ket: '4 gambar bingkai parallelogram, kesan dinamik', contoh: contohTemplat6 },
   ]
 
   return (
