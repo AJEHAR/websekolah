@@ -51,13 +51,18 @@ export function labelSeksyen(seksyen) {
 }
 
 // Kepala standard (logo tengah + pill seksyen mengapung + panel Nama
-// Sekolah/sub-tajuk) - DIKONGSI oleh Gaya yang guna corak kepala biasa
-// (Gaya 1/2/3/5). Gaya 4 (hero besar) boleh guna versi lebih ringkas
-// sendiri kalau perlu.
-export function KepalaStandard({ logo, namaSekolah, teksSub1, teksSub2, seksyen, tunjukSeksyenBadge, opacity, namaSekolahLalai }) {
+// Sekolah/sub-tajuk) - DIKONGSI oleh Gaya yang guna corak kepala biasa.
+// gambarBulat (pilihan) - lencana gambar bulat mengapung di penjuru KIRI
+// (cerminan pill badge di kanan) - untuk Gaya "Bucu Highlight".
+export function KepalaStandard({ logo, namaSekolah, teksSub1, teksSub2, seksyen, tunjukSeksyenBadge, opacity, namaSekolahLalai, gambarBulat }) {
   return (
     <>
       <div className="relative mb-2.5 shrink-0" style={{ minHeight: '56px' }}>
+        {gambarBulat && (
+          <div className="absolute top-0 left-0 w-14 h-14 rounded-full overflow-hidden shadow-lg" style={{ border: '3px solid white' }}>
+            <img src={gambarBulat} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
         <div className="flex items-center justify-center h-14"><BarisLogo logo={logo} /></div>
         {tunjukSeksyenBadge && (
           <div className="absolute top-0 right-0">

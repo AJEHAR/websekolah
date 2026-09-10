@@ -2,8 +2,8 @@ import PrintArea from '../../components/cetak/PrintArea.jsx'
 import { NAMA_SEKOLAH } from './rpiConstants.js'
 import { gayaKotak, SenaraiPeluru, Kotak, KepalaStandard, BarisChip, GambarSlot, BlokTandatangan } from './oprCetakBersama.jsx'
 
-// Gaya 3 - "Mozek Gambar". Kolaj gambar (1 besar + 2 kecil) di atas
-// sebelum kandungan, kandungan disusun satu lajur penuh (lebih rasmi/
+// Gaya 3 - "Mozek Gambar". Grid 2x2 (4 gambar SAMA SAIZ) di atas sebelum
+// kandungan, kandungan disusun satu lajur penuh (lebih rasmi/
 // tenang berbanding Gaya 1/2). TETAP 1 muka A4 SENTIASA.
 export default function CetakOPR_Gaya3({ rekod, logo, namaSekolah, subHeader1, subHeader2, seksyen }) {
   const gambar = rekod.gambar || []
@@ -24,14 +24,15 @@ export default function CetakOPR_Gaya3({ rekod, logo, namaSekolah, subHeader1, s
       >
         <KepalaStandard logo={logo} namaSekolah={namaSekolah} teksSub1={teksSub1} teksSub2={teksSub2} seksyen={seksyen} tunjukSeksyenBadge={rekod.tunjukSeksyenBadge} opacity={opacity} namaSekolahLalai={NAMA_SEKOLAH} />
 
-        {/* Kolaj mozek - gambar 1 (besar, kiri) + gambar 2/3/4 (kecil,
-            kanan, bertindan menegak) - SEMUA 4 gambar digunakan. Guna
-            FLEXBOX (bukan CSS Grid row-span) - teknik terbukti stabil
-            sepanjang sistem ni, elak risiko keserasian enjin cetak. */}
-        <div className="flex gap-2 mb-2.5 shrink-0" style={{ height: '68mm' }}>
-          <GambarSlot src={gambar[0]?.url ?? gambar[0]} posisi={gambar[0]?.posisi} opacity={opacity} className="" gayaLuar={{ flex: 1.6 }} />
-          <div className="flex flex-col gap-2" style={{ flex: 1 }}>
+        {/* 4 gambar SAMA SAIZ (grid 2x2) - bukan mozek asimetri lagi
+            (punca bug limpah/gambar terlalu kecil yang dilaporkan) - guna
+            FLEXBOX (bukan CSS Grid), teknik terbukti stabil. */}
+        <div className="flex flex-col gap-2 mb-2.5 shrink-0" style={{ height: '68mm' }}>
+          <div className="flex gap-2" style={{ flex: 1 }}>
+            <GambarSlot src={gambar[0]?.url ?? gambar[0]} posisi={gambar[0]?.posisi} opacity={opacity} />
             <GambarSlot src={gambar[1]?.url ?? gambar[1]} posisi={gambar[1]?.posisi} opacity={opacity} />
+          </div>
+          <div className="flex gap-2" style={{ flex: 1 }}>
             <GambarSlot src={gambar[2]?.url ?? gambar[2]} posisi={gambar[2]?.posisi} opacity={opacity} />
             <GambarSlot src={gambar[3]?.url ?? gambar[3]} posisi={gambar[3]?.posisi} opacity={opacity} />
           </div>

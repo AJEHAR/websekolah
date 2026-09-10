@@ -3,6 +3,7 @@ import CetakOPR_Gaya2 from './CetakOPR_Gaya2.jsx'
 import CetakOPR_Gaya3 from './CetakOPR_Gaya3.jsx'
 import CetakOPR_Gaya4 from './CetakOPR_Gaya4.jsx'
 import CetakOPR_Gaya5 from './CetakOPR_Gaya5.jsx'
+import CetakOPR_Gaya6 from './CetakOPR_Gaya6.jsx'
 
 // Router antara gaya cetakan OPR - rekod.layoutCetak simpan pilihan
 // staff (ditetapkan dalam OPRForm.jsx). Rekod LAMA (sebelum ciri pilih
@@ -13,6 +14,7 @@ const GAYA = {
   gaya3: CetakOPR_Gaya3,
   gaya4: CetakOPR_Gaya4,
   gaya5: CetakOPR_Gaya5,
+  gaya6: CetakOPR_Gaya6,
 }
 
 export default function CetakOPR({ rekod, logo, namaSekolah, subHeader1, subHeader2, seksyen }) {
