@@ -101,6 +101,34 @@ export function GambarSlot({ src, posisi, opacity, className = 'flex-1 min-h-0',
   )
 }
 
+// Bingkai BULAT/OVAL - alternatif kepada petak biasa. Box-shadow biasa
+// (bukan drop-shadow) sebab bulatan/oval kekal serasi baik dengan
+// box-shadow (tak macam heksagon di bawah).
+export function GambarSlotBulat({ src, posisi, opacity, className = 'flex-1' }) {
+  return (
+    <div className={`${className} rounded-full shadow-lg overflow-hidden`} style={{ ...gayaKotak(opacity), aspectRatio: '1 / 1' }}>
+      {src ? <img src={src} alt="" className="w-full h-full object-cover" style={{ objectPosition: posisi ?? '50% 50%' }} /> : <div className="w-full h-full bg-[#EAF3FB]" />}
+    </div>
+  )
+}
+
+// Bingkai HEKSAGON - guna clip-path (CSS lebih baharu, PERLU diuji
+// terus di Chrome sebenar - alat pratonton pembangunan tak dapat sahkan
+// sepenuhnya). filter:drop-shadow (BUKAN box-shadow) - box-shadow ikut
+// bentuk KOTAK asal (nampak pelik/rectangular di belakang heksagon),
+// drop-shadow ikut BENTUK SEBENAR yang kelihatan (lepas clip).
+const HEKSAGON_CLIP = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
+export function GambarSlotHeksagon({ src, posisi, opacity, className = 'flex-1' }) {
+  return (
+    <div
+      className={`${className} overflow-hidden`}
+      style={{ ...gayaKotak(opacity), aspectRatio: '1 / 1', clipPath: HEKSAGON_CLIP, WebkitClipPath: HEKSAGON_CLIP, filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.25))' }}
+    >
+      {src ? <img src={src} alt="" className="w-full h-full object-cover" style={{ objectPosition: posisi ?? '50% 50%' }} /> : <div className="w-full h-full bg-[#EAF3FB]" />}
+    </div>
+  )
+}
+
 // Blok Hari/Tarikh/Masa (3 chip) - baris standard dikongsi.
 export function BarisChip({ rekod, opacity }) {
   return (

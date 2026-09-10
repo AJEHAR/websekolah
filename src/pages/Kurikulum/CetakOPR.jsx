@@ -1,17 +1,16 @@
 import CetakOPR_Gaya1 from './CetakOPR_Gaya1.jsx'
 import CetakOPR_Gaya2 from './CetakOPR_Gaya2.jsx'
-import CetakOPR_Gaya3 from './CetakOPR_Gaya3.jsx'
 import CetakOPR_Gaya4 from './CetakOPR_Gaya4.jsx'
 import CetakOPR_Gaya5 from './CetakOPR_Gaya5.jsx'
 import CetakOPR_Gaya6 from './CetakOPR_Gaya6.jsx'
 
 // Router antara gaya cetakan OPR - rekod.layoutCetak simpan pilihan
 // staff (ditetapkan dalam OPRForm.jsx). Rekod LAMA (sebelum ciri pilih
-// gaya ni wujud) tiada medan ni langsung - lalai ke 'gaya1'.
+// gaya ni wujud, ATAU rekod guna 'gaya3' yang dah DIBUANG) - lalai ke
+// 'gaya1' supaya laporan sedia ada tetap cetak, tak pernah error/kosong.
 const GAYA = {
   gaya1: CetakOPR_Gaya1,
   gaya2: CetakOPR_Gaya2,
-  gaya3: CetakOPR_Gaya3,
   gaya4: CetakOPR_Gaya4,
   gaya5: CetakOPR_Gaya5,
   gaya6: CetakOPR_Gaya6,

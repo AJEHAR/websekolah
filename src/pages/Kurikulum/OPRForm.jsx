@@ -191,10 +191,9 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   const PILIHAN_GAYA = [
     { id: 'gaya1', nama: 'Gaya 1 - Kotak Ringkas', ket: 'Kotak bersempadan lembut, gambar 4 sebaris' },
     { id: 'gaya2', nama: 'Gaya 2 - Kepala Bersempadan', ket: 'Kandungan kiri, gambar lajur sempit kanan' },
-    { id: 'gaya3', nama: 'Gaya 3 - Mozek Gambar', ket: '4 gambar sama saiz (grid 2x2) di atas' },
-    { id: 'gaya4', nama: 'Gaya 4 - Bucu Highlight', ket: '1 gambar jadi lencana bulat di kepala' },
+    { id: 'gaya4', nama: 'Gaya 4 - Bingkai Bulat', ket: '4 gambar dalam bingkai bulat/oval' },
     { id: 'gaya5', nama: 'Gaya 5 - Filem Menegak', ket: '4 gambar tersusun menegak, lebih dominan' },
-    { id: 'gaya6', nama: 'Gaya 6 - Kad Sampul', ket: 'Gambar jadi latar kotak Nama Program' },
+    { id: 'gaya6', nama: 'Gaya 6 - Bingkai Heksagon', ket: '4 gambar dalam bingkai heksagon' },
   ]
 
   return (

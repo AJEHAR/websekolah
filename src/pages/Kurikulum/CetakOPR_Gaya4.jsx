@@ -1,16 +1,12 @@
 import PrintArea from '../../components/cetak/PrintArea.jsx'
 import { NAMA_SEKOLAH } from './rpiConstants.js'
-import { gayaKotak, SenaraiPeluru, Kotak, KepalaStandard, BarisChip, GambarSlot, BlokTandatangan } from './oprCetakBersama.jsx'
+import { gayaKotak, SenaraiPeluru, Kotak, KepalaStandard, BarisChip, GambarSlotBulat, BlokTandatangan } from './oprCetakBersama.jsx'
 
-// Gaya 4 - "Bucu Highlight". GANTIAN Gaya 4 asal ("Foto Utama" - hero
-// 72mm) yang dibuang selepas didapati SELALU sebabkan tandatangan
-// terpotong (ruang tak cukup secara struktur). Versi ni: 1 gambar
-// ditonjolkan sebagai LENCANA BULAT kecil (~14mm) di kepala (bukan ambil
-// baris/ruang berasingan - overlay sahaja) - struktur BAKI SAMA PERSIS
-// dengan Gaya 1 yang terbukti selamat (budget ruang tak berubah).
+// Gaya 4 - "Bingkai Bulat". 4 gambar dalam bingkai BULAT/OVAL (bukan
+// petak) - lencana bulat kepala (versi awal) DIBUANG atas permintaan
+// pengguna, struktur baki SAMA Gaya 1 yang terbukti selamat.
 export default function CetakOPR_Gaya4({ rekod, logo, namaSekolah, subHeader1, subHeader2, seksyen }) {
   const gambarDiisi = (rekod.gambar || []).filter(Boolean)
-  const gambar = rekod.gambar || []
   const unit = rekod.unit || 'PROGRAM'
   const teksSub1 = subHeader1 ? subHeader1.replace(/\{Unit\}/gi, unit) : ''
   const teksSub2 = subHeader2 ? subHeader2.replace(/\{Unit\}/gi, unit) : ''
@@ -26,11 +22,7 @@ export default function CetakOPR_Gaya4({ rekod, logo, namaSekolah, subHeader1, s
           backgroundSize: 'cover', backgroundPosition: 'center',
         }}
       >
-        <KepalaStandard
-          logo={logo} namaSekolah={namaSekolah} teksSub1={teksSub1} teksSub2={teksSub2} seksyen={seksyen}
-          tunjukSeksyenBadge={rekod.tunjukSeksyenBadge} opacity={opacity} namaSekolahLalai={NAMA_SEKOLAH}
-          gambarBulat={gambar[0]?.url ?? gambar[0]}
-        />
+        <KepalaStandard logo={logo} namaSekolah={namaSekolah} teksSub1={teksSub1} teksSub2={teksSub2} seksyen={seksyen} tunjukSeksyenBadge={rekod.tunjukSeksyenBadge} opacity={opacity} namaSekolahLalai={NAMA_SEKOLAH} />
         <BarisChip rekod={rekod} opacity={opacity} />
 
         <div className="rounded-xl shadow-md p-2.5 text-center mb-2.5 shrink-0 overflow-hidden" style={gayaKotak(opacity)}>
@@ -55,9 +47,12 @@ export default function CetakOPR_Gaya4({ rekod, logo, namaSekolah, subHeader1, s
             <Kotak label="Penambahbaikan" flex="1 1 100%" opacity={opacity}><SenaraiPeluru teks={rekod.penambahbaikan} /></Kotak>
           </div>
 
-          <div className="flex gap-2 mb-3" style={{ flex: 4 }}>
+          {/* 4 gambar bingkai bulat/oval - sejajar tengah menegak dalam
+              baris (items-center) supaya kelihatan kemas walaupun bentuk
+              bulat berbeza dari kotak sekeliling. */}
+          <div className="flex items-center justify-center gap-3 mb-3" style={{ flex: 4 }}>
             {(gambarDiisi.length > 0 ? gambarDiisi : [null, null, null, null]).map((g, i) => (
-              <GambarSlot key={i} src={g ? (g.url ?? g) : null} posisi={g?.posisi} opacity={opacity} className="flex-1" />
+              <GambarSlotBulat key={i} src={g ? (g.url ?? g) : null} posisi={g?.posisi} opacity={opacity} />
             ))}
           </div>
 
