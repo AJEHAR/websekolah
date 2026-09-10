@@ -188,43 +188,34 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     }
   }
 
+  const PILIHAN_GAYA = [
+    { id: 'gaya1', nama: 'Gaya 1 - Kotak Ringkas', ket: 'Kotak bersempadan lembut, gambar 4 sebaris' },
+    { id: 'gaya2', nama: 'Gaya 2 - Kepala Bersempadan', ket: 'Kandungan kiri, gambar lajur sempit kanan' },
+    { id: 'gaya3', nama: 'Gaya 3 - Mozek Gambar', ket: 'Kolaj gambar (1 besar + 3 kecil) di atas' },
+    { id: 'gaya4', nama: 'Gaya 4 - Foto Utama', ket: 'Satu gambar besar (hero) jadi tumpuan utama' },
+    { id: 'gaya5', nama: 'Gaya 5 - Filem Menegak', ket: '4 gambar tersusun menegak, lebih dominan' },
+  ]
+
   return (
     <div className="space-y-6">
       <div>
         <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">1. Gaya Cetakan</p>
         <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => u('layoutCetak', 'gaya1')}
-            className="rounded-card border-2 p-3 text-left"
-            style={{ borderColor: data.layoutCetak === 'gaya1' ? '#C8102E' : '#E5E5E5' }}
-          >
-            <div className="h-20 rounded bg-white border border-border mb-2 p-1.5 flex flex-col gap-0.5">
-              <div className="h-2 bg-gray-200 rounded-sm w-1/2 mx-auto" />
-              <div className="flex-1 grid grid-cols-2 gap-0.5 mt-1">
-                <div className="bg-gray-100 rounded-sm" />
-                <div className="bg-gray-100 rounded-sm" />
+          {PILIHAN_GAYA.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => u('layoutCetak', g.id)}
+              className="rounded-card border-2 p-3 text-left"
+              style={{ borderColor: data.layoutCetak === g.id ? '#C8102E' : '#E5E5E5' }}
+            >
+              <div className="h-20 rounded bg-white border border-border mb-2 p-1.5 flex flex-col items-center justify-center">
+                <span className="text-[10px] text-inkmuted font-semibold">{g.nama.split(' - ')[0]}</span>
               </div>
-            </div>
-            <p className="text-xs font-semibold text-ink">Gaya 1 - Kotak Ringkas</p>
-            <p className="text-[10px] text-inkmuted">Latar putih, kotak bersempadan hitam, gambar 4 sebaris</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => u('layoutCetak', 'gaya2')}
-            className="rounded-card border-2 p-3 text-left"
-            style={{ borderColor: data.layoutCetak === 'gaya2' ? '#C8102E' : '#E5E5E5' }}
-          >
-            <div className="h-20 rounded bg-white border border-border mb-2 overflow-hidden flex flex-col">
-              <div className="h-5 shrink-0 border-b-2 border-black" />
-              <div className="flex-1 p-1.5 flex gap-1">
-                <div className="flex-1 bg-gray-100 rounded-sm" />
-                <div className="w-4 bg-gray-200 rounded-sm" />
-              </div>
-            </div>
-            <p className="text-xs font-semibold text-ink">Gaya 2 - Kepala Bersempadan</p>
-            <p className="text-[10px] text-inkmuted">Kepala ikut Unit, gambar sekolum di kanan</p>
-          </button>
+              <p className="text-xs font-semibold text-ink">{g.nama}</p>
+              <p className="text-[10px] text-inkmuted">{g.ket}</p>
+            </button>
+          ))}
         </div>
       </div>
 
