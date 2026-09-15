@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, query, serverTimestamp, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'kkgsYuran'
@@ -11,6 +11,12 @@ const KOLEKSI = 'kkgsYuran'
 // kekerapan bayaran sekolah amalkan. Medan "tahun" (nombor, cth 2026)
 // PENTING - kira peruntukan bulan HANYA guna bayaran tahun berkenaan
 // (elak bayaran lebih tahun lepas "terbawa" masuk kiraan tahun semasa).
+//
+// PENTING: susun (sort) tarikh dibuat di KLIEN (bukan orderBy() dalam
+// query Firestore) - gabungan where()+orderBy() pada MEDAN BERBEZA
+// PERLUKAN "indeks komposit" khas dibuat dulu di Firebase Console (punca
+// ralat "query requires an index" yang dilaporkan). Susun di klien elak
+// keperluan tu SEPENUHNYA - tak perlu buat apa-apa di Firebase Console.
 export function useKkgsYuranTahun(tahun, aktif = true) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)
@@ -23,9 +29,11 @@ export function useKkgsYuranTahun(tahun, aktif = true) {
     }
     setLoading(true)
     try {
-      const q = query(collection(db, KOLEKSI), where('tahun', '==', Number(tahun)), orderBy('tarikh', 'desc'))
+      const q = query(collection(db, KOLEKSI), where('tahun', '==', Number(tahun)))
       const snap = await getDocs(q)
-      setSenarai(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      const semua = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      semua.sort((a, b) => (b.tarikh ?? '').localeCompare(a.tarikh ?? ''))
+      setSenarai(semua)
     } finally {
       setLoading(false)
     }
@@ -50,9 +58,11 @@ export function useKkgsYuranAhli(ahliId) {
     }
     setLoading(true)
     try {
-      const q = query(collection(db, KOLEKSI), where('ahliId', '==', ahliId), orderBy('tarikh', 'desc'))
+      const q = query(collection(db, KOLEKSI), where('ahliId', '==', ahliId))
       const snap = await getDocs(q)
-      setSenarai(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      const semua = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      semua.sort((a, b) => (b.tarikh ?? '').localeCompare(a.tarikh ?? ''))
+      setSenarai(semua)
     } finally {
       setLoading(false)
     }

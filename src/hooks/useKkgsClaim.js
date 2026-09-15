@@ -6,6 +6,12 @@ const KOLEKSI = 'kkgsClaim'
 
 // Tuntutan (claim) staff SENDIRI sahaja - untuk mana-mana staff biasa
 // (bukan Jawatankuasa) semak status tuntutan dia.
+//
+// PENTING: susun (sort) dibuat di KLIEN (bukan orderBy() dalam query) -
+// gabungan where()+orderBy() pada MEDAN BERBEZA perlukan "indeks
+// komposit" khas dibuat dulu di Firebase Console (sama punca ralat
+// "query requires an index" yang berlaku di useKkgsYuranTahun). Susun di
+// klien elak keperluan tu sepenuhnya.
 export function useKkgsClaimSaya(uid) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)
@@ -18,9 +24,11 @@ export function useKkgsClaimSaya(uid) {
     }
     setLoading(true)
     try {
-      const q = query(collection(db, KOLEKSI), where('pemohonUid', '==', uid), orderBy('tarikhMohon', 'desc'))
+      const q = query(collection(db, KOLEKSI), where('pemohonUid', '==', uid))
       const snap = await getDocs(q)
-      setSenarai(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      const semua = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      semua.sort((a, b) => (b.tarikhMohon?.toMillis?.() ?? 0) - (a.tarikhMohon?.toMillis?.() ?? 0))
+      setSenarai(semua)
     } finally {
       setLoading(false)
     }
