@@ -1,16 +1,30 @@
 // Jawatan Jawatankuasa KKGS - SUSUNAN ni penting (hierarki paparan dalam
 // page Jawatankuasa). "Ahli" ialah LALAI untuk semua staff yang belum
 // dilantik apa-apa jawatan khas - bukan jawatan sebenar, jadi Ahli biasa
-// TAK dipaparkan dalam senarai Jawatankuasa (tapisan automatik).
+// TAK dipaparkan dalam senarai Jawatankuasa (tapisan automatik). Nilai
+// disimpan TERUS guna label penuh (KECUALI "Ahli" - dikekalkan pendek
+// untuk keserasian rekod sedia ada, dipaparkan sebagai "Ahli KKGS
+// (Selain Di Atas)" khusus dalam UI Jawatankuasa).
 export const JAWATAN_KKGS = [
+  'Penasihat',
   'Pengerusi',
-  'Timbalan Pengerusi',
+  'Naib Pengerusi',
   'Setiausaha',
   'Bendahari 1',
   'Bendahari 2',
-  'AJK',
+  'AJK KKGS',
   'Ahli',
 ]
+
+// Jawatan yang cuma BOLEH SATU orang pegang serentak (bukan AJK, yang
+// lazimnya ramai ahli) - lantikan baharu untuk jawatan ni AUTOMATIK
+// "tanggalkan" pemegang lama (kembali ke "Ahli") - elak dua orang
+// pegang jawatan sama serentak tanpa disedari.
+export const JAWATAN_SATU_ORANG = ['Penasihat', 'Pengerusi', 'Naib Pengerusi', 'Setiausaha', 'Bendahari 1', 'Bendahari 2']
+
+export function labelJawatan(jawatan) {
+  return jawatan === 'Ahli' ? 'Ahli KKGS (Selain Di Atas)' : jawatan
+}
 
 // Sesiapa dengan jawatan LAIN daripada "Ahli" dianggap Jawatankuasa -
 // label/paparan SAHAJA (untuk page Jawatankuasa). PENTING: ini BUKAN

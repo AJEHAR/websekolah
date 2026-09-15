@@ -7,7 +7,7 @@ import { uraiCSVBaris } from '../../lib/csvUtils.js'
 import {
   useKkgsAhliSenarai, tambahAhliKkgs, kemaskiniAhliKkgs, padamAhliKkgs, padamAhliPukalKkgs, kemaskiniAhliPukalKkgs, importNamaPukalKkgs,
 } from '../../hooks/useKkgsAhli.js'
-import { JAWATAN_KKGS, STATUS_KEAHLIAN, labelStatusKeahlian, NAMA_BULAN } from './kkgsConstants.js'
+import { JAWATAN_KKGS, STATUS_KEAHLIAN, labelStatusKeahlian, labelJawatan, NAMA_BULAN } from './kkgsConstants.js'
 
 const MEDAN_KOSONG = { nama: '', emel: '', jawatan: 'Ahli', statusKeahlian: 'aktif', bulanMula: 1, bulanTamat: 12 }
 
@@ -58,7 +58,7 @@ function ModalAhli({ open, dataAwal, onTutup, onSimpan }) {
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Jawatan</label>
             <select value={data.jawatan} onChange={(e) => u('jawatan', e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
-              {JAWATAN_KKGS.map((j) => <option key={j} value={j}>{j}</option>)}
+              {JAWATAN_KKGS.map((j) => <option key={j} value={j}>{labelJawatan(j)}</option>)}
             </select>
           </div>
           <div>
@@ -226,6 +226,25 @@ export default function SenaraiAhliKKGS() {
     })
   }
 
+  const semuaDipilih = disenarai.length > 0 && disenarai.every((a) => terpilih.has(a.id))
+  function togolPilihSemua() {
+    setTerpilih((s) => {
+      if (semuaDipilih) {
+        // Nyahpilih SEMUA yang kelihatan sekarang (carian aktif) -
+        // pilihan ahli LAIN (di luar carian semasa) kekal tak berubah.
+        const baru = new Set(s)
+        disenarai.forEach((a) => baru.delete(a.id))
+        return baru
+      }
+      // Pilih SEMUA yang kelihatan sekarang - GABUNG dengan pilihan
+      // sedia ada (bukan ganti terus), staff boleh cari lain & tambah
+      // lagi kepada pilihan sama.
+      const baru = new Set(s)
+      disenarai.forEach((a) => baru.add(a.id))
+      return baru
+    })
+  }
+
   async function simpan(data) {
     if (ahliEdit) {
       await kemaskiniAhliKkgs(ahliEdit.id, data, user.uid)
@@ -274,6 +293,15 @@ export default function SenaraiAhliKKGS() {
           </>
         )}
       </div>
+
+      {bolehUrus && disenarai.length > 0 && (
+        <div className="flex items-center gap-2 mb-2">
+          <button onClick={togolPilihSemua} className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+            {semuaDipilih ? <CheckSquare size={16} className="text-brand-red" /> : <Square size={16} />}
+            {semuaDipilih ? 'Nyahpilih Semua' : `Pilih Semua (${disenarai.length})`}
+          </button>
+        </div>
+      )}
 
       {bolehUrus && terpilih.size > 0 && (
         <div className="flex items-center gap-2 mb-3 p-2.5 rounded-card bg-base">

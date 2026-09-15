@@ -22,6 +22,11 @@ const DATA_UJIAN = [
   { kunci: 'unitUBKS', label: 'Unit UBKS' },
   { kunci: 'kehadiranUBKS', label: 'Kehadiran UBKS' },
   { kunci: 'perancanganUBKS', label: 'Perancangan UBKS' },
+  { kunci: 'kkgsAhli', label: 'Senarai Ahli KKGS' },
+  { kunci: 'kkgsYuran', label: 'Rekod Bayaran Yuran KKGS' },
+  { kunci: 'kkgsKewangan', label: 'Buku Tunai KKGS' },
+  { kunci: 'kkgsClaim', label: 'Tuntutan (Claim) KKGS' },
+  { kunci: 'kkgsTetapanYuran', label: 'Tetapan Yuran KKGS (bilangan bulan/kadar)' },
 ]
 
 const DATA_KONFIGURASI = [
