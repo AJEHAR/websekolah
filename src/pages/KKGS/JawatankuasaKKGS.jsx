@@ -88,6 +88,7 @@ export default function JawatankuasaKKGS() {
                   onChange={(id) => lantik(jawatan, id || null)}
                   pilihan={senarai.map((a) => ({ id: a.id, label: a.nama }))}
                   placeholder="Pilih nama…"
+                  tajuk={`Lantik ${labelJawatan(jawatan)}`}
                 />
               </div>
             </div>

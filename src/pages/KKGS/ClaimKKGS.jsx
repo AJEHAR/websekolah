@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, X, Upload, Check, X as XIcon } from 'lucide-react'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
-import { useKkgsClaimSaya, useKkgsClaimSemua, hantarClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
+import { useKkgsClaimSemua, hantarClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { JENIS_IMBUHAN_KKGS } from './kkgsConstants.js'
@@ -98,7 +98,7 @@ function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-ink mb-1">Nama Anda</label>
-              <DropdownCari value={ahliId} onChange={setAhliId} pilihan={senaraiAhli.map((a) => ({ id: a.id, label: a.nama }))} placeholder="Pilih nama…" bolehKosong={false} />
+              <DropdownCari value={ahliId} onChange={setAhliId} pilihan={senaraiAhli.map((a) => ({ id: a.id, label: a.nama }))} placeholder="Pilih nama…" bolehKosong={false} tajuk="Pilih Nama Anda" />
             </div>
             <div>
               <label className="block text-xs font-medium text-ink mb-1">Jenis Imbuhan</label>
@@ -108,6 +108,7 @@ function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
                 pilihan={JENIS_IMBUHAN_KKGS.map((j) => ({ id: j.label, label: `${j.label} (RM${j.jumlah})` }))}
                 placeholder="Pilih jenis…"
                 bolehKosong={false}
+                tajuk="Pilih Jenis Imbuhan"
               />
             </div>
             {imbuhanDipilih && (
@@ -159,7 +160,7 @@ function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
               <>
                 <div>
                   <label className="block text-xs font-medium text-ink mb-1">Penyumbang (Nama Anda)</label>
-                  <DropdownCari value={ahliId} onChange={setAhliId} pilihan={senaraiAhli.map((a) => ({ id: a.id, label: a.nama }))} placeholder="Pilih nama…" bolehKosong={false} />
+                  <DropdownCari value={ahliId} onChange={setAhliId} pilihan={senaraiAhli.map((a) => ({ id: a.id, label: a.nama }))} placeholder="Pilih nama…" bolehKosong={false} tajuk="Pilih Nama Anda" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-ink mb-1">Kepada Siapa <span className="text-inkmuted font-normal">(pilihan - peruntukan sumbangan ni)</span></label>
@@ -169,7 +170,7 @@ function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
             ) : (
               <div>
                 <label className="block text-xs font-medium text-ink mb-1">Penerima</label>
-                <DropdownCari value={ahliId} onChange={setAhliId} pilihan={senaraiAhli.map((a) => ({ id: a.id, label: a.nama }))} placeholder="Pilih nama penerima…" bolehKosong={false} />
+                <DropdownCari value={ahliId} onChange={setAhliId} pilihan={senaraiAhli.map((a) => ({ id: a.id, label: a.nama }))} placeholder="Pilih nama penerima…" bolehKosong={false} tajuk="Pilih Penerima" />
               </div>
             )}
 
@@ -200,17 +201,17 @@ export default function ClaimKKGS() {
   const { senarai: senaraiAhli } = useKkgsAhliSenarai()
   const [tab, setTab] = useState('imbuhan')
 
-  const { senarai: claimSaya, loading: loadingSaya, muatSemula: muatSemulaSaya } = useKkgsClaimSaya(user.uid)
-  const { senarai: claimSemua, loading: loadingSemua, muatSemula: muatSemulaSemua } = useKkgsClaimSemua(sayaJawatankuasa)
+  // SEMUA staff (bukan admin sahaja) nampak SEMUA tuntutan - telus atas
+  // permintaan, elak double-claim & staff nampak keadilan taburan.
+  // Butang lulus/tolak kekal admin SAHAJA (papar bersyarat di bawah).
+  const { senarai: claimSemua, loading, muatSemula: muatSemulaSemua } = useKkgsClaimSemua(true)
   const [tunjukForm, setTunjukForm] = useState(false)
 
-  const senaraiPenuh = sayaJawatankuasa ? claimSemua : claimSaya
+  const senaraiPenuh = claimSemua
   const senaraiPapar = senaraiPenuh.filter((c) => (c.jenisClaim || 'resit') === tab)
-  const loading = sayaJawatankuasa ? loadingSemua : loadingSaya
 
   async function muatSemulaSemuanya() {
-    muatSemulaSaya()
-    if (sayaJawatankuasa) muatSemulaSemua()
+    muatSemulaSemua()
   }
 
   async function putuskan(claim, status) {
@@ -247,7 +248,7 @@ export default function ClaimKKGS() {
       )}
 
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs text-inkmuted">{sayaJawatankuasa ? 'Semua rekod staff - lulus/tandakan selesai di sini.' : 'Rekod anda sahaja.'}</p>
+        <p className="text-xs text-inkmuted">Semua rekod staff - telus untuk semua ahli. {sayaJawatankuasa && 'Anda boleh lulus/tandakan selesai.'}</p>
         <button onClick={() => setTunjukForm(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold shrink-0">
           <Plus size={14} /> {tab === 'sumbangan' ? 'Rekod Baharu' : 'Tuntutan Baharu'}
         </button>
@@ -281,7 +282,7 @@ export default function ClaimKKGS() {
                   )}
                 </p>
               ) : (
-                sayaJawatankuasa && <p className="text-xs text-inkmuted mb-1">{c.ahliNama || c.pemohonNama}</p>
+                <p className="text-xs text-inkmuted mb-1">{c.ahliNama || c.pemohonNama}</p>
               )}
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-ink">RM {c.jumlah.toFixed(2)}</p>

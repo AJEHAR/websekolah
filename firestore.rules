@@ -440,13 +440,13 @@ service cloud.firestore {
     }
 
     // Claim KKGS - staff BOLEH CIPTA tuntutan SENDIRI sahaja (uid mesti
-    // sepadan, guna Firebase Auth UID terus - BUKAN padanan kkgsAhli),
-    // BACA rekod SENDIRI sahaja. Admin 'kkgs' boleh baca & kemaskini
-    // (lulus/tolak) SEMUA - tapi TAK boleh cipta tuntutan bagi pihak
-    // orang lain (create tetap perlu uid pemohon = uid sendiri, walau
-    // admin sekalipun).
+    // sepadan, guna Firebase Auth UID terus - BUKAN padanan kkgsAhli).
+    // BACA - SEMUA staff diluluskan boleh lihat SEMUA tuntutan (telus,
+    // atas permintaan - elak double-claim & pastikan keadilan ahli
+    // nampak siapa dapat apa). Admin 'kkgs' SAHAJA boleh kemaskini
+    // (lulus/tolak).
     match /kkgsClaim/{docId} {
-      allow read: if isStaffDiluluskan() && (isAdminSeksyen('kkgs') || resource.data.pemohonUid == request.auth.uid);
+      allow read: if isStaffDiluluskan();
       allow create: if isStaffDiluluskan() && request.resource.data.pemohonUid == request.auth.uid;
       allow update: if isAdminSeksyen('kkgs');
     }

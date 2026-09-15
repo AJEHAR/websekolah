@@ -1,18 +1,43 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Trash2, X } from 'lucide-react'
+import { Plus, Trash2, X, Printer } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsKewanganSenarai, tambahKewanganKkgs, padamKewanganKkgs } from '../../hooks/useKkgsKewangan.js'
+import { useKkgsLedger, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
+import { useCetak } from '../../hooks/useCetak.js'
+import { NAMA_BULAN } from './kkgsConstants.js'
+import LaporanKewanganKKGS from './LaporanKewanganKKGS.jsx'
+
+const TAHUN_SEMASA = new Date().getFullYear()
+const PILIHAN_TAHUN = [TAHUN_SEMASA - 2, TAHUN_SEMASA - 1, TAHUN_SEMASA, TAHUN_SEMASA + 1]
+const TAB = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'bukutunai', label: 'Buku Tunai' },
+  { id: 'ledger', label: 'Ledger' },
+  { id: 'laporan', label: 'Laporan' },
+]
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
+}
+
+function WarnaSumber(sumber) {
+  if (sumber === 'yuran') return { bg: '#E6F1FB', teks: '#1D4ED8' }
+  if (sumber === 'claim') return { bg: '#FCEFC7', teks: '#8A6D00' }
+  return { bg: '#F2F2F2', teks: '#5C5C5C' }
+}
+function labelSumber(sumber) {
+  if (sumber === 'yuran') return 'Yuran'
+  if (sumber === 'claim') return 'Claim'
+  return 'Manual'
 }
 
 function ModalTransaksi({ open, onTutup, onSimpan }) {
   const [tarikh, setTarikh] = useState(todayISO())
   const [perkara, setPerkara] = useState('')
   const [jenis, setJenis] = useState('masuk')
+  const [kategori, setKategori] = useState(KATEGORI_KEWANGAN[0])
   const [jumlah, setJumlah] = useState('')
   const [catatan, setCatatan] = useState('')
   const [menyimpan, setMenyimpan] = useState(false)
@@ -26,7 +51,7 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
     setRalat(null)
     setMenyimpan(true)
     try {
-      await onSimpan({ tarikh, perkara, jenis, jumlah, catatan })
+      await onSimpan({ tarikh, perkara, jenis, kategori, jumlah, catatan })
       setPerkara(''); setJumlah(''); setCatatan('')
     } catch (err) {
       setRalat(err.message || 'Gagal simpan.')
@@ -52,8 +77,14 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
             <input type="date" value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
           </div>
           <div>
+            <label className="block text-xs font-medium text-ink mb-1">Kategori</label>
+            <select value={kategori} onChange={(e) => setKategori(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
+              {KATEGORI_KEWANGAN.map((k) => <option key={k} value={k}>{k}</option>)}
+            </select>
+          </div>
+          <div>
             <label className="block text-xs font-medium text-ink mb-1">Perkara</label>
-            <input type="text" value={perkara} onChange={(e) => setPerkara(e.target.value)} placeholder="cth. Yuran Jun 2026 / Sewa dewan" className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
+            <input type="text" value={perkara} onChange={(e) => setPerkara(e.target.value)} placeholder="cth. Sewa dewan" className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
           </div>
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Jumlah (RM)</label>
@@ -73,78 +104,205 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
   )
 }
 
+// Carta bar RINGKAS (CSS tulen, tiada pustaka luar) - trend Masuk/Keluar
+// setiap bulan tahun dipilih.
+function CartaBulanan({ transaksi }) {
+  const dataBulan = Array.from({ length: 12 }, (_, i) => {
+    const bulan = i + 1
+    const masuk = transaksi.filter((t) => t.jenis === 'masuk' && Number(t.tarikh.slice(5, 7)) === bulan).reduce((j, t) => j + t.jumlah, 0)
+    const keluar = transaksi.filter((t) => t.jenis === 'keluar' && Number(t.tarikh.slice(5, 7)) === bulan).reduce((j, t) => j + t.jumlah, 0)
+    return { bulan, masuk, keluar }
+  })
+  const maksNilai = Math.max(...dataBulan.flatMap((d) => [d.masuk, d.keluar]), 1)
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-2 text-[10px]">
+        <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: '#0F6E56' }} /> Masuk</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: '#C8102E' }} /> Keluar</span>
+      </div>
+      <div className="flex items-end gap-1.5 h-32">
+        {dataBulan.map((d) => (
+          <div key={d.bulan} className="flex-1 flex flex-col items-center gap-0.5">
+            <div className="w-full flex items-end justify-center gap-0.5" style={{ height: '100%' }}>
+              <div style={{ height: `${(d.masuk / maksNilai) * 100}%`, backgroundColor: '#0F6E56', minHeight: d.masuk > 0 ? 2 : 0 }} className="flex-1 rounded-t-sm" />
+              <div style={{ height: `${(d.keluar / maksNilai) * 100}%`, backgroundColor: '#C8102E', minHeight: d.keluar > 0 ? 2 : 0 }} className="flex-1 rounded-t-sm" />
+            </div>
+            <span className="text-[8px] text-inkmuted">{NAMA_BULAN[d.bulan - 1].slice(0, 3)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function KewanganKKGS() {
   const { user } = useOutletContext()
   const { konfirm } = useDialog()
   const { adaSeksyen } = useIsAdmin(user)
-  const { senarai, loading, muatSemula } = useKkgsKewanganSenarai()
+  const bolehUrus = adaSeksyen('kkgs')
+  const [tab, setTab] = useState('dashboard')
+  const [tahun, setTahun] = useState(TAHUN_SEMASA)
+  const [bulanLaporan, setBulanLaporan] = useState(0) // 0 = tahun penuh
+
+  const { senarai: bukuTunaiSemua, loading: loadingBukuTunai, muatSemula: muatSemulaBukuTunai } = useKkgsKewanganSenarai()
+  const { transaksi: ledger, loading: loadingLedger, muatSemula: muatSemulaLedger } = useKkgsLedger(tahun, true)
   const [tunjukForm, setTunjukForm] = useState(false)
+  const [dataLaporan, setDataLaporan] = useCetak()
 
-  const sayaJawatankuasa = adaSeksyen('kkgs')
+  // Buku Tunai TAPIS ikut tahun dipilih juga - konsisten dengan 3 tab
+  // lain (dulu Buku Tunai papar SEMUA tahun serentak, tak konsisten
+  // dengan pemilih tahun yang staff dah pilih).
+  const bukuTunai = bukuTunaiSemua.filter((t) => (t.tarikh ?? '').slice(0, 4) === String(tahun))
 
-  const jumlahMasuk = senarai.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
-  const jumlahKeluar = senarai.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
-  const baki = jumlahMasuk - jumlahKeluar
+  async function muatSemulaSemua() {
+    muatSemulaBukuTunai()
+    muatSemulaLedger()
+  }
 
   async function simpan(data) {
     await tambahKewanganKkgs(data, user.uid)
     setTunjukForm(false)
-    muatSemula()
+    muatSemulaSemua()
   }
 
   async function padam(t) {
     if (!(await konfirm('Padam transaksi ni?', { bahaya: true }))) return
     await padamKewanganKkgs(t.id)
-    muatSemula()
+    muatSemulaSemua()
+  }
+
+  const ledgerTahun = ledger // sudah ditapis ikut tahun dalam hook
+  const jumlahMasukTahun = ledgerTahun.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
+  const jumlahKeluarTahun = ledgerTahun.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
+  const bakiTahun = jumlahMasukTahun - jumlahKeluarTahun
+
+  const bulanIni = new Date().getMonth() + 1
+  const masukBulanIni = ledgerTahun.filter((t) => t.jenis === 'masuk' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
+  const keluarBulanIni = ledgerTahun.filter((t) => t.jenis === 'keluar' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
+
+  function cetakLaporan() {
+    const transaksiTapis = bulanLaporan === 0 ? ledgerTahun : ledgerTahun.filter((t) => Number(t.tarikh.slice(5, 7)) === bulanLaporan)
+    setDataLaporan({ transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan })
   }
 
   return (
     <div>
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="rounded-card border border-border bg-surface p-3 text-center">
-          <p className="text-[10px] text-inkmuted">Masuk</p>
-          <p className="text-sm font-bold text-[#0F6E56]">RM {jumlahMasuk.toFixed(2)}</p>
-        </div>
-        <div className="rounded-card border border-border bg-surface p-3 text-center">
-          <p className="text-[10px] text-inkmuted">Keluar</p>
-          <p className="text-sm font-bold text-brand-red">RM {jumlahKeluar.toFixed(2)}</p>
-        </div>
-        <div className="rounded-card border border-border bg-surface p-3 text-center">
-          <p className="text-[10px] text-inkmuted">Baki</p>
-          <p className="text-sm font-bold text-ink">RM {baki.toFixed(2)}</p>
-        </div>
+      <div className="flex gap-1.5 mb-4 p-1 rounded-card bg-base w-fit overflow-x-auto">
+        {TAB.map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={`h-9 px-3.5 rounded-card text-xs font-semibold shrink-0 ${tab === t.id ? 'bg-brand-red text-white' : 'text-inkmuted'}`}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {sayaJawatankuasa && (
-        <button onClick={() => setTunjukForm(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold mb-4">
-          <Plus size={14} /> Rekod Transaksi
-        </button>
+      <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="h-10 px-3 rounded-card border border-border bg-surface text-sm mb-4">
+        {PILIHAN_TAHUN.map((t) => <option key={t} value={t}>{t}{t === TAHUN_SEMASA ? ' (semasa)' : ''}</option>)}
+      </select>
+
+      {/* ===== DASHBOARD ===== */}
+      {tab === 'dashboard' && (
+        loadingLedger ? <p className="text-sm text-inkmuted">Memuatkan…</p> : (
+          <div>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="rounded-card border border-border bg-surface p-3 text-center">
+                <p className="text-[10px] text-inkmuted">Baki {tahun}</p>
+                <p className="text-sm font-bold text-ink">RM {bakiTahun.toFixed(2)}</p>
+              </div>
+              <div className="rounded-card border border-border bg-surface p-3 text-center">
+                <p className="text-[10px] text-inkmuted">Masuk Bulan Ini</p>
+                <p className="text-sm font-bold text-[#0F6E56]">RM {masukBulanIni.toFixed(2)}</p>
+              </div>
+              <div className="rounded-card border border-border bg-surface p-3 text-center">
+                <p className="text-[10px] text-inkmuted">Keluar Bulan Ini</p>
+                <p className="text-sm font-bold text-brand-red">RM {keluarBulanIni.toFixed(2)}</p>
+              </div>
+            </div>
+            <div className="rounded-card border border-border bg-surface p-4">
+              <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-3">Trend Bulanan {tahun}</p>
+              <CartaBulanan transaksi={ledgerTahun} />
+            </div>
+          </div>
+        )
       )}
 
-      {loading ? (
-        <p className="text-sm text-inkmuted">Memuatkan…</p>
-      ) : senarai.length === 0 ? (
-        <p className="text-sm text-inkmuted">Tiada transaksi lagi.</p>
-      ) : (
-        <div className="space-y-2">
-          {senarai.map((t) => (
-            <div key={t.id} className="flex items-center gap-3 p-3.5 rounded-card border border-border bg-surface">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-ink truncate">{t.perkara}</p>
-                <p className="text-xs text-inkmuted">{t.tarikh}{t.catatan && ` · ${t.catatan}`}</p>
-              </div>
-              <p className="text-sm font-bold shrink-0" style={{ color: t.jenis === 'masuk' ? '#0F6E56' : '#C8102E' }}>
-                {t.jenis === 'masuk' ? '+' : '-'} RM {t.jumlah.toFixed(2)}
-              </p>
-              {sayaJawatankuasa && (
-                <button onClick={() => padam(t)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red shrink-0"><Trash2 size={15} /></button>
-              )}
+      {/* ===== BUKU TUNAI (manual) ===== */}
+      {tab === 'bukutunai' && (
+        <div>
+          {bolehUrus && (
+            <button onClick={() => setTunjukForm(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold mb-4">
+              <Plus size={14} /> Rekod Transaksi
+            </button>
+          )}
+          {loadingBukuTunai ? (
+            <p className="text-sm text-inkmuted">Memuatkan…</p>
+          ) : bukuTunai.length === 0 ? (
+            <p className="text-sm text-inkmuted">Tiada transaksi manual lagi.</p>
+          ) : (
+            <div className="space-y-2">
+              {bukuTunai.map((t) => (
+                <div key={t.id} className="flex items-center gap-3 p-3.5 rounded-card border border-border bg-surface">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-ink truncate">{t.perkara}</p>
+                    <p className="text-xs text-inkmuted">{t.tarikh} · {t.kategori || 'Lain-lain'}{t.catatan && ` · ${t.catatan}`}</p>
+                  </div>
+                  <p className="text-sm font-bold shrink-0" style={{ color: t.jenis === 'masuk' ? '#0F6E56' : '#C8102E' }}>{t.jenis === 'masuk' ? '+' : '-'} RM {t.jumlah.toFixed(2)}</p>
+                  {bolehUrus && <button onClick={() => padam(t)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red shrink-0"><Trash2 size={15} /></button>}
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
-      <ModalTransaksi open={tunjukForm} onTutup={() => setTunjukForm(false)} onSimpan={simpan} />
+      {/* ===== LEDGER (gabungan automatik) ===== */}
+      {tab === 'ledger' && (
+        <div>
+          <p className="text-xs text-inkmuted mb-3">Gabungan AUTOMATIK semua pergerakan wang (Yuran + Claim diluluskan + Kewangan manual) - gambaran kewangan sebenar &amp; lengkap.</p>
+          {loadingLedger ? (
+            <p className="text-sm text-inkmuted">Memuatkan…</p>
+          ) : ledgerTahun.length === 0 ? (
+            <p className="text-sm text-inkmuted">Tiada transaksi tahun ni.</p>
+          ) : (
+            <div className="space-y-2">
+              {ledgerTahun.map((t) => {
+                const w = WarnaSumber(t.sumber)
+                return (
+                  <div key={t.id} className="flex items-center gap-3 p-3.5 rounded-card border border-border bg-surface">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-ink truncate">{t.perkara}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.teks }}>{labelSumber(t.sumber)}</span>
+                        <span className="text-[10px] text-inkmuted">{t.tarikh} · {t.kategori}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm font-bold shrink-0" style={{ color: t.jenis === 'masuk' ? '#0F6E56' : '#C8102E' }}>{t.jenis === 'masuk' ? '+' : '-'} RM {t.jumlah.toFixed(2)}</p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===== LAPORAN (boleh cetak) ===== */}
+      {tab === 'laporan' && (
+        <div>
+          <p className="text-xs text-inkmuted mb-3">Jana laporan ringkasan boleh cetak - pilih tempoh tahun penuh atau satu bulan sahaja.</p>
+          <div className="flex gap-2 mb-4 flex-wrap items-center">
+            <select value={bulanLaporan} onChange={(e) => setBulanLaporan(Number(e.target.value))} className="h-10 px-3 rounded-card border border-border bg-surface text-sm">
+              <option value={0}>Tahun Penuh ({tahun})</option>
+              {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n} {tahun}</option>)}
+            </select>
+            <button onClick={cetakLaporan} className="flex items-center gap-1.5 h-10 px-4 rounded-card bg-brand-red text-white text-xs font-semibold">
+              <Printer size={14} /> Jana &amp; Cetak Laporan
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bolehUrus && <ModalTransaksi open={tunjukForm} onTutup={() => setTunjukForm(false)} onSimpan={simpan} />}
+      {dataLaporan && <LaporanKewanganKKGS {...dataLaporan} />}
     </div>
   )
 }
