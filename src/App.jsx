@@ -40,6 +40,13 @@ const KategoriRPTPage = lazy(() => import('./pages/Admin/KategoriRPTPage.jsx'))
 const LatarHubPage = lazy(() => import('./pages/Admin/LatarHubPage.jsx'))
 const ResetDataPage = lazy(() => import('./pages/Admin/ResetDataPage.jsx'))
 const GuruBertugasLayout = lazy(() => import('./pages/GuruBertugas/GuruBertugasLayout.jsx'))
+const KKGSLayout = lazy(() => import('./pages/KKGS/KKGSLayout.jsx'))
+const KKGSHub = lazy(() => import('./pages/KKGS/KKGSHub.jsx'))
+const SenaraiAhliKKGS = lazy(() => import('./pages/KKGS/SenaraiAhliKKGS.jsx'))
+const JawatankuasaKKGS = lazy(() => import('./pages/KKGS/JawatankuasaKKGS.jsx'))
+const YuranSumbanganKKGS = lazy(() => import('./pages/KKGS/YuranSumbanganKKGS.jsx'))
+const KewanganKKGS = lazy(() => import('./pages/KKGS/KewanganKKGS.jsx'))
+const ClaimKKGS = lazy(() => import('./pages/KKGS/ClaimKKGS.jsx'))
 const GuruBertugasHub = lazy(() => import('./pages/GuruBertugas/GuruBertugasHub.jsx'))
 const Kumpulan = lazy(() => import('./pages/GuruBertugas/Kumpulan.jsx'))
 const Laporan3K = lazy(() => import('./pages/GuruBertugas/Laporan3K.jsx'))
@@ -189,6 +196,15 @@ export default function App() {
             <Route path="banci" element={<LaporanBanci />} />
             <Route path="harian" element={<LaporanHarian />} />
             <Route path="perhimpunan" element={<LaporanPerhimpunan />} />
+          </Route>
+
+          <Route path="/kkgs" element={<KKGSLayout />}>
+            <Route index element={<KKGSHub />} />
+            <Route path="senarai-ahli" element={<SenaraiAhliKKGS />} />
+            <Route path="jawatankuasa" element={<JawatankuasaKKGS />} />
+            <Route path="yuran" element={<YuranSumbanganKKGS />} />
+            <Route path="kewangan" element={<KewanganKKGS />} />
+            <Route path="claim" element={<ClaimKKGS />} />
           </Route>
 
           <Route path="/maklumat-murid" element={<MaklumatMuridLayout />}>

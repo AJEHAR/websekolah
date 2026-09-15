@@ -61,6 +61,18 @@ service cloud.firestore {
       return request.auth.token.email.lower().trim().replace('/', '_');
     }
 
+    // Jawatankuasa KKGS - ID dokumen kkgsAhli SAMA seperti emelDocIdSendiri()
+    // (emel dinormalkan) - sesiapa dengan jawatan LAIN daripada "Ahli"
+    // (Pengerusi/Timbalan Pengerusi/Setiausaha/Bendahari 1/Bendahari
+    // 2/AJK) dianggap Jawatankuasa. Akses ditentukan SEPENUHNYA oleh
+    // senarai ahli (bukan peranan admin berasingan) - kalau nama
+    // seseorang ditukar/dibuang dari kkgsAhli, akses hilang automatik.
+    function isJawatankuasaKKGS() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/kkgsAhli/$(emelDocIdSendiri())) &&
+        get(/databases/$(database)/documents/kkgsAhli/$(emelDocIdSendiri())).data.jawatan != 'Ahli';
+    }
+
     // Sama ada emel pengguna SEMASA disekat kekal daripada mendaftar
     // (lihat koleksi emelDisekat di bawah - diurus admin, isi bila admin
     // "Tolak & Sekat Kekal" permohonan yang jelas bukan staff sekolah).
@@ -399,6 +411,55 @@ service cloud.firestore {
     match /oppm/{docId} {
       allow read: if isStaffDiluluskan();
       allow write: if isStaffDiluluskan();
+    }
+
+    // ============================================================
+    // KKGS (Kelab Kebajikan Guru & Staf)
+    // ============================================================
+
+    // Senarai Ahli - SEMUA staff boleh BACA (telus, macam senarai staff
+    // biasa). TULIS dikunci Jawatankuasa SAHAJA - elak staff biasa
+    // "lantik diri sendiri" jadi Jawatankuasa dengan tukar jawatan
+    // sendiri terus dalam Firestore. isSuperAdmin() turut dibenarkan -
+    // untuk BOOTSTRAP (lantikan Jawatankuasa PERTAMA kali, sebelum ada
+    // sesiapa pun lagi dalam senarai untuk lulus kemasukan seterusnya).
+    match /kkgsAhli/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isJawatankuasaKKGS() || isSuperAdmin();
+    }
+
+    // Yuran Sumbangan - rekod bayaran SENSITIF (maklumat kewangan
+    // peribadi setiap staff) - staff HANYA boleh baca rekod SENDIRI
+    // (ahliId dia), Jawatankuasa boleh baca & urus SEMUA.
+    match /kkgsYuran/{docId} {
+      allow read: if isStaffDiluluskan() && (isJawatankuasaKKGS() || resource.data.ahliId == emelDocIdSendiri());
+      allow write: if isJawatankuasaKKGS();
+    }
+
+    // Kewangan (Buku Tunai) - SEMUA staff boleh BACA (telus, akauntabiliti
+    // kelab), Jawatankuasa SAHAJA boleh TULIS.
+    match /kkgsKewangan/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isJawatankuasaKKGS();
+    }
+
+    // Tetapan Yuran (bilangan bulan & kadar bulanan, per tahun) - SEMUA
+    // staff boleh BACA (perlu papar status sendiri), Jawatankuasa SAHAJA
+    // boleh TULIS.
+    match /kkgsTetapanYuran/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isJawatankuasaKKGS();
+    }
+
+    // Claim KKGS - staff BOLEH CIPTA tuntutan SENDIRI sahaja (uid mesti
+    // sepadan), BACA rekod SENDIRI sahaja. Jawatankuasa boleh baca &
+    // kemaskini (lulus/tolak) SEMUA - tapi TAK boleh cipta tuntutan bagi
+    // pihak orang lain (create tetap perlu uid pemohon = uid sendiri,
+    // walau Jawatankuasa sekalipun).
+    match /kkgsClaim/{docId} {
+      allow read: if isStaffDiluluskan() && (isJawatankuasaKKGS() || resource.data.pemohonUid == request.auth.uid);
+      allow create: if isStaffDiluluskan() && request.resource.data.pemohonUid == request.auth.uid;
+      allow update: if isJawatankuasaKKGS();
     }
   }
 }

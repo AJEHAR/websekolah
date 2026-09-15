@@ -61,6 +61,9 @@ const JENIS_FAIL_DIBENARKAN = {
   kertasKerja: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
   // OPR - gambar aktiviti + tandatangan digital (kedua-dua imej sahaja).
   opr: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  // KKGS - resit/bukti tuntutan (Claim) - gambar ATAU PDF (resit kadang
+  // diimbas terus jadi PDF, bukan gambar).
+  kkgs: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'],
   // Koleksi Pekeliling (Kurikulum) - dokumen boleh PDF, gambar, ATAU Word
   // (.doc/.docx) - pekeliling kadang diedarkan dalam format Word terus.
   pekeliling: [

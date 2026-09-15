@@ -68,6 +68,17 @@ export const NAV_ITEMS = [
       { label: 'Laporan Perhimpunan', to: '/guru-bertugas/perhimpunan' },
     ],
   },
+  {
+    label: 'KKGS',
+    to: '/kkgs',
+    children: [
+      { label: 'Senarai Ahli', to: '/kkgs/senarai-ahli' },
+      { label: 'Jawatankuasa', to: '/kkgs/jawatankuasa' },
+      { label: 'Yuran Sumbangan', to: '/kkgs/yuran' },
+      { label: 'Kewangan', to: '/kkgs/kewangan' },
+      { label: 'Claim KKGS', to: '/kkgs/claim' },
+    ],
+  },
   { label: 'Profil', to: '/profil' },
 ]
 
