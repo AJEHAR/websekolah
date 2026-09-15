@@ -232,10 +232,18 @@ export default function YuranSumbanganKKGS() {
                 const peruntukan = peruntukanAhli(a)
                 const petaBulan = {}
                 peruntukan.bulanList.forEach((b) => { petaBulan[b.bulan] = b })
+                // Baris "Lunas" - latar hijau lembut SELURUH baris (macam
+                // ucapan tahniah visual) bila ahli dah bayar PENUH. Sel
+                // "melekat" (Bil/Nama) perlu latar SENDIRI (bukan sekadar
+                // <tr>) - elak lubang telus semasa skrol mendatar.
+                const gayaLunas = peruntukan.lengkapPenuh ? { backgroundColor: '#E1F5EE' } : undefined
                 return (
-                  <tr key={a.id} className={bolehUrus ? 'cursor-pointer hover:bg-base' : ''} onClick={() => bolehUrus && setAhliBayar(a)}>
-                    <td className="sticky z-10 bg-surface text-center px-1 py-2 border-r border-border" style={{ left: KIRI.bil, width: LEBAR.bil }}>{i + 1}</td>
-                    <td className="sticky z-10 bg-surface px-2 py-2 border-r border-border whitespace-nowrap font-medium text-ink" style={{ left: KIRI.nama, width: LEBAR.nama }}>{a.nama}</td>
+                  <tr key={a.id} className={bolehUrus ? 'cursor-pointer hover:brightness-95' : ''} style={gayaLunas} onClick={() => bolehUrus && setAhliBayar(a)}>
+                    <td className="sticky z-10 text-center px-1 py-2 border-r border-border" style={{ left: KIRI.bil, width: LEBAR.bil, ...(gayaLunas ?? { backgroundColor: '#ffffff' }) }}>{i + 1}</td>
+                    <td className="sticky z-10 px-2 py-2 border-r border-border whitespace-nowrap font-medium text-ink" style={{ left: KIRI.nama, width: LEBAR.nama, ...(gayaLunas ?? { backgroundColor: '#ffffff' }) }}>
+                      {a.nama}
+                      {peruntukan.lengkapPenuh && <span className="ml-1.5 text-[10px] font-bold" style={{ color: '#0F6E56' }}>🎉 Lunas</span>}
+                    </td>
                     {senaraiBulan.map((b) => {
                       const info = petaBulan[b]
                       if (!info) return <td key={b} className="text-center px-1 py-2 text-inkmuted" style={{ width: LEBAR.bulan }}>-</td>

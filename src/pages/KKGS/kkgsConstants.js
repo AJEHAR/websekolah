@@ -51,6 +51,19 @@ export function labelStatusKeahlian(nilai) {
   return STATUS_KEAHLIAN.find((s) => s.nilai === nilai)?.label ?? nilai
 }
 
+// Senarai Jenis Imbuhan KKGS - jumlah TETAP setiap jenis (bukan staff
+// taip jumlah sendiri macam Resit) - diambil dari surat pekeliling KKGS
+// yang dikongsi pengguna. BOLEH kemas kini di sini bila-bila (tambah/
+// buang/ubah jumlah) - senarai ni dikongsi seluruh sistem Claim.
+export const JENIS_IMBUHAN_KKGS = [
+  { label: 'Sakit masuk wad selama 3 hari', jumlah: 100 },
+  { label: 'Berkahwin kali pertama', jumlah: 50 },
+  { label: 'Kematian ahli keluarga terdekat', jumlah: 50 },
+  { label: 'Bersalin kali pertama di SKPK', jumlah: 100 },
+  { label: 'Pertukaran', jumlah: 100 },
+  { label: 'Bersara', jumlah: 100 },
+]
+
 // Nama 12 bulan kalendar (TETAP - Jan hingga Dis) - "bilanganBulan" (10-12)
 // tentukan berapa BANYAK bulan PERTAMA dikenakan yuran (cth. 10 = Jan-Okt
 // dikenakan, Nov-Dis dikecualikan) - disahkan dengan pengguna.

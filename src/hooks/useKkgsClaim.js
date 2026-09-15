@@ -72,11 +72,12 @@ export function useKkgsClaimSemua(aktif) {
   return { senarai, loading, muatSemula }
 }
 
-export async function hantarClaimKkgs({ tujuan, jumlah, resitUrl }, user) {
+export async function hantarClaimKkgs({ jenisClaim, ahliId, ahliNama, jenisImbuhan, tujuan, jumlah, resitUrl }, user) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await addDoc(collection(db, KOLEKSI), {
     pemohonUid: user.uid, pemohonNama: user.displayName ?? user.email, pemohonEmel: user.email,
-    tujuan: tujuan.trim(), jumlah: Number(jumlah), resitUrl: resitUrl ?? '',
+    jenisClaim: jenisClaim || 'resit', ahliId: ahliId ?? '', ahliNama: ahliNama ?? '', jenisImbuhan: jenisImbuhan ?? '',
+    tujuan: (tujuan ?? '').trim(), jumlah: Number(jumlah), resitUrl: resitUrl ?? '',
     status: 'menunggu', tarikhMohon: serverTimestamp(), tarikhKeputusan: null, catatanKeputusan: '',
   })
 }

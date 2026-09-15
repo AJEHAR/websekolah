@@ -3,6 +3,7 @@ import { Award, ArrowRight } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsAhliSenarai, kemaskiniAhliKkgs } from '../../hooks/useKkgsAhli.js'
 import { JAWATAN_KKGS, JAWATAN_SATU_ORANG, labelJawatan, adalahJawatankuasa } from './kkgsConstants.js'
+import DropdownCari from './DropdownCari.jsx'
 
 // Jawatankuasa - dropdown PILIH TERUS ikut jawatan (bukan senarai nama
 // lagi) - untuk jawatan SATU ORANG (Penasihat/Pengerusi/Naib
@@ -81,14 +82,14 @@ export default function JawatankuasaKKGS() {
           return (
             <div key={jawatan} className="flex items-center gap-3 p-3.5 rounded-card border border-border bg-surface">
               <p className="text-sm font-semibold text-ink w-40 shrink-0">{labelJawatan(jawatan)}</p>
-              <select
-                value={pemegang?.id ?? ''}
-                onChange={(e) => lantik(jawatan, e.target.value || null)}
-                className="flex-1 h-10 px-3 rounded-card border border-border bg-base text-sm"
-              >
-                <option value="">- Tiada -</option>
-                {senarai.map((a) => <option key={a.id} value={a.id}>{a.nama}</option>)}
-              </select>
+              <div className="flex-1">
+                <DropdownCari
+                  value={pemegang?.id ?? ''}
+                  onChange={(id) => lantik(jawatan, id || null)}
+                  pilihan={senarai.map((a) => ({ id: a.id, label: a.nama }))}
+                  placeholder="Pilih nama…"
+                />
+              </div>
             </div>
           )
         })}
