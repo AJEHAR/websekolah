@@ -38,38 +38,6 @@ export function useKkgsYuranTahun(tahun, aktif = true) {
   return { senarai, loading, muatSemula }
 }
 
-// PENTING: untuk staff BUKAN Jawatankuasa - peraturan Firestore TOLAK
-// query TANPA penapis ahliId (tak boleh "buktikan" setiap dokumen hasil
-// query patuh peraturan baca). Query ni TAPIS di PERINGKAT QUERY (bukan
-// klien) - satu-satunya cara staff biasa boleh baca rekod SENDIRI sahaja
-// tanpa ralat kebenaran.
-export function useKkgsYuranAhliTahun(ahliId, tahun) {
-  const [senarai, setSenarai] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const muatSemula = useCallback(async () => {
-    if (!isFirebaseConfigured || !ahliId || !tahun) {
-      setSenarai([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    try {
-      const q = query(collection(db, KOLEKSI), where('ahliId', '==', ahliId), where('tahun', '==', Number(tahun)), orderBy('tarikh', 'desc'))
-      const snap = await getDocs(q)
-      setSenarai(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    } finally {
-      setLoading(false)
-    }
-  }, [ahliId, tahun])
-
-  useEffect(() => {
-    muatSemula()
-  }, [muatSemula])
-
-  return { senarai, loading, muatSemula }
-}
-
 export function useKkgsYuranAhli(ahliId) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)

@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, Trash2, X } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
-import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsKewanganSenarai, tambahKewanganKkgs, padamKewanganKkgs } from '../../hooks/useKkgsKewangan.js'
-import { adalahJawatankuasaSaya } from './kkgsConstants.js'
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -77,11 +76,11 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
 export default function KewanganKKGS() {
   const { user } = useOutletContext()
   const { konfirm } = useDialog()
-  const { senarai: senaraiAhli } = useKkgsAhliSenarai()
+  const { adaSeksyen } = useIsAdmin(user)
   const { senarai, loading, muatSemula } = useKkgsKewanganSenarai()
   const [tunjukForm, setTunjukForm] = useState(false)
 
-  const sayaJawatankuasa = adalahJawatankuasaSaya(senaraiAhli, user.email)
+  const sayaJawatankuasa = adaSeksyen('kkgs')
 
   const jumlahMasuk = senarai.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
   const jumlahKeluar = senarai.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)

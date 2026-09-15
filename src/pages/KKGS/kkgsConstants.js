@@ -13,9 +13,11 @@ export const JAWATAN_KKGS = [
 ]
 
 // Sesiapa dengan jawatan LAIN daripada "Ahli" dianggap Jawatankuasa -
-// kebenaran urus Kewangan/Yuran/luluskan Claim ditentukan oleh status ni
-// (bukan peranan admin berasingan) - lihat firestore.rules
-// isJawatankuasaKKGS().
+// label/paparan SAHAJA (untuk page Jawatankuasa). PENTING: ini BUKAN
+// asas kebenaran sistem - kebenaran urus (Yuran/Kewangan/Claim/Senarai
+// Ahli) guna peranan admin BIASA (isAdminSeksyen('kkgs') di
+// firestore.rules, useIsAdmin(user).adaSeksyen('kkgs') di klien) - sama
+// corak macam KURI/HEM/KOKU, dilantik melalui Panel Admin.
 export function adalahJawatankuasa(jawatan) {
   return Boolean(jawatan) && jawatan !== 'Ahli'
 }
@@ -33,18 +35,6 @@ export const STATUS_KEAHLIAN = [
 
 export function labelStatusKeahlian(nilai) {
   return STATUS_KEAHLIAN.find((s) => s.nilai === nilai)?.label ?? nilai
-}
-
-// Semak client-side sama ada pengguna semasa Jawatankuasa - guna
-// SENARAI yang dah dimuatkan (bukan panggilan Firestore berasingan),
-// padan ikut emel (bukan huruf besar/kecil). Corak ni MESTI sepadan
-// dengan isJawatankuasaKKGS() dalam firestore.rules - kalau ubah logik
-// sini, ubah sekali di rules.
-export function adalahJawatankuasaSaya(senaraiAhli, emelPengguna) {
-  if (!emelPengguna) return false
-  const emel = emelPengguna.trim().toLowerCase()
-  const ahli = senaraiAhli.find((a) => (a.emel ?? '').trim().toLowerCase() === emel)
-  return adalahJawatankuasa(ahli?.jawatan)
 }
 
 // Nama 12 bulan kalendar (TETAP - Jan hingga Dis) - "bilanganBulan" (10-12)

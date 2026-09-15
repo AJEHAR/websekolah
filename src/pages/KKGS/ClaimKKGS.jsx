@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, X, Upload, Check, X as XIcon } from 'lucide-react'
-import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsClaimSaya, useKkgsClaimSemua, hantarClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
-import { adalahJawatankuasaSaya } from './kkgsConstants.js'
 
 const WARNA_STATUS = {
   menunggu: { bg: '#FCEFC7', teks: '#8A6D00', label: 'Menunggu' },
@@ -83,8 +82,8 @@ function ModalHantarClaim({ open, onTutup, onSelesai, user }) {
 
 export default function ClaimKKGS() {
   const { user } = useOutletContext()
-  const { senarai: senaraiAhli } = useKkgsAhliSenarai()
-  const sayaJawatankuasa = adalahJawatankuasaSaya(senaraiAhli, user.email)
+  const { adaSeksyen } = useIsAdmin(user)
+  const sayaJawatankuasa = adaSeksyen('kkgs')
 
   const { senarai: claimSaya, loading: loadingSaya, muatSemula: muatSemulaSaya } = useKkgsClaimSaya(user.uid)
   const { senarai: claimSemua, loading: loadingSemua, muatSemula: muatSemulaSemua } = useKkgsClaimSemua(sayaJawatankuasa)

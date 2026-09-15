@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDocs, serverTimestamp, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
-import { emelKeDocId } from '../lib/emelUtils.js'
 
 const KOLEKSI = 'kkgsAhli'
 
-// Senarai Ahli KKGS - ID DOKUMEN = emel ahli (dinormalkan, sama corak
-// dengan koleksi admins/) - PENTING supaya firestore.rules boleh SEMAK
-// TERUS (get() satu dokumen) sama ada pengguna semasa Jawatankuasa,
-// tanpa perlu query - lihat isJawatankuasaKKGS() dalam firestore.rules.
+// Senarai Ahli KKGS - ID dokumen AUTO-JANA (bukan berasaskan emel lagi -
+// kebenaran KKGS kini guna model admin BIASA (isAdminSeksyen('kkgs') di
+// firestore.rules), BUKAN padanan emel dalam senarai ahli. Medan "emel"
+// kekal PILIHAN sekadar rujukan/maklumat, tiada kesan fungsi/kebenaran.
 export function useKkgsAhliSenarai() {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)
@@ -37,17 +36,15 @@ export function useKkgsAhliSenarai() {
   return { senarai, loading, muatSemula }
 }
 
-export async function tambahAhliKkgs({ nama, emel, jawatan, statusKeahlian }, uid) {
+export async function tambahAhliKkgs({ nama, emel, jawatan, statusKeahlian, bulanMula, bulanTamat }, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
-  const docId = emel ? emelKeDocId(emel) : doc(collection(db, KOLEKSI)).id
-  const rujukan = doc(db, KOLEKSI, docId)
-  const sediaAda = await getDoc(rujukan)
-  if (sediaAda.exists()) throw new Error('Ahli dengan emel ni dah wujud dalam senarai.')
+  const rujukan = doc(collection(db, KOLEKSI))
   await setDoc(rujukan, {
     nama: nama.trim(), emel: emel?.trim().toLowerCase() ?? '', jawatan: jawatan || 'Ahli', statusKeahlian: statusKeahlian || 'aktif',
+    bulanMula: bulanMula ?? 1, bulanTamat: bulanTamat ?? 12,
     createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: uid,
   })
-  return docId
+  return rujukan.id
 }
 
 export async function kemaskiniAhliKkgs(id, data, uid) {
@@ -60,12 +57,36 @@ export async function padamAhliKkgs(id) {
   await deleteDoc(doc(db, KOLEKSI, id))
 }
 
-// Import pukal nama sahaja (ringkas, ikut keputusan pengguna) - ahli
-// baharu semua lalai jawatan="Ahli" & statusKeahlian="aktif", TIADA emel
-// (staff isi emel/jawatan satu-satu kemudian dalam borang edit - tanpa
-// emel, akaun tu TAK dapat kelayakan Jawatankuasa automatik walau
-// jawatan ditukar, sehingga emel diisi). Nama pendua (dengan ahli sedia
-// ada) dilangkau, bukan cipta rekod kembar.
+// Padam PUKAL - had 500 setiap batch (had Firestore sendiri), dipecah
+// automatik kalau lebih.
+export async function padamAhliPukalKkgs(idSenarai) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  const kepingan = []
+  for (let i = 0; i < idSenarai.length; i += 450) kepingan.push(idSenarai.slice(i, i + 450))
+  for (const keping of kepingan) {
+    const batch = writeBatch(db)
+    keping.forEach((id) => batch.delete(doc(db, KOLEKSI, id)))
+    await batch.commit()
+  }
+}
+
+// Kemaskini PUKAL - untuk tetapkan Bulan Mula/Tamat (atau medan lain)
+// kepada BERBILANG ahli serentak (cth. semua ahli baharu sertai Jun).
+export async function kemaskiniAhliPukalKkgs(idSenarai, data, uid) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  const kepingan = []
+  for (let i = 0; i < idSenarai.length; i += 450) kepingan.push(idSenarai.slice(i, i + 450))
+  for (const keping of kepingan) {
+    const batch = writeBatch(db)
+    keping.forEach((id) => batch.update(doc(db, KOLEKSI, id), { ...data, updatedAt: serverTimestamp(), updatedBy: uid }))
+    await batch.commit()
+  }
+}
+
+// Import pukal nama sahaja (ringkas) - ahli baharu semua lalai
+// jawatan="Ahli", statusKeahlian="aktif", bulanMula=1, bulanTamat=12.
+// Nama pendua (dengan ahli sedia ada) dilangkau, bukan cipta rekod
+// kembar.
 export async function importNamaPukalKkgs(senaraiNama, senaraiSediaAda, uid) {
   const namaSediaAda = new Set(senaraiSediaAda.map((a) => a.nama.trim().toLowerCase()))
   let ditambah = 0
@@ -79,7 +100,7 @@ export async function importNamaPukalKkgs(senaraiNama, senaraiSediaAda, uid) {
     }
     const rujukan = doc(collection(db, KOLEKSI))
     await setDoc(rujukan, {
-      nama: namaBersih, emel: '', jawatan: 'Ahli', statusKeahlian: 'aktif',
+      nama: namaBersih, emel: '', jawatan: 'Ahli', statusKeahlian: 'aktif', bulanMula: 1, bulanTamat: 12,
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: uid,
     })
     namaSediaAda.add(namaBersih.toLowerCase())
