@@ -56,12 +56,12 @@ export function labelStatusKeahlian(nilai) {
 // yang dikongsi pengguna. BOLEH kemas kini di sini bila-bila (tambah/
 // buang/ubah jumlah) - senarai ni dikongsi seluruh sistem Claim.
 export const JENIS_IMBUHAN_KKGS = [
-  { label: 'Sakit masuk wad selama 3 hari', jumlah: 100 },
-  { label: 'Berkahwin kali pertama', jumlah: 50 },
-  { label: 'Kematian ahli keluarga terdekat', jumlah: 50 },
-  { label: 'Bersalin kali pertama di SKPK', jumlah: 100 },
-  { label: 'Pertukaran', jumlah: 100 },
-  { label: 'Bersara', jumlah: 100 },
+  { label: 'Sakit masuk wad (3 hari)', jumlah: 30, keterangan: 'Kemasukan wad tahun semasa sahaja (tidak termasuk tahun-tahun lepas).' },
+  { label: 'Kahwin Kali Pertama', jumlah: 100, keterangan: 'Mana-mana perkahwinan PERTAMA anda semasa menjadi ahli KKGS SKPK.' },
+  { label: 'Kematian Ahli Keluarga Terdekat', jumlah: 50, keterangan: 'Ahli keluarga terdekat bermaksud: Ibu, Bapa, Adik-beradik, Suami/Isteri, atau Anak.' },
+  { label: 'Bersalin Kali Pertama', jumlah: 50, keterangan: 'Kelahiran anak PERTAMA (lelaki atau perempuan bersalin) semasa berada/berkhidmat di SKPK.' },
+  { label: 'Pertukaran', jumlah: 100, keterangan: 'Pertukaran rasmi keluar dari SKPK.' },
+  { label: 'Bersara', jumlah: 100, keterangan: 'Persaraan rasmi daripada perkhidmatan.' },
 ]
 
 // Nama 12 bulan kalendar (TETAP - Jan hingga Dis) - "bilanganBulan" (10-12)

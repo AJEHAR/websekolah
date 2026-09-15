@@ -39,9 +39,9 @@ export default function DropdownCari({ value, onChange, pilihan, placeholder = '
       <button
         type="button"
         onClick={() => setBuka((b) => !b)}
-        className="w-full h-10 px-3 rounded-card border border-border bg-base text-sm flex items-center justify-between gap-2 text-left"
+        className="w-full min-h-[42px] px-3 py-2 rounded-card border border-border bg-base text-sm flex items-center justify-between gap-2 text-left"
       >
-        <span className={dipilih ? 'text-ink truncate' : 'text-inkmuted truncate'}>{dipilih ? dipilih.label : placeholder}</span>
+        <span className={`${dipilih ? 'text-ink' : 'text-inkmuted'} whitespace-normal break-words leading-snug`}>{dipilih ? dipilih.label : placeholder}</span>
         <ChevronDown size={14} className="text-inkmuted shrink-0" />
       </button>
 
