@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { addDoc, collection, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'kkgsClaim'
@@ -41,10 +41,8 @@ export function useKkgsClaimSaya(uid) {
   return { senarai, loading, muatSemula }
 }
 
-// SEMUA tuntutan - HANYA untuk Jawatankuasa semak/luluskan (firestore.rules
-// sekat baca rekod orang lain untuk staff biasa - panggilan ni akan gagal
-// senyap/pulangkan kosong kalau bukan Jawatankuasa, UI kekal jangan
-// panggil fungsi ni melainkan disahkan Jawatankuasa dulu).
+// SEMUA tuntutan - kini terbuka kepada SEMUA staff diluluskan (telus,
+// atas permintaan pengguna - lihat firestore.rules kkgsClaim).
 export function useKkgsClaimSemua(aktif) {
   const [senarai, setSenarai] = useState([])
   const [loading, setLoading] = useState(true)
@@ -88,4 +86,17 @@ export async function putuskanClaimKkgs(id, { status, catatanKeputusan }, uid) {
   await updateDoc(doc(db, KOLEKSI, id), {
     status, catatanKeputusan: catatanKeputusan?.trim() ?? '', tarikhKeputusan: serverTimestamp(), diputuskanOleh: uid,
   })
+}
+
+// Edit tuntutan - HANYA dibenarkan (firestore.rules) bila status MASIH
+// "menunggu" (belum diputuskan) - elak ubah rekod yang dah termaktub
+// dalam Ledger/Kewangan selepas diluluskan (integriti kewangan).
+export async function kemaskiniClaimKkgs(id, data) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  await updateDoc(doc(db, KOLEKSI, id), data)
+}
+
+export async function padamClaimKkgs(id) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  await deleteDoc(doc(db, KOLEKSI, id))
 }

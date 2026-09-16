@@ -8,10 +8,10 @@ function tarikhHariIni() {
 // Laporan Kewangan KKGS - ringkasan boleh cetak, TAHUN PENUH atau SATU
 // BULAN sahaja (tapisan dibuat SEBELUM hantar ke komponen ni - senarai
 // yang diterima dah tepat skop period diminta).
-export default function LaporanKewanganKKGS({ transaksi, tahun, bulan }) {
+export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerkumpul }) {
   const jumlahMasuk = transaksi.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
   const jumlahKeluar = transaksi.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
-  const baki = jumlahMasuk - jumlahKeluar
+  const bakiBersihTempoh = jumlahMasuk - jumlahKeluar
 
   const kategoriMap = {}
   transaksi.forEach((t) => {
@@ -32,7 +32,7 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan }) {
           <p className="text-xs font-semibold mt-1">Bagi Tempoh: {tajukPeriod}</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-3">
           <div className="border border-black p-3 text-center">
             <p className="text-[10px] text-gray-600">Jumlah Masuk</p>
             <p className="text-base font-bold">RM {jumlahMasuk.toFixed(2)}</p>
@@ -42,10 +42,16 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan }) {
             <p className="text-base font-bold">RM {jumlahKeluar.toFixed(2)}</p>
           </div>
           <div className="border border-black p-3 text-center">
-            <p className="text-[10px] text-gray-600">Baki</p>
-            <p className="text-base font-bold">RM {baki.toFixed(2)}</p>
+            <p className="text-[10px] text-gray-600">Baki Bersih Tempoh Ini</p>
+            <p className="text-base font-bold">RM {bakiBersihTempoh.toFixed(2)}</p>
           </div>
         </div>
+        {bakiTerkumpul != null && (
+          <div className="border-2 border-black p-3 text-center mb-6 bg-gray-50">
+            <p className="text-[10px] text-gray-600">Baki Terkumpul Kelab (akhir tempoh ini, merentasi semua tahun)</p>
+            <p className="text-lg font-extrabold">RM {bakiTerkumpul.toFixed(2)}</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
@@ -68,7 +74,7 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan }) {
 
         <p className="text-xs font-bold mb-2">Senarai Transaksi Penuh</p>
         <table className="w-full border-collapse border border-black text-[10px] mb-8">
-          <thead>
+          <thead style={{ display: 'table-header-group' }}>
             <tr>
               <th className="border border-black p-1.5 bg-gray-100">Tarikh</th>
               <th className="border border-black p-1.5 bg-gray-100">Perkara</th>

@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useOutletContext, Link } from 'react-router-dom'
-import { Award, ArrowRight } from 'lucide-react'
+import { Award, ArrowRight, Search, X } from 'lucide-react'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
-import { useKkgsAhliSenarai, kemaskiniAhliKkgs } from '../../hooks/useKkgsAhli.js'
+import { useKkgsAhliSenarai, lantikJawatanAtomicKkgs, kemaskiniAhliKkgs } from '../../hooks/useKkgsAhli.js'
 import { JAWATAN_KKGS, JAWATAN_SATU_ORANG, labelJawatan, adalahJawatankuasa } from './kkgsConstants.js'
 import DropdownCari from './DropdownCari.jsx'
 
@@ -16,18 +17,15 @@ export default function JawatankuasaKKGS() {
   const { adaSeksyen } = useIsAdmin(user)
   const bolehUrus = adaSeksyen('kkgs')
   const { senarai, loading, muatSemula } = useKkgsAhliSenarai()
+  const [carianAjk, setCarianAjk] = useState('')
 
   const jawatanSatuOrang = JAWATAN_KKGS.filter((j) => JAWATAN_SATU_ORANG.includes(j))
   const ajkSemasa = senarai.filter((a) => a.jawatan === 'AJK KKGS')
+  const senaraiAjkDitapis = senarai.filter((a) => a.nama.toLowerCase().includes(carianAjk.toLowerCase()))
 
   async function lantik(jawatan, ahliIdBaharu) {
     const pemegangLama = senarai.find((a) => a.jawatan === jawatan)
-    if (pemegangLama && pemegangLama.id !== ahliIdBaharu) {
-      await kemaskiniAhliKkgs(pemegangLama.id, { jawatan: 'Ahli' }, user.uid)
-    }
-    if (ahliIdBaharu) {
-      await kemaskiniAhliKkgs(ahliIdBaharu, { jawatan }, user.uid)
-    }
+    await lantikJawatanAtomicKkgs({ idPemegangLama: pemegangLama?.id ?? null, idBaharu: ahliIdBaharu, jawatan }, user.uid)
     muatSemula()
   }
 
@@ -97,20 +95,31 @@ export default function JawatankuasaKKGS() {
       </div>
 
       <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">AJK KKGS (boleh lebih dari seorang)</p>
+      <div className="relative mb-2">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-inkmuted" />
+        <input type="text" value={carianAjk} onChange={(e) => setCarianAjk(e.target.value)} placeholder="Cari nama…" className="w-full h-10 pl-8 pr-8 rounded-card border border-border bg-surface text-sm" />
+        {carianAjk && (
+          <button onClick={() => setCarianAjk('')} aria-label="Kosongkan carian" className="absolute right-3 top-1/2 -translate-y-1/2 text-inkmuted"><X size={13} /></button>
+        )}
+      </div>
       <div className="rounded-card border border-border bg-surface divide-y divide-border max-h-80 overflow-y-auto">
-        {senarai.map((a) => (
-          <label key={a.id} className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={a.jawatan === 'AJK KKGS'}
-              disabled={JAWATAN_SATU_ORANG.includes(a.jawatan)}
-              onChange={(e) => togolAjk(a, e.target.checked)}
-              className="h-4 w-4 shrink-0"
-            />
-            <span className="text-ink flex-1">{a.nama}</span>
-            {JAWATAN_SATU_ORANG.includes(a.jawatan) && <span className="text-[10px] text-inkmuted shrink-0">{labelJawatan(a.jawatan)}</span>}
-          </label>
-        ))}
+        {senaraiAjkDitapis.length === 0 ? (
+          <p className="px-3.5 py-3 text-xs text-inkmuted">Tiada padanan carian.</p>
+        ) : (
+          senaraiAjkDitapis.map((a) => (
+            <label key={a.id} className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={a.jawatan === 'AJK KKGS'}
+                disabled={JAWATAN_SATU_ORANG.includes(a.jawatan)}
+                onChange={(e) => togolAjk(a, e.target.checked)}
+                className="h-4 w-4 shrink-0"
+              />
+              <span className="text-ink flex-1">{a.nama}</span>
+              {JAWATAN_SATU_ORANG.includes(a.jawatan) && <span className="text-[10px] text-inkmuted shrink-0">{labelJawatan(a.jawatan)}</span>}
+            </label>
+          ))
+        )}
       </div>
       {ajkSemasa.length === 0 && <p className="text-xs text-inkmuted mt-2">Belum ada AJK dilantik.</p>}
 

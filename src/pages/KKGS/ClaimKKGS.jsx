@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, X, Upload, Check, X as XIcon } from 'lucide-react'
+import { Plus, X, Upload, Check, X as XIcon, Pencil, Trash2 } from 'lucide-react'
+import { useDialog } from '../../context/DialogContext.jsx'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
-import { useKkgsClaimSemua, hantarClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
+import { useKkgsClaimSemua, hantarClaimKkgs, kemaskiniClaimKkgs, padamClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { JENIS_IMBUHAN_KKGS } from './kkgsConstants.js'
@@ -25,25 +26,30 @@ function BadgeStatus({ status }) {
   return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.teks }}>{w.label}</span>
 }
 
-// Borang hantar - reka bentuk BERBEZA ikut tab (bukan togol dalam SATU
-// borang lagi) - tab tentukan jenisClaim terus, staff nampak medan
-// relevan sahaja untuk tab tu.
-function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
-  const [ahliId, setAhliId] = useState('')
-  const [jenisImbuhan, setJenisImbuhan] = useState('')
-  const [tujuan, setTujuan] = useState('')
-  const [jumlah, setJumlah] = useState('')
-  const [catatan, setCatatan] = useState('')
+// Borang hantar/edit - reka bentuk BERBEZA ikut tab (bukan togol dalam
+// SATU borang lagi) - tab tentukan jenisClaim terus, staff nampak medan
+// relevan sahaja untuk tab tu. editData (pilihan) - kalau diisi, borang
+// jadi mod EDIT (pra-isi medan + kemaskini rekod sedia ada, bukan cipta
+// baharu).
+function ModalHantar({ open, jenis, senaraiAhli, editData, onTutup, onSelesai, user }) {
+  const [ahliId, setAhliId] = useState(editData?.ahliId ?? '')
+  const [jenisImbuhan, setJenisImbuhan] = useState(editData?.jenisImbuhan ?? '')
+  const [tujuan, setTujuan] = useState(editData?.tujuan ?? '')
+  const [jumlah, setJumlah] = useState(editData?.jumlah ?? '')
+  const [catatan, setCatatan] = useState(editData?.jenisClaim === 'sumbangan' ? (editData?.tujuan ?? '') : '')
   const [fail, setFail] = useState(null)
-  const [arahSumbangan, setArahSumbangan] = useState('masuk') // 'masuk' | 'keluar'
-  const [kepadaSiapa, setKepadaSiapa] = useState('')
+  const [arahSumbangan, setArahSumbangan] = useState(editData?.arahSumbangan || 'masuk') // 'masuk' | 'keluar'
+  const [kepadaSiapa, setKepadaSiapa] = useState(editData?.kepadaSiapa ?? '')
   const [menghantar, setMenghantar] = useState(false)
   const [ralat, setRalat] = useState(null)
 
   if (!open) return null
 
+  const modEdit = Boolean(editData)
   const imbuhanDipilih = JENIS_IMBUHAN_KKGS.find((j) => j.label === jenisImbuhan)
-  const tajuk = jenis === 'imbuhan' ? 'Hantar Claim (Imbuhan)' : jenis === 'resit' ? 'Hantar Tuntutan Resit' : 'Rekod Sumbangan'
+  const tajuk = modEdit
+    ? 'Edit Rekod'
+    : jenis === 'imbuhan' ? 'Hantar Claim (Imbuhan)' : jenis === 'resit' ? 'Hantar Tuntutan Resit' : 'Rekod Sumbangan'
 
   async function hantar() {
     setRalat(null)
@@ -59,28 +65,36 @@ function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
     }
     setMenghantar(true)
     try {
-      let resitUrl = ''
+      let resitUrl = editData?.resitUrl ?? ''
       if (fail) {
         const hasil = await muatNaikKeDrive(fail, 'kkgs')
         resitUrl = hasil.url
       }
+
+      let dataUntukSimpan
       if (jenis === 'imbuhan') {
         const ahli = senaraiAhli.find((a) => a.id === ahliId)
-        await hantarClaimKkgs({ jenisClaim: 'imbuhan', ahliId, ahliNama: ahli.nama, jenisImbuhan: imbuhanDipilih.label, jumlah: imbuhanDipilih.jumlah, resitUrl }, user)
+        dataUntukSimpan = { jenisClaim: 'imbuhan', ahliId, ahliNama: ahli.nama, jenisImbuhan: imbuhanDipilih.label, jumlah: imbuhanDipilih.jumlah, resitUrl }
       } else if (jenis === 'resit') {
-        await hantarClaimKkgs({ jenisClaim: 'resit', tujuan, jumlah, resitUrl }, user)
+        dataUntukSimpan = { jenisClaim: 'resit', tujuan: tujuan.trim(), jumlah: Number(jumlah), resitUrl }
       } else {
         const ahli = senaraiAhli.find((a) => a.id === ahliId)
-        await hantarClaimKkgs({
+        dataUntukSimpan = {
           jenisClaim: 'sumbangan', arahSumbangan, ahliId, ahliNama: ahli.nama,
-          kepadaSiapa: arahSumbangan === 'masuk' ? kepadaSiapa : '', tujuan: catatan, jumlah, resitUrl,
-        }, user)
+          kepadaSiapa: arahSumbangan === 'masuk' ? kepadaSiapa : '', tujuan: catatan.trim(), jumlah: Number(jumlah), resitUrl,
+        }
+      }
+
+      if (modEdit) {
+        await kemaskiniClaimKkgs(editData.id, dataUntukSimpan)
+      } else {
+        await hantarClaimKkgs(dataUntukSimpan, user)
       }
       setAhliId(''); setJenisImbuhan(''); setTujuan(''); setJumlah(''); setCatatan(''); setKepadaSiapa(''); setFail(null)
       onSelesai()
       onTutup()
     } catch (err) {
-      setRalat(err.message || 'Gagal hantar.')
+      setRalat(err.message || 'Gagal simpan.')
     } finally {
       setMenghantar(false)
     }
@@ -187,7 +201,7 @@ function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
 
         {ralat && <p className="text-xs text-brand-red mt-3">{ralat}</p>}
         <button onClick={hantar} disabled={menghantar} className="w-full h-11 mt-4 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
-          {menghantar ? 'Menghantar…' : jenis === 'sumbangan' ? 'Rekod Sumbangan' : 'Hantar Tuntutan'}
+          {menghantar ? 'Menyimpan…' : modEdit ? 'Simpan Perubahan' : jenis === 'sumbangan' ? 'Rekod Sumbangan' : 'Hantar Tuntutan'}
         </button>
       </div>
     </div>
@@ -196,6 +210,7 @@ function ModalHantar({ open, jenis, senaraiAhli, onTutup, onSelesai, user }) {
 
 export default function ClaimKKGS() {
   const { user } = useOutletContext()
+  const { konfirm } = useDialog()
   const { adaSeksyen } = useIsAdmin(user)
   const sayaJawatankuasa = adaSeksyen('kkgs')
   const { senarai: senaraiAhli } = useKkgsAhliSenarai()
@@ -206,6 +221,7 @@ export default function ClaimKKGS() {
   // Butang lulus/tolak kekal admin SAHAJA (papar bersyarat di bawah).
   const { senarai: claimSemua, loading, muatSemula: muatSemulaSemua } = useKkgsClaimSemua(true)
   const [tunjukForm, setTunjukForm] = useState(false)
+  const [claimEdit, setClaimEdit] = useState(null)
 
   const senaraiPenuh = claimSemua
   const senaraiPapar = senaraiPenuh.filter((c) => (c.jenisClaim || 'resit') === tab)
@@ -217,6 +233,33 @@ export default function ClaimKKGS() {
   async function putuskan(claim, status) {
     await putuskanClaimKkgs(claim.id, { status, catatanKeputusan: '' }, user.uid)
     muatSemulaSemuanya()
+  }
+
+  // Edit/Padam DIBENARKAN (padan firestore.rules) untuk: admin KKGS BILA-
+  // BILA, ATAU pemohon sendiri HANYA semasa status masih "menunggu" (elak
+  // ubah rekod selepas diluluskan - dah termaktub dalam Ledger).
+  function bolehEditPadam(c) {
+    return sayaJawatankuasa || (c.pemohonUid === user.uid && c.status === 'menunggu')
+  }
+
+  async function padam(c) {
+    const amaran = c.status === 'diluluskan'
+      ? `⚠️ Rekod ni DAH DILULUSKAN dan termaktub dalam Ledger/Kewangan. Padam akan UBAH jumlah kewangan lama secara senyap. Teruskan?`
+      : 'Padam rekod ni? Tindakan tak boleh dibatalkan.'
+    if (!(await konfirm(amaran, { bahaya: true }))) return
+    await padamClaimKkgs(c.id)
+    muatSemulaSemuanya()
+  }
+
+  function editKlik(c) {
+    if (c.status === 'diluluskan') {
+      konfirm(`⚠️ Rekod ni DAH DILULUSKAN dan termaktub dalam Ledger/Kewangan. Ubah akan UBAH jumlah kewangan lama secara senyap. Teruskan edit?`, { bahaya: true }).then((ok) => {
+        if (ok) { setClaimEdit(c); setTunjukForm(true) }
+      })
+    } else {
+      setClaimEdit(c)
+      setTunjukForm(true)
+    }
   }
 
   return (
@@ -249,7 +292,7 @@ export default function ClaimKKGS() {
 
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs text-inkmuted">Semua rekod staff - telus untuk semua ahli. {sayaJawatankuasa && 'Anda boleh lulus/tandakan selesai.'}</p>
-        <button onClick={() => setTunjukForm(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold shrink-0">
+        <button onClick={() => { setClaimEdit(null); setTunjukForm(true) }} className="flex items-center gap-1.5 h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold shrink-0">
           <Plus size={14} /> {tab === 'sumbangan' ? 'Rekod Baharu' : 'Tuntutan Baharu'}
         </button>
       </div>
@@ -298,12 +341,31 @@ export default function ClaimKKGS() {
                   </button>
                 </div>
               )}
+              {bolehEditPadam(c) && (
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => editKlik(c)} className="flex-1 h-8 rounded-card border border-border text-xs font-semibold text-ink flex items-center justify-center gap-1">
+                    <Pencil size={12} /> Edit
+                  </button>
+                  <button onClick={() => padam(c)} className="flex-1 h-8 rounded-card border border-brand-red text-brand-red text-xs font-semibold flex items-center justify-center gap-1">
+                    <Trash2 size={12} /> Padam
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      <ModalHantar key={tab} open={tunjukForm} jenis={tab} senaraiAhli={senaraiAhli} onTutup={() => setTunjukForm(false)} onSelesai={muatSemulaSemuanya} user={user} />
+      <ModalHantar
+        key={claimEdit?.id ?? tab}
+        open={tunjukForm}
+        jenis={tab}
+        senaraiAhli={senaraiAhli}
+        editData={claimEdit}
+        onTutup={() => { setTunjukForm(false); setClaimEdit(null) }}
+        onSelesai={muatSemulaSemuanya}
+        user={user}
+      />
     </div>
   )
 }

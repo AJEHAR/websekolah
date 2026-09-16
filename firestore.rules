@@ -406,8 +406,6 @@ service cloud.firestore {
     // ============================================================
 
     // Senarai Ahli - SEMUA staff boleh BACA (telus, macam senarai staff
-    // biasa). TULIS dikunci Jawatankuasa SAHAJA - elak staff biasa
-    // Senarai Ahli - SEMUA staff boleh BACA (telus, macam senarai staff
     // biasa, VIEW SAHAJA). TULIS dikunci admin seksyen 'kkgs' sahaja -
     // sama corak macam KategoriUBKS/PanitiaRPT (admin dilantik melalui
     // Panel Admin biasa, BUKAN padanan emel dalam senarai ahli lagi -
@@ -439,16 +437,26 @@ service cloud.firestore {
       allow write: if isAdminSeksyen('kkgs');
     }
 
+    // Tetapan Umum (Baki Pembukaan) - SEMUA staff boleh BACA (perlu papar
+    // Baki Terkumpul sebenar), admin 'kkgs' SAHAJA boleh TULIS.
+    match /kkgsTetapanUmum/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isAdminSeksyen('kkgs');
+    }
+
     // Claim KKGS - staff BOLEH CIPTA tuntutan SENDIRI sahaja (uid mesti
     // sepadan, guna Firebase Auth UID terus - BUKAN padanan kkgsAhli).
     // BACA - SEMUA staff diluluskan boleh lihat SEMUA tuntutan (telus,
     // atas permintaan - elak double-claim & pastikan keadilan ahli
-    // nampak siapa dapat apa). Admin 'kkgs' SAHAJA boleh kemaskini
-    // (lulus/tolak).
+    // nampak siapa dapat apa). KEMASKINI/PADAM - admin 'kkgs' BOLEH
+    // BILA-BILA (lulus/tolak/edit/padam), PEMOHON SENDIRI boleh edit/
+    // padam tuntutan dia HANYA SEMASA status MASIH "menunggu" (elak
+    // pemohon ubah/padam rekod SELEPAS diluluskan - integriti kewangan,
+    // rekod tu dah termaktub dalam Ledger).
     match /kkgsClaim/{docId} {
       allow read: if isStaffDiluluskan();
       allow create: if isStaffDiluluskan() && request.resource.data.pemohonUid == request.auth.uid;
-      allow update: if isAdminSeksyen('kkgs');
+      allow update, delete: if isAdminSeksyen('kkgs') || (resource.data.status == 'menunggu' && resource.data.pemohonUid == request.auth.uid);
     }
   }
 }

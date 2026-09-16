@@ -46,35 +46,6 @@ export function useKkgsYuranTahun(tahun, aktif = true) {
   return { senarai, loading, muatSemula }
 }
 
-export function useKkgsYuranAhli(ahliId) {
-  const [senarai, setSenarai] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const muatSemula = useCallback(async () => {
-    if (!isFirebaseConfigured || !ahliId) {
-      setSenarai([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    try {
-      const q = query(collection(db, KOLEKSI), where('ahliId', '==', ahliId))
-      const snap = await getDocs(q)
-      const semua = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-      semua.sort((a, b) => (b.tarikh ?? '').localeCompare(a.tarikh ?? ''))
-      setSenarai(semua)
-    } finally {
-      setLoading(false)
-    }
-  }, [ahliId])
-
-  useEffect(() => {
-    muatSemula()
-  }, [muatSemula])
-
-  return { senarai, loading, muatSemula }
-}
-
 export async function tambahYuranKkgs({ ahliId, ahliNama, tarikh, jumlah, catatan }, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   const tahun = Number(tarikh.slice(0, 4)) // tahun DIAMBIL dari tarikh bayaran - pastikan peruntukan bulan kira tahun BETUL

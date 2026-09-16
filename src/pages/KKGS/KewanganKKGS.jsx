@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Trash2, X, Printer } from 'lucide-react'
+import { Plus, Trash2, Pencil, X, Printer, Settings } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
-import { useKkgsKewanganSenarai, tambahKewanganKkgs, padamKewanganKkgs } from '../../hooks/useKkgsKewangan.js'
-import { useKkgsLedger, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
+import { useKkgsKewanganSenarai, tambahKewanganKkgs, kemaskiniKewanganKkgs, padamKewanganKkgs } from '../../hooks/useKkgsKewangan.js'
+import { useKkgsLedger, kiraBakiTerkumpul, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
+import { useKkgsBakiPembukaan, simpanBakiPembukaan } from '../../hooks/useKkgsBakiPembukaan.js'
 import { useCetak } from '../../hooks/useCetak.js'
-import { NAMA_BULAN } from './kkgsConstants.js'
+import { NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA } from './kkgsConstants.js'
 import LaporanKewanganKKGS from './LaporanKewanganKKGS.jsx'
 
-const TAHUN_SEMASA = new Date().getFullYear()
-const PILIHAN_TAHUN = [TAHUN_SEMASA - 2, TAHUN_SEMASA - 1, TAHUN_SEMASA, TAHUN_SEMASA + 1]
 const TAB = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'bukutunai', label: 'Buku Tunai' },
@@ -33,17 +32,24 @@ function labelSumber(sumber) {
   return 'Manual'
 }
 
-function ModalTransaksi({ open, onTutup, onSimpan }) {
-  const [tarikh, setTarikh] = useState(todayISO())
-  const [perkara, setPerkara] = useState('')
-  const [jenis, setJenis] = useState('masuk')
-  const [kategori, setKategori] = useState(KATEGORI_KEWANGAN[0])
-  const [jumlah, setJumlah] = useState('')
-  const [catatan, setCatatan] = useState('')
+// editData (pilihan) - borang jadi mod EDIT kalau diisi (fix bug #6 -
+// Buku Tunai dulu tiada butang edit, cuma padam).
+function ModalTransaksi({ open, tahun, editData, onTutup, onSimpan }) {
+  const [tarikh, setTarikh] = useState(editData?.tarikh ?? todayISO())
+  const [perkara, setPerkara] = useState(editData?.perkara ?? '')
+  const [jenis, setJenis] = useState(editData?.jenis ?? 'masuk')
+  const [kategori, setKategori] = useState(editData?.kategori ?? KATEGORI_KEWANGAN[0])
+  const [jumlah, setJumlah] = useState(editData?.jumlah ?? '')
+  const [catatan, setCatatan] = useState(editData?.catatan ?? '')
   const [menyimpan, setMenyimpan] = useState(false)
   const [ralat, setRalat] = useState(null)
 
   if (!open) return null
+
+  const modEdit = Boolean(editData)
+  // Amaran (bug #2) - sama konsep dengan ModalBayar Yuran.
+  const tahunTarikh = tarikh ? Number(tarikh.slice(0, 4)) : null
+  const tahunTakSepadan = tahunTarikh && tahunTarikh !== tahun
 
   async function simpan() {
     if (!perkara.trim()) return setRalat('Sila isi perkara.')
@@ -64,7 +70,7 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-surface rounded-card w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-ink">Rekod Transaksi</h3>
+          <h3 className="text-sm font-bold text-ink">{modEdit ? 'Edit Transaksi' : 'Rekod Transaksi'}</h3>
           <button onClick={onTutup} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><X size={18} /></button>
         </div>
         <div className="space-y-3">
@@ -75,6 +81,11 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Tarikh</label>
             <input type="date" value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
+            {tahunTakSepadan && (
+              <p className="text-[11px] text-amber-700 bg-amber-50 rounded-card px-2.5 py-1.5 mt-1.5">
+                ⚠️ Tarikh ni tahun <strong>{tahunTarikh}</strong>, bukan <strong>{tahun}</strong> (tahun sedang dilihat). Transaksi TAK akan kelihatan dalam paparan {tahun} ni.
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Kategori</label>
@@ -97,6 +108,51 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
         </div>
         {ralat && <p className="text-xs text-brand-red mt-3">{ralat}</p>}
         <button onClick={simpan} disabled={menyimpan} className="w-full h-11 mt-4 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
+          {menyimpan ? 'Menyimpan…' : modEdit ? 'Simpan Perubahan' : 'Simpan'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ModalBakiPembukaan({ open, tetapan, onTutup, onSimpan }) {
+  const [bakiPembukaan, setBakiPembukaan] = useState(tetapan.bakiPembukaan)
+  const [tahunPembukaan, setTahunPembukaan] = useState(tetapan.tahunPembukaan)
+  const [menyimpan, setMenyimpan] = useState(false)
+
+  if (!open) return null
+
+  async function simpan() {
+    setMenyimpan(true)
+    try {
+      await onSimpan({ bakiPembukaan, tahunPembukaan })
+      onTutup()
+    } finally {
+      setMenyimpan(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="bg-surface rounded-card w-full max-w-sm p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-ink">Baki Pembukaan</h3>
+          <button onClick={onTutup} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><X size={18} /></button>
+        </div>
+        <p className="text-xs text-inkmuted mb-3">Jumlah wang kelab SEBELUM sistem ni mula jejak rekod (cth. baki dari buku tunai fizikal lama). Guna untuk kira Baki Terkumpul SEBENAR - bukan sekadar Masuk-Keluar satu tahun.</p>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-ink mb-1">Baki Pembukaan (RM)</label>
+            <input type="number" value={bakiPembukaan} onChange={(e) => setBakiPembukaan(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink mb-1">Berkuat Kuasa Mula Tahun</label>
+            <select value={tahunPembukaan} onChange={(e) => setTahunPembukaan(Number(e.target.value))} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
+              {PILIHAN_TAHUN_KKGS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+        <button onClick={simpan} disabled={menyimpan} className="w-full h-11 mt-4 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
           {menyimpan ? 'Menyimpan…' : 'Simpan'}
         </button>
       </div>
@@ -104,8 +160,6 @@ function ModalTransaksi({ open, onTutup, onSimpan }) {
   )
 }
 
-// Carta bar RINGKAS (CSS tulen, tiada pustaka luar) - trend Masuk/Keluar
-// setiap bulan tahun dipilih.
 function CartaBulanan({ transaksi }) {
   const dataBulan = Array.from({ length: 12 }, (_, i) => {
     const bulan = i + 1
@@ -146,13 +200,15 @@ export default function KewanganKKGS() {
   const [bulanLaporan, setBulanLaporan] = useState(0) // 0 = tahun penuh
 
   const { senarai: bukuTunaiSemua, loading: loadingBukuTunai, muatSemula: muatSemulaBukuTunai } = useKkgsKewanganSenarai()
-  const { transaksi: ledger, loading: loadingLedger, muatSemula: muatSemulaLedger } = useKkgsLedger(tahun, true)
+  // semuaTransaksi (SEMUA tahun) perlu untuk Baki Terkumpul (fix bug #1);
+  // transaksiTahun (satu tahun) untuk paparan Ledger/Laporan.
+  const { semuaTransaksi, transaksiTahun, loading: loadingLedger, muatSemula: muatSemulaLedger } = useKkgsLedger(tahun, true)
+  const { tetapan: tetapanBaki, loading: loadingBaki, muatSemula: muatSemulaBaki } = useKkgsBakiPembukaan()
   const [tunjukForm, setTunjukForm] = useState(false)
+  const [transaksiEdit, setTransaksiEdit] = useState(null)
+  const [tunjukTetapanBaki, setTunjukTetapanBaki] = useState(false)
   const [dataLaporan, setDataLaporan] = useCetak()
 
-  // Buku Tunai TAPIS ikut tahun dipilih juga - konsisten dengan 3 tab
-  // lain (dulu Buku Tunai papar SEMUA tahun serentak, tak konsisten
-  // dengan pemilih tahun yang staff dah pilih).
   const bukuTunai = bukuTunaiSemua.filter((t) => (t.tarikh ?? '').slice(0, 4) === String(tahun))
 
   async function muatSemulaSemua() {
@@ -161,8 +217,13 @@ export default function KewanganKKGS() {
   }
 
   async function simpan(data) {
-    await tambahKewanganKkgs(data, user.uid)
+    if (transaksiEdit) {
+      await kemaskiniKewanganKkgs(transaksiEdit.id, data, user.uid)
+    } else {
+      await tambahKewanganKkgs(data, user.uid)
+    }
     setTunjukForm(false)
+    setTransaksiEdit(null)
     muatSemulaSemua()
   }
 
@@ -172,18 +233,24 @@ export default function KewanganKKGS() {
     muatSemulaSemua()
   }
 
-  const ledgerTahun = ledger // sudah ditapis ikut tahun dalam hook
-  const jumlahMasukTahun = ledgerTahun.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
-  const jumlahKeluarTahun = ledgerTahun.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
-  const bakiTahun = jumlahMasukTahun - jumlahKeluarTahun
+  async function simpanTetapanBaki(data) {
+    await simpanBakiPembukaan(data, user.uid)
+    muatSemulaBaki()
+  }
+
+  const jumlahMasukTahun = transaksiTahun.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
+  const jumlahKeluarTahun = transaksiTahun.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
+  // Baki Terkumpul SEBENAR (fix bug #1) - baki pembukaan + semua tahun
+  // dari tahunPembukaan hingga tahun dipilih, BUKAN sekadar satu tahun.
+  const bakiTerkumpul = kiraBakiTerkumpul(semuaTransaksi, tahun, tetapanBaki.bakiPembukaan, tetapanBaki.tahunPembukaan)
 
   const bulanIni = new Date().getMonth() + 1
-  const masukBulanIni = ledgerTahun.filter((t) => t.jenis === 'masuk' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
-  const keluarBulanIni = ledgerTahun.filter((t) => t.jenis === 'keluar' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
+  const masukBulanIni = transaksiTahun.filter((t) => t.jenis === 'masuk' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
+  const keluarBulanIni = transaksiTahun.filter((t) => t.jenis === 'keluar' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
 
   function cetakLaporan() {
-    const transaksiTapis = bulanLaporan === 0 ? ledgerTahun : ledgerTahun.filter((t) => Number(t.tarikh.slice(5, 7)) === bulanLaporan)
-    setDataLaporan({ transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan })
+    const transaksiTapis = bulanLaporan === 0 ? transaksiTahun : transaksiTahun.filter((t) => Number(t.tarikh.slice(5, 7)) === bulanLaporan)
+    setDataLaporan({ transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan, bakiTerkumpul })
   }
 
   return (
@@ -196,18 +263,29 @@ export default function KewanganKKGS() {
         ))}
       </div>
 
-      <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="h-10 px-3 rounded-card border border-border bg-surface text-sm mb-4">
-        {PILIHAN_TAHUN.map((t) => <option key={t} value={t}>{t}{t === TAHUN_SEMASA ? ' (semasa)' : ''}</option>)}
-      </select>
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="h-10 px-3 rounded-card border border-border bg-surface text-sm">
+          {PILIHAN_TAHUN_KKGS.map((t) => <option key={t} value={t}>{t}{t === TAHUN_SEMASA ? ' (semasa)' : ''}</option>)}
+        </select>
+        {bolehUrus && tab === 'dashboard' && (
+          <button onClick={() => setTunjukTetapanBaki(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+            <Settings size={14} /> Baki Pembukaan
+          </button>
+        )}
+      </div>
 
       {/* ===== DASHBOARD ===== */}
       {tab === 'dashboard' && (
-        loadingLedger ? <p className="text-sm text-inkmuted">Memuatkan…</p> : (
+        (loadingLedger || loadingBaki) ? <p className="text-sm text-inkmuted">Memuatkan…</p> : (
           <div>
+            <div className="rounded-card border-2 border-ink bg-surface p-4 text-center mb-3">
+              <p className="text-xs text-inkmuted">Baki Terkumpul Kelab (akhir {tahun}, merentasi semua tahun)</p>
+              <p className="text-2xl font-extrabold text-ink">RM {bakiTerkumpul.toFixed(2)}</p>
+            </div>
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="rounded-card border border-border bg-surface p-3 text-center">
-                <p className="text-[10px] text-inkmuted">Baki {tahun}</p>
-                <p className="text-sm font-bold text-ink">RM {bakiTahun.toFixed(2)}</p>
+                <p className="text-[10px] text-inkmuted">Bersih {tahun}</p>
+                <p className="text-sm font-bold text-ink">RM {(jumlahMasukTahun - jumlahKeluarTahun).toFixed(2)}</p>
               </div>
               <div className="rounded-card border border-border bg-surface p-3 text-center">
                 <p className="text-[10px] text-inkmuted">Masuk Bulan Ini</p>
@@ -220,7 +298,7 @@ export default function KewanganKKGS() {
             </div>
             <div className="rounded-card border border-border bg-surface p-4">
               <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-3">Trend Bulanan {tahun}</p>
-              <CartaBulanan transaksi={ledgerTahun} />
+              <CartaBulanan transaksi={transaksiTahun} />
             </div>
           </div>
         )
@@ -230,7 +308,7 @@ export default function KewanganKKGS() {
       {tab === 'bukutunai' && (
         <div>
           {bolehUrus && (
-            <button onClick={() => setTunjukForm(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold mb-4">
+            <button onClick={() => { setTransaksiEdit(null); setTunjukForm(true) }} className="flex items-center gap-1.5 h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold mb-4">
               <Plus size={14} /> Rekod Transaksi
             </button>
           )}
@@ -247,7 +325,12 @@ export default function KewanganKKGS() {
                     <p className="text-xs text-inkmuted">{t.tarikh} · {t.kategori || 'Lain-lain'}{t.catatan && ` · ${t.catatan}`}</p>
                   </div>
                   <p className="text-sm font-bold shrink-0" style={{ color: t.jenis === 'masuk' ? '#0F6E56' : '#C8102E' }}>{t.jenis === 'masuk' ? '+' : '-'} RM {t.jumlah.toFixed(2)}</p>
-                  {bolehUrus && <button onClick={() => padam(t)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red shrink-0"><Trash2 size={15} /></button>}
+                  {bolehUrus && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => { setTransaksiEdit(t); setTunjukForm(true) }} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><Pencil size={14} /></button>
+                      <button onClick={() => padam(t)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red"><Trash2 size={15} /></button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -258,14 +341,14 @@ export default function KewanganKKGS() {
       {/* ===== LEDGER (gabungan automatik) ===== */}
       {tab === 'ledger' && (
         <div>
-          <p className="text-xs text-inkmuted mb-3">Gabungan AUTOMATIK semua pergerakan wang (Yuran + Claim diluluskan + Kewangan manual) - gambaran kewangan sebenar &amp; lengkap.</p>
+          <p className="text-xs text-inkmuted mb-3">Gabungan AUTOMATIK semua pergerakan wang (Yuran + Claim diluluskan + Kewangan manual) tahun {tahun} - gambaran kewangan sebenar &amp; lengkap.</p>
           {loadingLedger ? (
             <p className="text-sm text-inkmuted">Memuatkan…</p>
-          ) : ledgerTahun.length === 0 ? (
+          ) : transaksiTahun.length === 0 ? (
             <p className="text-sm text-inkmuted">Tiada transaksi tahun ni.</p>
           ) : (
             <div className="space-y-2">
-              {ledgerTahun.map((t) => {
+              {transaksiTahun.map((t) => {
                 const w = WarnaSumber(t.sumber)
                 return (
                   <div key={t.id} className="flex items-center gap-3 p-3.5 rounded-card border border-border bg-surface">
@@ -301,7 +384,12 @@ export default function KewanganKKGS() {
         </div>
       )}
 
-      {bolehUrus && <ModalTransaksi open={tunjukForm} onTutup={() => setTunjukForm(false)} onSimpan={simpan} />}
+      {bolehUrus && (
+        <>
+          <ModalTransaksi key={transaksiEdit?.id ?? 'baru'} open={tunjukForm} tahun={tahun} editData={transaksiEdit} onTutup={() => { setTunjukForm(false); setTransaksiEdit(null) }} onSimpan={simpan} />
+          <ModalBakiPembukaan open={tunjukTetapanBaki} tetapan={tetapanBaki} onTutup={() => setTunjukTetapanBaki(false)} onSimpan={simpanTetapanBaki} />
+        </>
+      )}
       {dataLaporan && <LaporanKewanganKKGS {...dataLaporan} />}
     </div>
   )

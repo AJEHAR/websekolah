@@ -51,6 +51,14 @@ export function labelStatusKeahlian(nilai) {
   return STATUS_KEAHLIAN.find((s) => s.nilai === nilai)?.label ?? nilai
 }
 
+// Pilihan tahun DIKONGSI merentasi Yuran & Kewangan - PENTING kekal SAMA
+// supaya tahun boleh dilihat konsisten di kedua-dua page (dulu Yuran &
+// Kewangan guna senarai tahun BERBEZA - bug #5, tahun boleh guna kat
+// satu page tapi tak boleh dilihat di page lain).
+const TAHUN_SEMASA_KKGS = new Date().getFullYear()
+export const PILIHAN_TAHUN_KKGS = [TAHUN_SEMASA_KKGS - 2, TAHUN_SEMASA_KKGS - 1, TAHUN_SEMASA_KKGS, TAHUN_SEMASA_KKGS + 1, TAHUN_SEMASA_KKGS + 2, TAHUN_SEMASA_KKGS + 3]
+export const TAHUN_SEMASA = TAHUN_SEMASA_KKGS
+
 // Senarai Jenis Imbuhan KKGS - jumlah TETAP setiap jenis (bukan staff
 // taip jumlah sendiri macam Resit) - diambil dari surat pekeliling KKGS
 // yang dikongsi pengguna. BOLEH kemas kini di sini bila-bila (tambah/
@@ -99,5 +107,6 @@ export function kiraPeruntukanYuran({ bulanMula, bulanTamat, kadarBulanan, jumla
   }
   const jumlahDiperlukan = (bulanTamat - bulanMula + 1) * kadarBulanan
   const lengkapPenuh = bulanList.length > 0 && bulanList.every((b) => b.status === 'penuh')
-  return { bulanList, jumlahDiperlukan, jumlahDibayar, lengkapPenuh }
+  const lebihan = jumlahDibayar > jumlahDiperlukan ? jumlahDibayar - jumlahDiperlukan : 0
+  return { bulanList, jumlahDiperlukan, jumlahDibayar, lengkapPenuh, lebihan }
 }

@@ -7,14 +7,11 @@ import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsYuranTahun, tambahYuranKkgs, padamYuranKkgs } from '../../hooks/useKkgsYuran.js'
 import { useKkgsTetapanYuran, simpanTetapanYuran } from '../../hooks/useKkgsTetapanYuran.js'
 import { useCetak } from '../../hooks/useCetak.js'
-import { kiraPeruntukanYuran, NAMA_BULAN } from './kkgsConstants.js'
+import { kiraPeruntukanYuran, NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA } from './kkgsConstants.js'
 import ResitYuranKKGS from './ResitYuranKKGS.jsx'
 
-const TAHUN_SEMASA = new Date().getFullYear()
-// Tahun LEPAS + SEMASA + AKAN DATANG - bukan sekadar tahun semasa sahaja
-// (KKGS urus rekod berterusan tahun ke tahun, staff perlu boleh
-// sediakan/tengok tahun akan datang awal, atau semak sejarah tahun lepas).
-const PILIHAN_TAHUN = [TAHUN_SEMASA - 2, TAHUN_SEMASA - 1, TAHUN_SEMASA, TAHUN_SEMASA + 1, TAHUN_SEMASA + 2, TAHUN_SEMASA + 3]
+// Pemalar tahun DIKONGSI (kkgsConstants.js) - elak tak konsisten dengan
+// Kewangan (bug #5 - dulu dua page guna senarai tahun berlainan).
 
 // Lebar lajur tetap (px) - lajur Bil/Nama "melekat" (sticky) semasa skrol
 // mendatar merentasi lajur bulan - SAMA teknik dengan Papan RMT. Jadual
@@ -83,6 +80,12 @@ function ModalBayar({ open, ahli, tahun, tarikCadangan, rekodAhli, onTutup, onSi
 
   if (!open) return null
 
+  // Amaran (bug #2) - kalau tahun tarikh tak sepadan tahun sedang
+  // dilihat, bayaran akan "hilang" senyap dari paparan semasa (disimpan
+  // bawah tahun lain) - beri amaran JELAS sebelum simpan, elak kekeliruan.
+  const tahunTarikh = tarikh ? Number(tarikh.slice(0, 4)) : null
+  const tahunTakSepadan = tahunTarikh && tahunTarikh !== tahun
+
   async function simpan() {
     if (!jumlah || Number(jumlah) <= 0) return setRalat('Sila isi jumlah yang sah.')
     setRalat(null)
@@ -108,6 +111,11 @@ function ModalBayar({ open, ahli, tahun, tarikCadangan, rekodAhli, onTutup, onSi
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Tarikh</label>
             <input type="date" value={tarikh} onChange={(e) => setTarikh(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
+            {tahunTakSepadan && (
+              <p className="text-[11px] text-amber-700 bg-amber-50 rounded-card px-2.5 py-1.5 mt-1.5">
+                ⚠️ Tarikh ni tahun <strong>{tahunTarikh}</strong>, bukan <strong>{tahun}</strong> (tahun sedang dilihat). Bayaran akan disimpan bawah {tahunTarikh} dan TAK akan kelihatan dalam paparan {tahun} ni.
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Jumlah Dibayar (RM)</label>
@@ -161,7 +169,7 @@ function KadAhliYuran({ ahli, peruntukan, bolehUrus, onKlik, onCetakResit }) {
           {ahli.nama}
           {peruntukan.lengkapPenuh && <span className="ml-1.5 text-[10px] font-bold" style={{ color: '#0F6E56' }}>🎉 Lunas</span>}
         </p>
-        <p className="text-xs font-bold text-ink shrink-0">RM{peruntukan.jumlahDibayar}/{peruntukan.jumlahDiperlukan}</p>
+        <p className="text-xs font-bold text-ink shrink-0">RM{peruntukan.jumlahDibayar}/{peruntukan.jumlahDiperlukan}{peruntukan.lebihan > 0 && <span className="block text-[9px] font-normal text-[#0F6E56]">+RM{peruntukan.lebihan} lebihan</span>}</p>
       </div>
       <div className="flex gap-1 overflow-x-auto pb-1">
         {peruntukan.bulanList.map((b) => {
@@ -244,7 +252,7 @@ export default function YuranSumbanganKKGS() {
     <div>
       <div className="flex gap-2 mb-3 flex-wrap items-center">
         <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="h-11 px-3 rounded-card border border-border bg-surface text-sm">
-          {PILIHAN_TAHUN.map((t) => (
+          {PILIHAN_TAHUN_KKGS.map((t) => (
             <option key={t} value={t}>{t}{t === TAHUN_SEMASA ? ' (semasa)' : ''}</option>
           ))}
         </select>
@@ -263,8 +271,11 @@ export default function YuranSumbanganKKGS() {
           value={carian}
           onChange={(e) => setCarian(e.target.value)}
           placeholder="Cari nama…"
-          className="w-full h-11 pl-9 pr-3 rounded-card border border-border bg-surface text-sm"
+          className="w-full h-11 pl-9 pr-9 rounded-card border border-border bg-surface text-sm"
         />
+        {carian && (
+          <button onClick={() => setCarian('')} aria-label="Kosongkan carian" className="absolute right-3 top-1/2 -translate-y-1/2 text-inkmuted"><X size={14} /></button>
+        )}
       </div>
 
       {disenarai.length === 0 ? (
@@ -320,6 +331,7 @@ export default function YuranSumbanganKKGS() {
                       })}
                       <td className="text-center px-2 py-2 border-l border-border font-semibold text-ink whitespace-nowrap">
                         RM{peruntukan.jumlahDibayar}/{peruntukan.jumlahDiperlukan}
+                        {peruntukan.lebihan > 0 && <span className="block text-[9px] font-normal text-[#0F6E56]">+RM{peruntukan.lebihan} lebihan</span>}
                         {peruntukan.lengkapPenuh && (
                           <button onClick={(e) => { e.stopPropagation(); cetakResit(a, peruntukan) }} aria-label="Muat turun resit" className="ml-1 text-brand-red align-middle">
                             <Download size={12} className="inline" />

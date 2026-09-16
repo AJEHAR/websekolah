@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, getDocs } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 // Ledger (Buku Besar) - GABUNG SEMUA pergerakan wang KKGS dari 3 sumber
 // berlainan (kkgsKewangan manual, kkgsYuran bayaran ahli, kkgsClaim
 // Imbuhan/Resit/Sumbangan diluluskan) jadi SATU senarai selaras - elak
-// gambaran kewangan berpecah (Baki Semasa yang TAK termasuk Yuran/Claim
-// akan mengelirukan). Cuma rekod BENAR-BENAR selesai (Yuran = semua
-// rekod bayaran, Claim = status "diluluskan" sahaja - tuntutan menunggu
-// belum benar-benar keluar duit) yang dikira.
+// gambaran kewangan berpecah. Cuma rekod BENAR-BENAR selesai (Yuran =
+// semua rekod bayaran, Claim = status "diluluskan" sahaja) yang dikira.
+//
+// PENTING (fix bug #1 "Baki bukan sebenar"): hook ni sekarang tarik
+// SEMUA TAHUN (bukan satu tahun sahaja) - perlu untuk kira BAKI
+// TERKUMPUL sebenar (jumlah semua tahun dari awal hingga tahun dipilih),
+// bukan sekadar Masuk-Keluar SATU tahun. `transaksiTahun` (ditapis satu
+// tahun) kekal disediakan berasingan untuk paparan Ledger/Laporan yang
+// memang patut tunjuk SATU tempoh sahaja.
 function tarikhTimestamp(ts) {
   if (!ts) return null
   const d = ts.toDate ? ts.toDate() : new Date(ts)
@@ -16,12 +21,12 @@ function tarikhTimestamp(ts) {
 }
 
 export function useKkgsLedger(tahun, aktif = true) {
-  const [transaksi, setTransaksi] = useState([])
+  const [semuaTransaksi, setSemuaTransaksi] = useState([])
   const [loading, setLoading] = useState(true)
 
   const muatSemula = useCallback(async () => {
-    if (!isFirebaseConfigured || !tahun || !aktif) {
-      setTransaksi([])
+    if (!isFirebaseConfigured || !aktif) {
+      setSemuaTransaksi([])
       setLoading(false)
       return
     }
@@ -29,38 +34,35 @@ export function useKkgsLedger(tahun, aktif = true) {
     try {
       const [snapKewangan, snapYuran, snapClaim] = await Promise.all([
         getDocs(collection(db, 'kkgsKewangan')),
-        getDocs(query(collection(db, 'kkgsYuran'), where('tahun', '==', Number(tahun)))),
+        getDocs(collection(db, 'kkgsYuran')),
         getDocs(collection(db, 'kkgsClaim')),
       ])
 
       const gabungan = []
 
-      // 1. Kewangan manual - jenis & kategori terus dari rekod.
       snapKewangan.docs.forEach((d) => {
         const data = d.data()
-        if (!data.tarikh || data.tarikh.slice(0, 4) !== String(tahun)) return
+        if (!data.tarikh) return
         gabungan.push({
           id: `kewangan_${d.id}`, sumber: 'kewangan', tarikh: data.tarikh, jenis: data.jenis,
           kategori: data.kategori || 'Lain-lain', perkara: data.perkara, jumlah: data.jumlah,
         })
       })
 
-      // 2. Yuran - SEMUA rekod bayaran = MASUK (tiada langkah kelulusan).
       snapYuran.docs.forEach((d) => {
         const data = d.data()
+        if (!data.tarikh) return
         gabungan.push({
           id: `yuran_${d.id}`, sumber: 'yuran', tarikh: data.tarikh, jenis: 'masuk',
           kategori: 'Yuran', perkara: `Yuran - ${data.ahliNama}${data.catatan ? ` (${data.catatan})` : ''}`, jumlah: data.jumlah,
         })
       })
 
-      // 3. Claim (Imbuhan/Resit/Sumbangan) - HANYA status "diluluskan"
-      //    (tuntutan "menunggu" belum benar-benar keluar duit lagi).
       snapClaim.docs.forEach((d) => {
         const data = d.data()
         if (data.status !== 'diluluskan') return
         const tarikh = tarikhTimestamp(data.tarikhKeputusan) || tarikhTimestamp(data.tarikhMohon)
-        if (!tarikh || tarikh.slice(0, 4) !== String(tahun)) return
+        if (!tarikh) return
 
         if (data.jenisClaim === 'sumbangan') {
           const masuk = data.arahSumbangan === 'masuk'
@@ -83,17 +85,34 @@ export function useKkgsLedger(tahun, aktif = true) {
       })
 
       gabungan.sort((a, b) => (b.tarikh ?? '').localeCompare(a.tarikh ?? ''))
-      setTransaksi(gabungan)
+      setSemuaTransaksi(gabungan)
     } finally {
       setLoading(false)
     }
-  }, [tahun, aktif])
+  }, [aktif])
 
   useEffect(() => {
     muatSemula()
   }, [muatSemula])
 
-  return { transaksi, loading, muatSemula }
+  // Ditapis SATU tahun sahaja - untuk paparan Ledger/Laporan (memang
+  // patut tunjuk satu tempoh, bukan gabungan sepanjang zaman).
+  const transaksiTahun = tahun ? semuaTransaksi.filter((t) => (t.tarikh ?? '').slice(0, 4) === String(tahun)) : []
+
+  return { semuaTransaksi, transaksiTahun, loading, muatSemula }
+}
+
+// Kira BAKI TERKUMPUL SEBENAR pada akhir tahun tertentu - baki
+// pembukaan + SEMUA transaksi dari tahunPembukaan hingga akhir tahun
+// dipilih (BUKAN sekadar satu tahun tu sahaja).
+export function kiraBakiTerkumpul(semuaTransaksi, tahunSasaran, bakiPembukaan, tahunPembukaan) {
+  const transaksiSehinggaTahun = semuaTransaksi.filter((t) => {
+    const tahunT = Number((t.tarikh ?? '').slice(0, 4))
+    return tahunT >= tahunPembukaan && tahunT <= tahunSasaran
+  })
+  const jumlahMasuk = transaksiSehinggaTahun.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
+  const jumlahKeluar = transaksiSehinggaTahun.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
+  return bakiPembukaan + jumlahMasuk - jumlahKeluar
 }
 
 export const KATEGORI_KEWANGAN = ['Yuran', 'Sumbangan', 'Imbuhan', 'Belanja Program', 'Perbelanjaan Pentadbiran', 'Lain-lain']

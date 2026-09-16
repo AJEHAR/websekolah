@@ -52,6 +52,23 @@ export async function kemaskiniAhliKkgs(id, data, uid) {
   await updateDoc(doc(db, KOLEKSI, id), { ...data, updatedAt: serverTimestamp(), updatedBy: uid })
 }
 
+// Lantikan jawatan SATU ORANG - tanggal pemegang lama + lantik baharu
+// dalam SATU batch ATOMIC (fix bug #4) - dulu 2 write berasingan, kalau
+// write kedua gagal (rangkaian terputus dll), jawatan jadi KOSONG (orang
+// lama tertanggal tapi orang baharu tak sempat dilantik). Batch pastikan
+// KEDUA-DUA berjaya, atau KEDUA-DUA gagal (tiada keadaan separuh jalan).
+export async function lantikJawatanAtomicKkgs({ idPemegangLama, idBaharu, jawatan }, uid) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  const batch = writeBatch(db)
+  if (idPemegangLama && idPemegangLama !== idBaharu) {
+    batch.update(doc(db, KOLEKSI, idPemegangLama), { jawatan: 'Ahli', updatedAt: serverTimestamp(), updatedBy: uid })
+  }
+  if (idBaharu) {
+    batch.update(doc(db, KOLEKSI, idBaharu), { jawatan, updatedAt: serverTimestamp(), updatedBy: uid })
+  }
+  await batch.commit()
+}
+
 export async function padamAhliKkgs(id) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await deleteDoc(doc(db, KOLEKSI, id))

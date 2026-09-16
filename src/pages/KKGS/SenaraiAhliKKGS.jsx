@@ -28,6 +28,7 @@ function ModalAhli({ open, dataAwal, onTutup, onSimpan }) {
 
   async function simpan() {
     if (!data.nama.trim()) return setRalat('Sila isi nama.')
+    if ((data.bulanMula ?? 1) > (data.bulanTamat ?? 12)) return setRalat('Bulan Mula mesti sebelum atau sama dengan Bulan Tamat.')
     setRalat(null)
     setMenyimpan(true)
     try {
@@ -281,7 +282,12 @@ export default function SenaraiAhliKKGS() {
       <p className="text-xs text-inkmuted mb-4">Senarai induk semua ahli KKGS - jawatan &amp; status keahlian diurus di sini (page Jawatankuasa cuma paparan tapisan dari senarai ni).{!bolehUrus && ' Anda boleh LIHAT sahaja - hubungi admin KKGS untuk buat perubahan.'}</p>
 
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <input type="text" value={carian} onChange={(e) => setCarian(e.target.value)} placeholder="Cari nama…" className="flex-1 min-w-[160px] h-11 px-3 rounded-card border border-border bg-surface text-sm" />
+        <div className="relative flex-1 min-w-[160px]">
+          <input type="text" value={carian} onChange={(e) => setCarian(e.target.value)} placeholder="Cari nama…" className="w-full h-11 pl-3 pr-9 rounded-card border border-border bg-surface text-sm" />
+          {carian && (
+            <button onClick={() => setCarian('')} aria-label="Kosongkan carian" className="absolute right-3 top-1/2 -translate-y-1/2 text-inkmuted"><X size={14} /></button>
+          )}
+        </div>
         {bolehUrus && (
           <>
             <button onClick={() => setTunjukImport(true)} className="flex items-center gap-1.5 h-11 px-3 rounded-card border border-border text-xs font-semibold text-ink">
@@ -318,7 +324,9 @@ export default function SenaraiAhliKKGS() {
         <p className="text-sm text-inkmuted">Tiada ahli lagi.</p>
       ) : (
         <div className="space-y-2">
-          {disenarai.map((a) => (
+          {disenarai.map((a) => {
+            const warna = WarnaStatus(a.statusKeahlian)
+            return (
             <div key={a.id} className="flex items-center gap-2.5 p-3.5 rounded-card border border-border bg-surface">
               {bolehUrus && (
                 <button onClick={() => togolPilih(a.id)} aria-label="Pilih" className="shrink-0 text-inkmuted">
@@ -329,7 +337,7 @@ export default function SenaraiAhliKKGS() {
                 <p className="text-sm font-semibold text-ink truncate">{a.nama}</p>
                 <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                   {a.jawatan && a.jawatan !== 'Ahli' && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#FDEAEA] text-brand-red">{a.jawatan}</span>}
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={WarnaStatus(a.statusKeahlian) && { backgroundColor: WarnaStatus(a.statusKeahlian).bg, color: WarnaStatus(a.statusKeahlian).teks }}>{labelStatusKeahlian(a.statusKeahlian)}</span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: warna.bg, color: warna.teks }}>{labelStatusKeahlian(a.statusKeahlian)}</span>
                   <span className="text-[10px] text-inkmuted">{NAMA_BULAN[(a.bulanMula ?? 1) - 1].slice(0, 3)}-{NAMA_BULAN[(a.bulanTamat ?? 12) - 1].slice(0, 3)}</span>
                 </div>
               </div>
@@ -340,7 +348,8 @@ export default function SenaraiAhliKKGS() {
                 </>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
