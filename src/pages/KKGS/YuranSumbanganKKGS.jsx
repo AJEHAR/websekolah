@@ -1,14 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Trash2, X, Settings, Download, Search, ChevronDown, ChevronRight, CalendarRange, Wand2 } from 'lucide-react'
+import { Plus, Trash2, X, Settings, Download, Search, ChevronDown, ChevronRight, CalendarRange, Users, CheckSquare, Square, UserMinus } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsYuranTahun, tambahYuranKkgs, padamYuranKkgs } from '../../hooks/useKkgsYuran.js'
 import { useKkgsTetapanYuran, simpanTetapanYuran } from '../../hooks/useKkgsTetapanYuran.js'
-import { useKkgsKeahlianTahunSenarai, simpanKeahlianTahun, padamKeahlianTahun, migrasiKeahlianTahunDariAhli } from '../../hooks/useKkgsKeahlianTahun.js'
+import {
+  useKkgsKeahlianTahunSenarai, simpanKeahlianTahun, buangDariRosterTahun, simpanRosterPukal,
+  salinRosterTahunLepas, isiRosterAktifSemasa, isiRosterSemuaAhli,
+} from '../../hooks/useKkgsKeahlianTahun.js'
 import { useCetak } from '../../hooks/useCetak.js'
-import { kiraPeruntukanYuran, NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA } from './kkgsConstants.js'
+import { kiraPeruntukanYuran, NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA, labelStatusKeahlian } from './kkgsConstants.js'
 import ResitYuranKKGS from './ResitYuranKKGS.jsx'
 
 // Pemalar tahun DIKONGSI (kkgsConstants.js) - elak tak konsisten dengan
@@ -156,7 +159,7 @@ function ModalBayar({ open, ahli, tahun, tarikCadangan, rekodAhli, onTutup, onSi
 // (Jan - bilangan bulan tetapan) bila TIADA override; guna ni untuk
 // pengecualian (ahli baharu join lewat / ahli keluar awal TAHUN NI
 // SAHAJA - tahun lain tak terjejas).
-function ModalTempoh({ open, ahli, tahun, bilanganBulan, override, onTutup, onSimpan, onPadamOverride }) {
+function ModalTempoh({ open, ahli, tahun, bilanganBulan, override, onTutup, onSimpan, onKeluarkan }) {
   const [bulanMula, setBulanMula] = useState(override?.bulanMula ?? 1)
   const [bulanTamat, setBulanTamat] = useState(override?.bulanTamat ?? bilanganBulan)
   const [menyimpan, setMenyimpan] = useState(false)
@@ -175,10 +178,19 @@ function ModalTempoh({ open, ahli, tahun, bilanganBulan, override, onTutup, onSi
     }
   }
 
-  async function guanaLalai() {
+  async function resetPenuhTahun() {
     setMenyimpan(true)
     try {
-      await onPadamOverride()
+      await onSimpan({ bulanMula: 1, bulanTamat: null })
+    } finally {
+      setMenyimpan(false)
+    }
+  }
+
+  async function keluarkan() {
+    setMenyimpan(true)
+    try {
+      await onKeluarkan()
     } finally {
       setMenyimpan(false)
     }
@@ -192,7 +204,7 @@ function ModalTempoh({ open, ahli, tahun, bilanganBulan, override, onTutup, onSi
           <button onClick={onTutup} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><X size={18} /></button>
         </div>
         <p className="text-xs text-inkmuted mb-3">
-          {override ? 'Ahli ni ada tempoh KHAS untuk tahun ni.' : `Lalai: Penuh tahun (${NAMA_BULAN[0].slice(0, 3)}-${NAMA_BULAN[bilanganBulan - 1].slice(0, 3)}).`} Ubah HANYA untuk tahun {tahun} - tahun lain tak terjejas.
+          {override?.bulanTamat != null || (override?.bulanMula ?? 1) !== 1 ? 'Ahli ni ada tempoh KHAS untuk tahun ni.' : `Lalai: Penuh tahun (${NAMA_BULAN[0].slice(0, 3)}-${NAMA_BULAN[bilanganBulan - 1].slice(0, 3)}).`} Ubah HANYA untuk tahun {tahun} - tahun lain tak terjejas.
         </p>
         <div className="grid grid-cols-2 gap-2">
           <div>
@@ -212,11 +224,106 @@ function ModalTempoh({ open, ahli, tahun, bilanganBulan, override, onTutup, onSi
         <button onClick={simpan} disabled={menyimpan} className="w-full h-11 mt-4 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
           {menyimpan ? 'Menyimpan…' : 'Simpan Tempoh Khas'}
         </button>
-        {override && (
-          <button onClick={guanaLalai} disabled={menyimpan} className="w-full h-10 mt-2 rounded-card border border-border text-xs font-semibold text-ink disabled:opacity-60">
-            Guna Lalai Semula (Padam Tempoh Khas)
-          </button>
+        <button onClick={resetPenuhTahun} disabled={menyimpan} className="w-full h-10 mt-2 rounded-card border border-border text-xs font-semibold text-ink disabled:opacity-60">
+          Reset ke Penuh Tahun (Lalai)
+        </button>
+        <button onClick={keluarkan} disabled={menyimpan} className="w-full h-10 mt-2 rounded-card border border-brand-red text-xs font-semibold text-brand-red disabled:opacity-60 flex items-center justify-center gap-1.5">
+          <UserMinus size={13} /> Keluarkan dari Papan {tahun}
+        </button>
+        <p className="text-[10px] text-inkmuted mt-1.5">Keluarkan = ahli ni tak muncul dalam papan {tahun} ni langsung (sejarah bayaran dia TIDAK dipadam).</p>
+      </div>
+    </div>
+  )
+}
+
+// Urus SIAPA disertakan dalam papan tahun ni - pilih dari Senarai Ahli
+// (select all / individu / nyahpilih), boleh cari nama. Simpan hantar
+// SENARAI PENUH terpilih - komponen induk kira sendiri tambah/buang
+// (banding dengan roster sedia ada) supaya tempoh khas ahli yang KEKAL
+// terpilih tak disentuh langsung.
+function ModalRoster({ open, senaraiAhli, rosterSet, tahun, onTutup, onSimpan }) {
+  const [terpilih, setTerpilih] = useState(new Set(rosterSet))
+  const [carian, setCarian] = useState('')
+  const [menyimpan, setMenyimpan] = useState(false)
+
+  // Modal ni tak unmount bila tutup (guna `open &&` bukan render bersyarat
+  // penuh) - jadi kena reset `terpilih` setiap kali DIBUKA supaya pilihan
+  // lama yang tak disimpan tak "melekat" bila dibuka semula.
+  useEffect(() => {
+    if (open) setTerpilih(new Set(rosterSet))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  if (!open) return null
+
+  const disenarai = senaraiAhli.filter((a) => a.nama.toLowerCase().includes(carian.toLowerCase()))
+  const semuaDipilih = disenarai.length > 0 && disenarai.every((a) => terpilih.has(a.id))
+
+  function togol(id) {
+    setTerpilih((s) => {
+      const baru = new Set(s)
+      if (baru.has(id)) baru.delete(id)
+      else baru.add(id)
+      return baru
+    })
+  }
+
+  function togolSemua() {
+    setTerpilih((s) => {
+      const baru = new Set(s)
+      if (semuaDipilih) disenarai.forEach((a) => baru.delete(a.id))
+      else disenarai.forEach((a) => baru.add(a.id))
+      return baru
+    })
+  }
+
+  async function simpan() {
+    setMenyimpan(true)
+    try {
+      const tambah = [...terpilih].filter((id) => !rosterSet.has(id))
+      const buang = [...rosterSet].filter((id) => !terpilih.has(id))
+      await onSimpan({ tambah, buang })
+    } finally {
+      setMenyimpan(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-surface flex flex-col" style={{ height: '100dvh' }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+        <h3 className="text-sm font-bold text-ink">Urus Senarai Ahli - Papan {tahun}</h3>
+        <button onClick={onTutup} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><X size={18} /></button>
+      </div>
+      <div className="p-3 border-b border-border shrink-0 space-y-2">
+        <p className="text-xs text-inkmuted">Cuma ahli TERPILIH sahaja akan muncul dalam papan pembayaran tahun {tahun}. Rekod bayaran ahli yang dinyahpilih TIDAK dipadam.</p>
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-inkmuted" />
+          <input type="text" value={carian} onChange={(e) => setCarian(e.target.value)} placeholder="Cari nama…" className="w-full h-10 pl-9 pr-3 rounded-card border border-border bg-base text-sm" />
+        </div>
+        <button onClick={togolSemua} className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+          {semuaDipilih ? <CheckSquare size={16} className="text-brand-red" /> : <Square size={16} />}
+          {semuaDipilih ? 'Nyahpilih Semua' : `Pilih Semua (${disenarai.length})`}
+        </button>
+      </div>
+      <div className="overflow-y-auto flex-1 p-3 space-y-1.5">
+        {disenarai.length === 0 ? (
+          <p className="text-sm text-inkmuted text-center py-4">Tiada padanan.</p>
+        ) : (
+          disenarai.map((a) => (
+            <button key={a.id} type="button" onClick={() => togol(a.id)} className="w-full flex items-center gap-2.5 p-2.5 rounded-card border border-border text-left">
+              {terpilih.has(a.id) ? <CheckSquare size={18} className="text-brand-red shrink-0" /> : <Square size={18} className="text-inkmuted shrink-0" />}
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-ink truncate">{a.nama}</span>
+                {a.statusKeahlian !== 'aktif' && <span className="text-[10px] text-inkmuted">{labelStatusKeahlian(a.statusKeahlian)}</span>}
+              </span>
+            </button>
+          ))
         )}
+      </div>
+      <div className="p-3 border-t border-border shrink-0">
+        <button onClick={simpan} disabled={menyimpan} className="w-full h-11 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
+          {menyimpan ? 'Menyimpan…' : `Simpan (${terpilih.size} ahli dalam papan)`}
+        </button>
       </div>
     </div>
   )
@@ -342,8 +449,9 @@ export default function YuranSumbanganKKGS() {
   const [ahliBayar, setAhliBayar] = useState(null)
   const [ahliTempoh, setAhliTempoh] = useState(null)
   const [tunjukTetapan, setTunjukTetapan] = useState(false)
+  const [tunjukRoster, setTunjukRoster] = useState(false)
   const [dataResit, setDataResit] = useCetak()
-  const [memigrasi, setMemigrasi] = useState(false)
+  const [menyediakan, setMenyediakan] = useState(false)
   // Ahli tak aktif (bersara/pindah/berhenti) - collapsed LALAI, papan
   // pembayaran ni untuk urus bayaran SEMASA, ahli dah keluar cuma perlu
   // dirujuk sekali-sekala (sejarah bayaran lama kekal, tak dipadam).
@@ -389,35 +497,67 @@ export default function YuranSumbanganKKGS() {
     muatSemulaTempoh()
   }
 
-  async function padamOverrideTempoh() {
-    await padamKeahlianTahun(ahliTempoh.id, tahun)
+  async function keluarkanAhliTempoh() {
+    await buangDariRosterTahun(ahliTempoh.id, tahun)
     setAhliTempoh(null)
     muatSemulaTempoh()
   }
 
-  // Migrasi SEKALI SAHAJA - tarik Bulan Mula/Tamat lama (medan kkgsAhli,
-  // sebelum ciri Tempoh Tahunan ni wujud) jadi override tahun ni SAHAJA.
-  // Butang ni hilang sendiri lepas migrasi selesai (senaraiAhliPerluMigrasi
-  // jadi kosong).
-  const senaraiAhliPerluMigrasi = senaraiAhli.filter((a) => {
-    const bulanMulaLama = a.bulanMula ?? 1
-    const bulanTamatLama = a.bulanTamat ?? 12
-    return (bulanMulaLama !== 1 || bulanTamatLama !== 12) && !petaTempoh[a.id]
-  })
+  async function simpanRoster({ tambah, buang }) {
+    await simpanRosterPukal({ tambah, buang }, tahun, user.uid)
+    setTunjukRoster(false)
+    muatSemulaTempoh()
+  }
 
-  async function migrasi() {
-    if (!(await konfirm(`Migrasi tempoh lama ${senaraiAhliPerluMigrasi.length} ahli ke tahun ${tahun}? Ni sekali sahaja - ahli yang dah ada Tempoh Khas untuk tahun ni TAK disentuh.`))) return
-    setMemigrasi(true)
+  // Sediakan papan tahun BAHARU (roster kosong) - 3 cara pantas, semua
+  // SELAMAT dipanggil berulang (ahli sedia ada dalam papan tak disentuh):
+  //  - salin tahun lepas (HANYA ahli masih "aktif" disalin - ni fix utama
+  //    keluhan "nama lama masih melekat" tahun baharu)
+  //  - guna semua ahli AKTIF semasa (kalau takde roster tahun lepas)
+  //  - guna SEMUA ahli tanpa kira status (untuk migrasi tahun yang DAH
+  //    ada rekod bayaran sebelum ciri roster ni wujud)
+  async function sediakanDenganSalinan() {
+    setMenyediakan(true)
     try {
-      await migrasiKeahlianTahunDariAhli(senaraiAhliPerluMigrasi, tahun, petaTempoh, user.uid)
+      const { disalin } = await salinRosterTahunLepas(tahun - 1, tahun, senaraiAhli, petaTempoh, user.uid)
+      if (disalin === 0) {
+        await konfirm(`Tiada roster ahli aktif dijumpai untuk tahun ${tahun - 1}. Cuba pilihan "Guna Semua Ahli Aktif Semasa" atau "Pilih Ahli Sendiri".`)
+      }
       muatSemulaTempoh()
     } finally {
-      setMemigrasi(false)
+      setMenyediakan(false)
+    }
+  }
+
+  async function sediakanDenganAktifSemasa() {
+    setMenyediakan(true)
+    try {
+      await isiRosterAktifSemasa(tahun, senaraiAhli, petaTempoh, user.uid)
+      muatSemulaTempoh()
+    } finally {
+      setMenyediakan(false)
+    }
+  }
+
+  async function sediakanDenganSemuaAhli() {
+    if (!(await konfirm(`Masukkan SEMUA ${senaraiAhli.length} ahli (termasuk yang dah bersara/pindah/berhenti) ke papan ${tahun}? Guna pilihan ni untuk tahun yang DAH ADA rekod bayaran sebelum ni.`))) return
+    setMenyediakan(true)
+    try {
+      await isiRosterSemuaAhli(tahun, senaraiAhli, petaTempoh, user.uid)
+      muatSemulaTempoh()
+    } finally {
+      setMenyediakan(false)
     }
   }
 
   const senaraiBulan = Array.from({ length: tetapan.bilanganBulan }, (_, i) => i + 1)
-  const disenarai = senaraiAhli.filter((a) => a.nama.toLowerCase().includes(carian.toLowerCase()))
+  // HANYA ahli yang DISERTAKAN (ada dalam petaTempoh, iaitu papan tahun
+  // ni) yang dipaparkan - fix utama: dulu SEMUA Senarai Ahli terus
+  // dipaparkan tanpa kira tahun, jadi ahli dah bersara/pindah tahun
+  // lepas masih "melekat" bila tahun baharu dibuka.
+  const rosterSet = new Set(Object.keys(petaTempoh))
+  const ahliDalamPapan = senaraiAhli.filter((a) => rosterSet.has(a.id))
+  const disenarai = ahliDalamPapan.filter((a) => a.nama.toLowerCase().includes(carian.toLowerCase()))
   const disenaraiAktif = disenarai.filter((a) => a.statusKeahlian === 'aktif')
   const disenaraiTakAktif = disenarai.filter((a) => a.statusKeahlian !== 'aktif')
 
@@ -432,17 +572,37 @@ export default function YuranSumbanganKKGS() {
           ))}
         </select>
         {bolehUrus && (
-          <button onClick={() => setTunjukTetapan(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink ml-auto">
-            <Settings size={14} /> Tetapan
-          </button>
+          <>
+            <button onClick={() => setTunjukRoster(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink ml-auto">
+              <Users size={14} /> Urus Senarai ({ahliDalamPapan.length})
+            </button>
+            <button onClick={() => setTunjukTetapan(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+              <Settings size={14} /> Tetapan
+            </button>
+          </>
         )}
       </div>
       <p className="text-xs text-inkmuted mb-3">RM{tetapan.yuranBulanan}/bulan × {tetapan.bilanganBulan} bulan{!bolehUrus && ' · Anda boleh LIHAT sahaja.'}</p>
 
-      {bolehUrus && tahun === TAHUN_SEMASA && senaraiAhliPerluMigrasi.length > 0 && (
-        <button onClick={migrasi} disabled={memigrasi} className="flex items-center gap-1.5 h-9 px-3 mb-3 rounded-card border border-amber-400 bg-amber-50 text-amber-800 text-xs font-semibold disabled:opacity-60">
-          <Wand2 size={14} /> {memigrasi ? 'Memigrasi…' : `Migrasi Tempoh Lama (${senaraiAhliPerluMigrasi.length} ahli)`}
-        </button>
+      {bolehUrus && ahliDalamPapan.length === 0 && (
+        <div className="rounded-card border border-amber-300 bg-amber-50 p-4 mb-4">
+          <p className="text-sm font-semibold text-amber-900 mb-1">Papan Yuran {tahun} belum disediakan</p>
+          <p className="text-xs text-amber-800 mb-3">Tiada ahli dalam papan tahun ni lagi. Pilih satu cara untuk mula:</p>
+          <div className="flex flex-col gap-2">
+            <button onClick={sediakanDenganSalinan} disabled={menyediakan} className="h-10 px-3 rounded-card bg-brand-red text-white text-xs font-semibold disabled:opacity-60">
+              {menyediakan ? 'Menyediakan…' : `Salin Ahli Aktif dari Tahun ${tahun - 1}`}
+            </button>
+            <button onClick={sediakanDenganAktifSemasa} disabled={menyediakan} className="h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink disabled:opacity-60">
+              Guna Semua Ahli Aktif Semasa (Senarai Ahli)
+            </button>
+            <button onClick={sediakanDenganSemuaAhli} disabled={menyediakan} className="h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink disabled:opacity-60">
+              Guna SEMUA Ahli (termasuk tak aktif - untuk tahun dah ada rekod lama)
+            </button>
+            <button onClick={() => setTunjukRoster(true)} className="h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+              Pilih Ahli Sendiri
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="relative mb-3">
@@ -460,7 +620,13 @@ export default function YuranSumbanganKKGS() {
       </div>
 
       {disenarai.length === 0 ? (
-        <p className="text-sm text-inkmuted">{senaraiAhli.length === 0 ? 'Tiada ahli dalam Senarai Ahli lagi.' : 'Tiada padanan carian.'}</p>
+        ahliDalamPapan.length === 0 ? (
+          bolehUrus ? null : (
+            <p className="text-sm text-inkmuted">Papan yuran tahun {tahun} belum disediakan lagi.</p>
+          )
+        ) : (
+          <p className="text-sm text-inkmuted">Tiada padanan carian.</p>
+        )
       ) : (
         <>
           {/* PAPARAN KAD - telefon sahaja (sm:hidden) */}
@@ -561,9 +727,17 @@ export default function YuranSumbanganKKGS() {
               override={petaTempoh[ahliTempoh.id]}
               onTutup={() => setAhliTempoh(null)}
               onSimpan={simpanTempoh}
-              onPadamOverride={padamOverrideTempoh}
+              onKeluarkan={keluarkanAhliTempoh}
             />
           )}
+          <ModalRoster
+            open={tunjukRoster}
+            senaraiAhli={senaraiAhli}
+            rosterSet={rosterSet}
+            tahun={tahun}
+            onTutup={() => setTunjukRoster(false)}
+            onSimpan={simpanRoster}
+          />
         </>
       )}
       {dataResit && <ResitYuranKKGS {...dataResit} />}
