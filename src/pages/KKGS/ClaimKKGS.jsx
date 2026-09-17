@@ -1,13 +1,22 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, X, Upload, Check, X as XIcon, Pencil, Trash2 } from 'lucide-react'
+import { Plus, X, Upload, Check, X as XIcon, Pencil, Trash2, Printer } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsClaimSemua, hantarClaimKkgs, kemaskiniClaimKkgs, padamClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
+import { useCetak } from '../../hooks/useCetak.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
-import { JENIS_IMBUHAN_KKGS } from './kkgsConstants.js'
+import { JENIS_IMBUHAN_KKGS, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA } from './kkgsConstants.js'
 import DropdownCari from './DropdownCari.jsx'
+import LaporanClaimKKGS from './LaporanClaimKKGS.jsx'
+
+function tarikhMohonKeTahun(c) {
+  const ts = c.tarikhMohon
+  if (!ts) return null
+  const d = ts.toDate ? ts.toDate() : new Date(ts)
+  return d.getFullYear()
+}
 
 const TAB = [
   { id: 'imbuhan', label: 'Claim' },
@@ -215,6 +224,8 @@ export default function ClaimKKGS() {
   const sayaJawatankuasa = adaSeksyen('kkgs')
   const { senarai: senaraiAhli } = useKkgsAhliSenarai()
   const [tab, setTab] = useState('imbuhan')
+  const [tahun, setTahun] = useState(TAHUN_SEMASA)
+  const [dataCetak, setDataCetak] = useCetak()
 
   // SEMUA staff (bukan admin sahaja) nampak SEMUA tuntutan - telus atas
   // permintaan, elak double-claim & staff nampak keadilan taburan.
@@ -224,10 +235,16 @@ export default function ClaimKKGS() {
   const [claimEdit, setClaimEdit] = useState(null)
 
   const senaraiPenuh = claimSemua
-  const senaraiPapar = senaraiPenuh.filter((c) => (c.jenisClaim || 'resit') === tab)
+  // Tapisan JENIS (tab) + TAHUN (ikut tarikh mohon) - memudahkan semakan
+  // (dulu semua tahun bercampur, susah semak rekod tahun tertentu).
+  const senaraiPapar = senaraiPenuh.filter((c) => (c.jenisClaim || 'resit') === tab && tarikhMohonKeTahun(c) === tahun)
 
   async function muatSemulaSemuanya() {
     muatSemulaSemua()
+  }
+
+  function cetakLaporan() {
+    setDataCetak({ senarai: senaraiPapar, jenis: tab, tahun })
   }
 
   async function putuskan(claim, status) {
@@ -276,6 +293,15 @@ export default function ClaimKKGS() {
         ))}
       </div>
 
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="h-10 px-3 rounded-card border border-border bg-surface text-sm">
+          {PILIHAN_TAHUN_KKGS.map((t) => <option key={t} value={t}>{t}{t === TAHUN_SEMASA ? ' (semasa)' : ''}</option>)}
+        </select>
+        <button onClick={cetakLaporan} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+          <Printer size={14} /> Cetak / PDF
+        </button>
+      </div>
+
       {tab === 'imbuhan' && (
         <details className="rounded-card border border-border bg-surface mb-4">
           <summary className="px-3.5 py-2.5 text-xs font-semibold text-ink cursor-pointer">📋 Kriteria Imbuhan (tekan untuk lihat)</summary>
@@ -300,7 +326,7 @@ export default function ClaimKKGS() {
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
       ) : senaraiPapar.length === 0 ? (
-        <p className="text-sm text-inkmuted">Tiada rekod lagi.</p>
+        <p className="text-sm text-inkmuted">Tiada rekod tahun {tahun}.</p>
       ) : (
         <div className="space-y-2">
           {senaraiPapar.map((c) => (
@@ -366,6 +392,7 @@ export default function ClaimKKGS() {
         onSelesai={muatSemulaSemuanya}
         user={user}
       />
+      {dataCetak && <LaporanClaimKKGS {...dataCetak} />}
     </div>
   )
 }
