@@ -4,10 +4,11 @@ import { Plus, X, Upload, Check, X as XIcon, Pencil, Trash2, Printer } from 'luc
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsClaimSemua, hantarClaimKkgs, kemaskiniClaimKkgs, padamClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
+import { useKkgsProgramTahun } from '../../hooks/useKkgsProgram.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
-import { JENIS_IMBUHAN_KKGS, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA } from './kkgsConstants.js'
+import { JENIS_IMBUHAN_KKGS, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA, PROGRAM_LAIN_ID } from './kkgsConstants.js'
 import DropdownCari from './DropdownCari.jsx'
 import LaporanClaimKKGS from './LaporanClaimKKGS.jsx'
 
@@ -40,7 +41,7 @@ function BadgeStatus({ status }) {
 // relevan sahaja untuk tab tu. editData (pilihan) - kalau diisi, borang
 // jadi mod EDIT (pra-isi medan + kemaskini rekod sedia ada, bukan cipta
 // baharu).
-function ModalHantar({ open, jenis, senaraiAhli, editData, onTutup, onSelesai, user }) {
+function ModalHantar({ open, jenis, senaraiAhli, tahun, editData, onTutup, onSelesai, user }) {
   const [ahliId, setAhliId] = useState(editData?.ahliId ?? '')
   const [jenisImbuhan, setJenisImbuhan] = useState(editData?.jenisImbuhan ?? '')
   const [tujuan, setTujuan] = useState(editData?.tujuan ?? '')
@@ -49,8 +50,15 @@ function ModalHantar({ open, jenis, senaraiAhli, editData, onTutup, onSelesai, u
   const [fail, setFail] = useState(null)
   const [arahSumbangan, setArahSumbangan] = useState(editData?.arahSumbangan || 'masuk') // 'masuk' | 'keluar'
   const [kepadaSiapa, setKepadaSiapa] = useState(editData?.kepadaSiapa ?? '')
+  const [programId, setProgramId] = useState(editData?.programId ?? '')
+  const [programLain, setProgramLain] = useState(editData?.programId === PROGRAM_LAIN_ID ? (editData?.programNama ?? '') : '')
   const [menghantar, setMenghantar] = useState(false)
   const [ralat, setRalat] = useState(null)
+
+  // Senarai Program/Aktiviti tahun semasa dilihat (page Tuntutan KKGS) -
+  // dikongsi corak sama macam Rekod Transaksi Kewangan.
+  const { senarai: senaraiProgram } = useKkgsProgramTahun(tahun)
+  const pilihanProgram = [...senaraiProgram.map((p) => ({ id: p.id, label: p.nama })), { id: PROGRAM_LAIN_ID, label: 'Lain-lain' }]
 
   if (!open) return null
 
@@ -66,8 +74,11 @@ function ModalHantar({ open, jenis, senaraiAhli, editData, onTutup, onSelesai, u
       if (!ahliId) return setRalat('Sila pilih nama anda.')
       if (!imbuhanDipilih) return setRalat('Sila pilih jenis imbuhan.')
     } else if (jenis === 'resit') {
+      if (!ahliId) return setRalat('Sila pilih nama anda.')
       if (!tujuan.trim()) return setRalat('Sila isi tujuan tuntutan.')
       if (!jumlah || Number(jumlah) <= 0) return setRalat('Sila isi jumlah yang sah.')
+      if (!programId) return setRalat('Sila pilih Program/Aktiviti.')
+      if (programId === PROGRAM_LAIN_ID && !programLain.trim()) return setRalat('Sila nyatakan Program/Aktiviti (Lain-lain).')
     } else {
       if (!ahliId) return setRalat(arahSumbangan === 'masuk' ? 'Sila pilih nama penyumbang.' : 'Sila pilih nama penerima.')
       if (!jumlah || Number(jumlah) <= 0) return setRalat('Sila isi jumlah yang sah.')
@@ -85,7 +96,9 @@ function ModalHantar({ open, jenis, senaraiAhli, editData, onTutup, onSelesai, u
         const ahli = senaraiAhli.find((a) => a.id === ahliId)
         dataUntukSimpan = { jenisClaim: 'imbuhan', ahliId, ahliNama: ahli.nama, jenisImbuhan: imbuhanDipilih.label, jumlah: imbuhanDipilih.jumlah, resitUrl }
       } else if (jenis === 'resit') {
-        dataUntukSimpan = { jenisClaim: 'resit', tujuan: tujuan.trim(), jumlah: Number(jumlah), resitUrl }
+        const ahli = senaraiAhli.find((a) => a.id === ahliId)
+        const programNama = programId === PROGRAM_LAIN_ID ? programLain.trim() : (senaraiProgram.find((p) => p.id === programId)?.nama ?? '')
+        dataUntukSimpan = { jenisClaim: 'resit', ahliId, ahliNama: ahli.nama, tujuan: tujuan.trim(), jumlah: Number(jumlah), resitUrl, programId, programNama }
       } else {
         const ahli = senaraiAhli.find((a) => a.id === ahliId)
         dataUntukSimpan = {
@@ -99,7 +112,7 @@ function ModalHantar({ open, jenis, senaraiAhli, editData, onTutup, onSelesai, u
       } else {
         await hantarClaimKkgs(dataUntukSimpan, user)
       }
-      setAhliId(''); setJenisImbuhan(''); setTujuan(''); setJumlah(''); setCatatan(''); setKepadaSiapa(''); setFail(null)
+      setAhliId(''); setJenisImbuhan(''); setTujuan(''); setJumlah(''); setCatatan(''); setKepadaSiapa(''); setFail(null); setProgramId(''); setProgramLain('')
       onSelesai()
       onTutup()
     } catch (err) {
@@ -152,6 +165,20 @@ function ModalHantar({ open, jenis, senaraiAhli, editData, onTutup, onSelesai, u
 
         {jenis === 'resit' && (
           <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-ink mb-1">Nama Anda</label>
+              <DropdownCari value={ahliId} onChange={setAhliId} pilihan={senaraiAhli.map((a) => ({ id: a.id, label: a.nama }))} placeholder="Pilih nama…" bolehKosong={false} tajuk="Pilih Nama Anda" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink mb-1">Program/Aktiviti</label>
+              <DropdownCari value={programId} onChange={setProgramId} pilihan={pilihanProgram} placeholder="Pilih Program/Aktiviti…" bolehKosong={false} tajuk="Pilih Program/Aktiviti" />
+              {programId === PROGRAM_LAIN_ID && (
+                <input type="text" value={programLain} onChange={(e) => setProgramLain(e.target.value)} placeholder="Nyatakan Program/Aktiviti…" className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm mt-2" />
+              )}
+              {senaraiProgram.length === 0 && (
+                <p className="text-[10px] text-inkmuted mt-1">Tiada Program/Aktiviti direkodkan untuk tahun {tahun} - guna "Lain-lain" atau tambah dulu di page Program/Aktiviti.</p>
+              )}
+            </div>
             <div>
               <label className="block text-xs font-medium text-ink mb-1">Tujuan</label>
               <textarea value={tujuan} onChange={(e) => setTujuan(e.target.value)} rows={2} placeholder="cth. Tuntutan sewa bas lawatan KKGS" className="w-full px-3 py-2 rounded-card border border-border bg-base text-sm" />
@@ -351,7 +378,7 @@ export default function ClaimKKGS() {
                   )}
                 </p>
               ) : (
-                <p className="text-xs text-inkmuted mb-1">{c.ahliNama || c.pemohonNama}</p>
+                <p className="text-xs text-inkmuted mb-1">{c.ahliNama || c.pemohonNama}{c.programNama && ` · 📌 ${c.programNama}`}</p>
               )}
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-ink">RM {c.jumlah.toFixed(2)}</p>
@@ -387,6 +414,7 @@ export default function ClaimKKGS() {
         open={tunjukForm}
         jenis={tab}
         senaraiAhli={senaraiAhli}
+        tahun={tahun}
         editData={claimEdit}
         onTutup={() => { setTunjukForm(false); setClaimEdit(null) }}
         onSelesai={muatSemulaSemuanya}

@@ -6,8 +6,10 @@ import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsKewanganSenarai, tambahKewanganKkgs, kemaskiniKewanganKkgs, padamKewanganKkgs } from '../../hooks/useKkgsKewangan.js'
 import { useKkgsLedger, kiraBakiTerkumpul, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
 import { useKkgsBakiPembukaan, simpanBakiPembukaan } from '../../hooks/useKkgsBakiPembukaan.js'
+import { useKkgsProgramTahun } from '../../hooks/useKkgsProgram.js'
 import { useCetak } from '../../hooks/useCetak.js'
-import { NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA } from './kkgsConstants.js'
+import { NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA, PROGRAM_LAIN_ID } from './kkgsConstants.js'
+import DropdownCari from './DropdownCari.jsx'
 import LaporanKewanganKKGS from './LaporanKewanganKKGS.jsx'
 
 const TAB = [
@@ -41,8 +43,17 @@ function ModalTransaksi({ open, tahun, editData, onTutup, onSimpan }) {
   const [kategori, setKategori] = useState(editData?.kategori ?? KATEGORI_KEWANGAN[0])
   const [jumlah, setJumlah] = useState(editData?.jumlah ?? '')
   const [catatan, setCatatan] = useState(editData?.catatan ?? '')
+  const [programId, setProgramId] = useState(editData?.programId ?? '')
+  const [programLain, setProgramLain] = useState(editData?.programId === PROGRAM_LAIN_ID ? (editData?.programNama ?? '') : '')
   const [menyimpan, setMenyimpan] = useState(false)
   const [ralat, setRalat] = useState(null)
+
+  // Senarai Program/Aktiviti diambil ikut TAHUN TARIKH transaksi (bukan
+  // tahun page semasa) - elak senarai kosong bila staff rekod transaksi
+  // lama/depan yang tahun dia beza dari tahun sedang dilihat.
+  const tahunProgram = tarikh ? Number(tarikh.slice(0, 4)) : tahun
+  const { senarai: senaraiProgram } = useKkgsProgramTahun(tahunProgram)
+  const pilihanProgram = [...senaraiProgram.map((p) => ({ id: p.id, label: p.nama })), { id: PROGRAM_LAIN_ID, label: 'Lain-lain' }]
 
   if (!open) return null
 
@@ -54,11 +65,14 @@ function ModalTransaksi({ open, tahun, editData, onTutup, onSimpan }) {
   async function simpan() {
     if (!perkara.trim()) return setRalat('Sila isi perkara.')
     if (!jumlah || Number(jumlah) <= 0) return setRalat('Sila isi jumlah yang sah.')
+    if (!programId) return setRalat('Sila pilih Program/Aktiviti.')
+    if (programId === PROGRAM_LAIN_ID && !programLain.trim()) return setRalat('Sila nyatakan Program/Aktiviti (Lain-lain).')
     setRalat(null)
     setMenyimpan(true)
     try {
-      await onSimpan({ tarikh, perkara, jenis, kategori, jumlah, catatan })
-      setPerkara(''); setJumlah(''); setCatatan('')
+      const programNama = programId === PROGRAM_LAIN_ID ? programLain.trim() : (senaraiProgram.find((p) => p.id === programId)?.nama ?? '')
+      await onSimpan({ tarikh, perkara, jenis, kategori, jumlah, catatan, programId, programNama })
+      setPerkara(''); setJumlah(''); setCatatan(''); setProgramId(''); setProgramLain('')
     } catch (err) {
       setRalat(err.message || 'Gagal simpan.')
     } finally {
@@ -92,6 +106,16 @@ function ModalTransaksi({ open, tahun, editData, onTutup, onSimpan }) {
             <select value={kategori} onChange={(e) => setKategori(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
               {KATEGORI_KEWANGAN.map((k) => <option key={k} value={k}>{k}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink mb-1">Program/Aktiviti</label>
+            <DropdownCari value={programId} onChange={setProgramId} pilihan={pilihanProgram} placeholder="Pilih Program/Aktiviti…" bolehKosong={false} tajuk="Pilih Program/Aktiviti" />
+            {programId === PROGRAM_LAIN_ID && (
+              <input type="text" value={programLain} onChange={(e) => setProgramLain(e.target.value)} placeholder="Nyatakan Program/Aktiviti…" className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm mt-2" />
+            )}
+            {senaraiProgram.length === 0 && (
+              <p className="text-[10px] text-inkmuted mt-1">Tiada Program/Aktiviti direkodkan untuk tahun {tahunProgram} - guna "Lain-lain" atau tambah dulu di page Program/Aktiviti.</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-ink mb-1">Perkara</label>
@@ -323,6 +347,7 @@ export default function KewanganKKGS() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-ink truncate">{t.perkara}</p>
                     <p className="text-xs text-inkmuted">{t.tarikh} · {t.kategori || 'Lain-lain'}{t.catatan && ` · ${t.catatan}`}</p>
+                    {t.programNama && <p className="text-[10px] text-inkmuted mt-0.5">📌 {t.programNama}</p>}
                   </div>
                   <p className="text-sm font-bold shrink-0" style={{ color: t.jenis === 'masuk' ? '#0F6E56' : '#C8102E' }}>{t.jenis === 'masuk' ? '+' : '-'} RM {t.jumlah.toFixed(2)}</p>
                   {bolehUrus && (
@@ -354,9 +379,10 @@ export default function KewanganKKGS() {
                   <div key={t.id} className="flex items-center gap-3 p-3.5 rounded-card border border-border bg-surface">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-ink truncate">{t.perkara}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                         <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.teks }}>{labelSumber(t.sumber)}</span>
                         <span className="text-[10px] text-inkmuted">{t.tarikh} · {t.kategori}</span>
+                        {t.programNama && <span className="text-[10px] text-inkmuted">· 📌 {t.programNama}</span>}
                       </div>
                     </div>
                     <p className="text-sm font-bold shrink-0" style={{ color: t.jenis === 'masuk' ? '#0F6E56' : '#C8102E' }}>{t.jenis === 'masuk' ? '+' : '-'} RM {t.jumlah.toFixed(2)}</p>

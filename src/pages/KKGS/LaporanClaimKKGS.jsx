@@ -62,19 +62,21 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun }) {
               <th className="border border-black p-1.5 bg-gray-100" style={{ width: 24 }}>Bil</th>
               <th className="border border-black p-1.5 bg-gray-100">Nama</th>
               <th className="border border-black p-1.5 bg-gray-100">Butiran</th>
+              <th className="border border-black p-1.5 bg-gray-100">Program/Aktiviti</th>
               <th className="border border-black p-1.5 bg-gray-100" style={{ width: 70 }}>Jumlah (RM)</th>
               <th className="border border-black p-1.5 bg-gray-100" style={{ width: 60 }}>Status</th>
             </tr>
           </thead>
           <tbody>
             {senarai.length === 0 ? (
-              <tr><td colSpan={5} className="border border-black p-3 text-center text-gray-500">Tiada rekod tahun ini.</td></tr>
+              <tr><td colSpan={6} className="border border-black p-3 text-center text-gray-500">Tiada rekod tahun ini.</td></tr>
             ) : (
               senarai.map((c, i) => (
                 <tr key={c.id}>
                   <td className="border border-black p-1.5 text-center">{i + 1}</td>
                   <td className="border border-black p-1.5">{namaBerkenaan(c)}</td>
                   <td className="border border-black p-1.5">{butiran(c)}</td>
+                  <td className="border border-black p-1.5">{c.programNama || '-'}</td>
                   <td className="border border-black p-1.5 text-right">{c.jumlah.toFixed(2)}</td>
                   <td className="border border-black p-1.5 text-center">{WARNA_STATUS_CETAK[c.status] ?? c.status}</td>
                 </tr>

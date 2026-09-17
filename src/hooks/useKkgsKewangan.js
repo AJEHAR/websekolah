@@ -34,10 +34,11 @@ export function useKkgsKewanganSenarai() {
   return { senarai, loading, muatSemula }
 }
 
-export async function tambahKewanganKkgs({ tarikh, perkara, jenis, kategori, jumlah, catatan }, uid) {
+export async function tambahKewanganKkgs({ tarikh, perkara, jenis, kategori, jumlah, catatan, programId, programNama }, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await addDoc(collection(db, KOLEKSI), {
     tarikh, perkara: perkara.trim(), jenis, kategori: kategori || 'Lain-lain', jumlah: Number(jumlah), catatan: catatan?.trim() ?? '',
+    programId: programId ?? '', programNama: programNama ?? '',
     createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: uid,
   })
 }

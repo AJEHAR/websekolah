@@ -415,6 +415,22 @@ service cloud.firestore {
       allow write: if isAdminSeksyen('kkgs');
     }
 
+    // Program/Aktiviti - SEMUA staff boleh BACA (telus), admin 'kkgs'
+    // SAHAJA boleh TULIS (tambah/edit/padam/tukar status) - sama corak
+    // macam kkgsAhli/kkgsYuran.
+    match /kkgsProgram/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isAdminSeksyen('kkgs');
+    }
+
+    // Tempoh Bayar Tahunan (override Bulan Mula/Tamat PER AHLI PER TAHUN,
+    // lalai = penuh tahun bila takde dokumen) - SEMUA staff boleh BACA,
+    // admin 'kkgs' SAHAJA boleh TULIS. Sama corak macam kkgsAhli/kkgsYuran.
+    match /kkgsKeahlianTahun/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isAdminSeksyen('kkgs');
+    }
+
     // Yuran Sumbangan - SEMUA staff boleh BACA (papan pembayaran telus,
     // bukan disorok ikut individu lagi - senarai ahli sahaja, tiada
     // padanan emel). Admin 'kkgs' SAHAJA boleh TULIS (rekod bayaran).

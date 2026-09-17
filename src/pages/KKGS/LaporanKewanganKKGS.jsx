@@ -79,19 +79,21 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerku
               <th className="border border-black p-1.5 bg-gray-100">Tarikh</th>
               <th className="border border-black p-1.5 bg-gray-100">Perkara</th>
               <th className="border border-black p-1.5 bg-gray-100">Kategori</th>
+              <th className="border border-black p-1.5 bg-gray-100">Program/Aktiviti</th>
               <th className="border border-black p-1.5 bg-gray-100">Masuk (RM)</th>
               <th className="border border-black p-1.5 bg-gray-100">Keluar (RM)</th>
             </tr>
           </thead>
           <tbody>
             {transaksi.length === 0 ? (
-              <tr><td colSpan={5} className="border border-black p-2 text-center text-gray-500">Tiada transaksi tempoh ini.</td></tr>
+              <tr><td colSpan={6} className="border border-black p-2 text-center text-gray-500">Tiada transaksi tempoh ini.</td></tr>
             ) : (
               [...transaksi].reverse().map((t) => (
                 <tr key={t.id}>
                   <td className="border border-black p-1.5">{t.tarikh}</td>
                   <td className="border border-black p-1.5">{t.perkara}</td>
                   <td className="border border-black p-1.5">{t.kategori}</td>
+                  <td className="border border-black p-1.5">{t.programNama || '-'}</td>
                   <td className="border border-black p-1.5 text-right">{t.jenis === 'masuk' ? t.jumlah.toFixed(2) : ''}</td>
                   <td className="border border-black p-1.5 text-right">{t.jenis === 'keluar' ? t.jumlah.toFixed(2) : ''}</td>
                 </tr>

@@ -46,6 +46,7 @@ export function useKkgsLedger(tahun, aktif = true) {
         gabungan.push({
           id: `kewangan_${d.id}`, sumber: 'kewangan', tarikh: data.tarikh, jenis: data.jenis,
           kategori: data.kategori || 'Lain-lain', perkara: data.perkara, jumlah: data.jumlah,
+          programNama: data.programNama || '',
         })
       })
 
@@ -80,6 +81,7 @@ export function useKkgsLedger(tahun, aktif = true) {
             kategori: data.jenisClaim === 'imbuhan' ? 'Imbuhan' : 'Resit',
             perkara: data.jenisClaim === 'imbuhan' ? `${data.jenisImbuhan} - ${data.ahliNama}` : (data.tujuan || '-'),
             jumlah: data.jumlah,
+            programNama: data.programNama || '',
           })
         }
       })

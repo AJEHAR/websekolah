@@ -51,6 +51,27 @@ export function labelStatusKeahlian(nilai) {
   return STATUS_KEAHLIAN.find((s) => s.nilai === nilai)?.label ?? nilai
 }
 
+// Status Program/Aktiviti KKGS - "akan-datang" LALAI untuk program baharu
+// (belum sampai/lepas tarikh), AJK tukar SECARA MANUAL ke "selesai" atau
+// "tangguh" bila perlu (bukan automatik ikut tarikh - AJK yang paling tahu
+// program tu betul-betul jalan atau tidak pada hari tu).
+export const STATUS_PROGRAM = [
+  { nilai: 'akan-datang', label: 'Akan Datang' },
+  { nilai: 'selesai', label: 'Selesai' },
+  { nilai: 'tangguh', label: 'Tangguh' },
+]
+
+export function labelStatusProgram(nilai) {
+  return STATUS_PROGRAM.find((s) => s.nilai === nilai)?.label ?? nilai
+}
+
+// ID KHAS untuk pilihan "Lain-lain" dalam dropdown Program/Aktiviti (Rekod
+// Transaksi Kewangan & Tuntutan Resit) - bila dipilih, staff KENA isi
+// medan teks bebas (bukan dari senarai Program/Aktiviti dirancang). Guna
+// SATU pemalar dikongsi (bukan string literal ulang-ulang) - elak silap
+// taip antara dua page yang guna corak sama ni.
+export const PROGRAM_LAIN_ID = 'lain-lain'
+
 // Pilihan tahun DIKONGSI merentasi Yuran & Kewangan - PENTING kekal SAMA
 // supaya tahun boleh dilihat konsisten di kedua-dua page (dulu Yuran &
 // Kewangan guna senarai tahun BERBEZA - bug #5, tahun boleh guna kat

@@ -1,15 +1,15 @@
 import { useRef, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Upload, X, CheckSquare, Square } from 'lucide-react'
+import { Plus, Pencil, Trash2, Upload, X, CheckSquare, Square, ChevronDown, ChevronRight } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { uraiCSVBaris } from '../../lib/csvUtils.js'
 import {
-  useKkgsAhliSenarai, tambahAhliKkgs, kemaskiniAhliKkgs, padamAhliKkgs, padamAhliPukalKkgs, kemaskiniAhliPukalKkgs, importNamaPukalKkgs,
+  useKkgsAhliSenarai, tambahAhliKkgs, kemaskiniAhliKkgs, padamAhliKkgs, padamAhliPukalKkgs, importNamaPukalKkgs,
 } from '../../hooks/useKkgsAhli.js'
-import { JAWATAN_KKGS, STATUS_KEAHLIAN, labelStatusKeahlian, labelJawatan, NAMA_BULAN } from './kkgsConstants.js'
+import { JAWATAN_KKGS, STATUS_KEAHLIAN, labelStatusKeahlian, labelJawatan } from './kkgsConstants.js'
 
-const MEDAN_KOSONG = { nama: '', emel: '', jawatan: 'Ahli', statusKeahlian: 'aktif', bulanMula: 1, bulanTamat: 12 }
+const MEDAN_KOSONG = { nama: '', emel: '', jawatan: 'Ahli', statusKeahlian: 'aktif' }
 
 function WarnaStatus(status) {
   return status === 'aktif' ? { bg: '#E1F5EE', teks: '#0F6E56' } : { bg: '#FCEFC7', teks: '#8A6D00' }
@@ -28,7 +28,6 @@ function ModalAhli({ open, dataAwal, onTutup, onSimpan }) {
 
   async function simpan() {
     if (!data.nama.trim()) return setRalat('Sila isi nama.')
-    if ((data.bulanMula ?? 1) > (data.bulanTamat ?? 12)) return setRalat('Bulan Mula mesti sebelum atau sama dengan Bulan Tamat.')
     setRalat(null)
     setMenyimpan(true)
     try {
@@ -69,21 +68,7 @@ function ModalAhli({ open, dataAwal, onTutup, onSimpan }) {
             </select>
             <p className="text-[10px] text-inkmuted mt-1">Bukan "Aktif" = tak diminta bayar yuran lagi, tapi baki/sejarah bayaran lama kekal.</p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-medium text-ink mb-1">Bulan Mula Bayar</label>
-              <select value={data.bulanMula ?? 1} onChange={(e) => u('bulanMula', Number(e.target.value))} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
-                {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink mb-1">Bulan Tamat Bayar</label>
-              <select value={data.bulanTamat ?? 12} onChange={(e) => u('bulanTamat', Number(e.target.value))} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
-                {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
-              </select>
-            </div>
-          </div>
-          <p className="text-[10px] text-inkmuted -mt-2">Lalai Januari-Disember (ikut tetapan tahun). Ubah kalau ahli baru sertai lewat (cth. join Jun = Bulan Mula: Jun) atau ahli keluar awal.</p>
+          <p className="text-[10px] text-inkmuted bg-base rounded-card p-2.5">Tempoh Bulan Mula/Tamat Bayar kini diurus di page <strong>Yuran Sumbangan</strong> (ikut tahun) - lalai ahli bayar PENUH TAHUN, ubah di sana kalau ahli ni join lewat/keluar awal TAHUN SEMASA sahaja.</p>
         </div>
         {ralat && <p className="text-xs text-brand-red mt-3">{ralat}</p>}
         <button onClick={simpan} disabled={menyimpan} className="w-full h-11 mt-4 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
@@ -157,48 +142,30 @@ function ModalImport({ open, senaraiSediaAda, onTutup, onSelesai, user }) {
   )
 }
 
-function ModalEditPukal({ open, bilangan, onTutup, onSimpan }) {
-  const [bulanMula, setBulanMula] = useState(1)
-  const [bulanTamat, setBulanTamat] = useState(12)
-  const [menyimpan, setMenyimpan] = useState(false)
-
-  if (!open) return null
-
-  async function simpan() {
-    setMenyimpan(true)
-    try {
-      await onSimpan({ bulanMula, bulanTamat })
-    } finally {
-      setMenyimpan(false)
-    }
-  }
-
+// Satu baris ahli - dikongsi antara seksyen Aktif & Tak Aktif (elak
+// duplikasi JSX).
+function BarisAhli({ a, bolehUrus, terpilih, onTogolPilih, onEdit, onPadam }) {
+  const warna = WarnaStatus(a.statusKeahlian)
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-surface rounded-card w-full max-w-sm p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-ink">Edit Pukal ({bilangan} ahli)</h3>
-          <button onClick={onTutup} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><X size={18} /></button>
-        </div>
-        <p className="text-xs text-inkmuted mb-3">Tetapkan Bulan Mula/Tamat Bayar untuk SEMUA {bilangan} ahli terpilih serentak (cth. kumpulan ahli baharu yang sertai bulan sama).</p>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-xs font-medium text-ink mb-1">Bulan Mula</label>
-            <select value={bulanMula} onChange={(e) => setBulanMula(Number(e.target.value))} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
-              {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-ink mb-1">Bulan Tamat</label>
-            <select value={bulanTamat} onChange={(e) => setBulanTamat(Number(e.target.value))} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm">
-              {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
-            </select>
-          </div>
-        </div>
-        <button onClick={simpan} disabled={menyimpan} className="w-full h-11 mt-4 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
-          {menyimpan ? 'Menyimpan…' : `Kemaskini ${bilangan} Ahli`}
+    <div className="flex items-center gap-2.5 p-3.5 rounded-card border border-border bg-surface">
+      {bolehUrus && (
+        <button onClick={() => onTogolPilih(a.id)} aria-label="Pilih" className="shrink-0 text-inkmuted">
+          {terpilih.has(a.id) ? <CheckSquare size={18} className="text-brand-red" /> : <Square size={18} />}
         </button>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-ink truncate">{a.nama}</p>
+        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+          {a.jawatan && a.jawatan !== 'Ahli' && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#FDEAEA] text-brand-red">{a.jawatan}</span>}
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: warna.bg, color: warna.teks }}>{labelStatusKeahlian(a.statusKeahlian)}</span>
+        </div>
       </div>
+      {bolehUrus && (
+        <>
+          <button onClick={() => onEdit(a)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><Pencil size={15} /></button>
+          <button onClick={() => onPadam(a)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red"><Trash2 size={15} /></button>
+        </>
+      )}
     </div>
   )
 }
@@ -212,11 +179,15 @@ export default function SenaraiAhliKKGS() {
   const [carian, setCarian] = useState('')
   const [tunjukForm, setTunjukForm] = useState(false)
   const [tunjukImport, setTunjukImport] = useState(false)
-  const [tunjukEditPukal, setTunjukEditPukal] = useState(false)
   const [ahliEdit, setAhliEdit] = useState(null)
   const [terpilih, setTerpilih] = useState(new Set())
+  // Ahli tak aktif (bersara/pindah/berhenti) - collapsed LALAI, senarai ni
+  // biasanya cuma untuk rujukan sekali-sekala (bukan urusan harian AJK).
+  const [tunjukTakAktif, setTunjukTakAktif] = useState(false)
 
   const disenarai = senarai.filter((a) => a.nama.toLowerCase().includes(carian.toLowerCase()))
+  const disenaraiAktif = disenarai.filter((a) => a.statusKeahlian === 'aktif')
+  const disenaraiTakAktif = disenarai.filter((a) => a.statusKeahlian !== 'aktif')
 
   function togolPilih(id) {
     setTerpilih((s) => {
@@ -270,13 +241,6 @@ export default function SenaraiAhliKKGS() {
     muatSemula()
   }
 
-  async function editPukal(data) {
-    await kemaskiniAhliPukalKkgs([...terpilih], data, user.uid)
-    setTunjukEditPukal(false)
-    setTerpilih(new Set())
-    muatSemula()
-  }
-
   return (
     <div>
       <p className="text-xs text-inkmuted mb-4">Senarai induk semua ahli KKGS - jawatan &amp; status keahlian diurus di sini (page Jawatankuasa cuma paparan tapisan dari senarai ni).{!bolehUrus && ' Anda boleh LIHAT sahaja - hubungi admin KKGS untuk buat perubahan.'}</p>
@@ -312,7 +276,6 @@ export default function SenaraiAhliKKGS() {
       {bolehUrus && terpilih.size > 0 && (
         <div className="flex items-center gap-2 mb-3 p-2.5 rounded-card bg-base">
           <p className="text-xs text-ink flex-1">{terpilih.size} ahli dipilih</p>
-          <button onClick={() => setTunjukEditPukal(true)} className="h-9 px-3 rounded-card border border-border text-xs font-semibold text-ink">Edit Pukal</button>
           <button onClick={padamPukal} className="h-9 px-3 rounded-card border border-brand-red text-brand-red text-xs font-semibold">Padam Pukal</button>
           <button onClick={() => setTerpilih(new Set())} className="h-9 px-2 text-xs text-inkmuted">Batal</button>
         </div>
@@ -323,39 +286,40 @@ export default function SenaraiAhliKKGS() {
       ) : disenarai.length === 0 ? (
         <p className="text-sm text-inkmuted">Tiada ahli lagi.</p>
       ) : (
-        <div className="space-y-2">
-          {disenarai.map((a) => {
-            const warna = WarnaStatus(a.statusKeahlian)
-            return (
-            <div key={a.id} className="flex items-center gap-2.5 p-3.5 rounded-card border border-border bg-surface">
-              {bolehUrus && (
-                <button onClick={() => togolPilih(a.id)} aria-label="Pilih" className="shrink-0 text-inkmuted">
-                  {terpilih.has(a.id) ? <CheckSquare size={18} className="text-brand-red" /> : <Square size={18} />}
-                </button>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-ink truncate">{a.nama}</p>
-                <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                  {a.jawatan && a.jawatan !== 'Ahli' && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#FDEAEA] text-brand-red">{a.jawatan}</span>}
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: warna.bg, color: warna.teks }}>{labelStatusKeahlian(a.statusKeahlian)}</span>
-                  <span className="text-[10px] text-inkmuted">{NAMA_BULAN[(a.bulanMula ?? 1) - 1].slice(0, 3)}-{NAMA_BULAN[(a.bulanTamat ?? 12) - 1].slice(0, 3)}</span>
+        <>
+          {disenaraiAktif.length === 0 ? (
+            <p className="text-sm text-inkmuted mb-4">Tiada ahli aktif padan carian.</p>
+          ) : (
+            <div className="space-y-2 mb-4">
+              {disenaraiAktif.map((a) => (
+                <BarisAhli key={a.id} a={a} bolehUrus={bolehUrus} terpilih={terpilih} onTogolPilih={togolPilih} onEdit={(a) => { setAhliEdit(a); setTunjukForm(true) }} onPadam={padam} />
+              ))}
+            </div>
+          )}
+
+          {disenaraiTakAktif.length > 0 && (
+            <div>
+              <button
+                onClick={() => setTunjukTakAktif((t) => !t)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-ink mb-2 w-full"
+              >
+                {tunjukTakAktif ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                Bersara / Pindah / Berhenti ({disenaraiTakAktif.length})
+              </button>
+              {tunjukTakAktif && (
+                <div className="space-y-2">
+                  {disenaraiTakAktif.map((a) => (
+                    <BarisAhli key={a.id} a={a} bolehUrus={bolehUrus} terpilih={terpilih} onTogolPilih={togolPilih} onEdit={(a) => { setAhliEdit(a); setTunjukForm(true) }} onPadam={padam} />
+                  ))}
                 </div>
-              </div>
-              {bolehUrus && (
-                <>
-                  <button onClick={() => { setAhliEdit(a); setTunjukForm(true) }} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><Pencil size={15} /></button>
-                  <button onClick={() => padam(a)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red"><Trash2 size={15} /></button>
-                </>
               )}
             </div>
-            )
-          })}
-        </div>
+          )}
+        </>
       )}
 
       <ModalAhli key={ahliEdit?.id ?? 'baru'} open={tunjukForm} dataAwal={ahliEdit} onTutup={() => { setTunjukForm(false); setAhliEdit(null) }} onSimpan={simpan} />
       <ModalImport open={tunjukImport} senaraiSediaAda={senarai} onTutup={() => setTunjukImport(false)} onSelesai={muatSemula} user={user} />
-      <ModalEditPukal open={tunjukEditPukal} bilangan={terpilih.size} onTutup={() => setTunjukEditPukal(false)} onSimpan={editPukal} />
     </div>
   )
 }
