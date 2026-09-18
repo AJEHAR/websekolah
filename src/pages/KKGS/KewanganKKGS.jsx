@@ -5,6 +5,7 @@ import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsKewanganSenarai, tambahKewanganKkgs, kemaskiniKewanganKkgs, padamKewanganKkgs } from '../../hooks/useKkgsKewangan.js'
 import { useKkgsLedger, kiraBakiTerkumpul, kiraTransaksiDenganBaki, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
+import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsBakiPembukaan, simpanBakiPembukaan } from '../../hooks/useKkgsBakiPembukaan.js'
 import { useKkgsProgramTahun } from '../../hooks/useKkgsProgram.js'
 import { useCetak } from '../../hooks/useCetak.js'
@@ -232,6 +233,13 @@ export default function KewanganKKGS() {
   // transaksiTahun (satu tahun) untuk paparan Ledger/Laporan.
   const { semuaTransaksi, transaksiTahun, loading: loadingLedger, muatSemula: muatSemulaLedger } = useKkgsLedger(tahun, true)
   const { tetapan: tetapanBaki, loading: loadingBaki, muatSemula: muatSemulaBaki } = useKkgsBakiPembukaan()
+  // Nama Pengerusi/Bendahari SEMASA - utk cetak terus pada ruang
+  // tandatangan laporan bulanan (SAHAJA bila laporan utk TAHUN SEMASA -
+  // rekod jawatankuasa ni cuma simpan pemegang SEKARANG, tiada sejarah
+  // ikut tahun, jadi tak sah dipakai utk laporan tahun lepas/depan).
+  const { senarai: ahliSenarai } = useKkgsAhliSenarai()
+  const namaPengerusiSemasa = ahliSenarai.find((a) => a.jawatan === 'Pengerusi')?.nama ?? null
+  const namaBendahariSemasa = ahliSenarai.find((a) => a.jawatan === 'Bendahari 1')?.nama ?? null
   const [tunjukForm, setTunjukForm] = useState(false)
   const [transaksiEdit, setTransaksiEdit] = useState(null)
   const [tunjukTetapanBaki, setTunjukTetapanBaki] = useState(false)
@@ -282,7 +290,13 @@ export default function KewanganKKGS() {
 
   function cetakLaporan() {
     const transaksiTapis = bulanLaporan === 0 ? transaksiTahunDenganBaki : transaksiTahunDenganBaki.filter((t) => Number(t.tarikh.slice(5, 7)) === bulanLaporan)
-    setDataLaporan({ transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan, bakiTerkumpul, bakiAwalTahun })
+    // Nama hanya dicetak kalau laporan utk TAHUN SEMASA - lihat nota di atas.
+    const untukTahunSemasa = tahun === TAHUN_SEMASA
+    setDataLaporan({
+      transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan, bakiTerkumpul, bakiAwalTahun,
+      namaPengerusi: untukTahunSemasa ? namaPengerusiSemasa : null,
+      namaBendahari: untukTahunSemasa ? namaBendahariSemasa : null,
+    })
   }
 
   return (

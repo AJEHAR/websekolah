@@ -30,16 +30,16 @@ function kumpul12Bulan(transaksi, bakiAwalTahun) {
 // sebab pelayar cuma letak padding pada MUKA PERTAMA satu div panjang,
 // bukan pada setiap muka surat yang overflow secara semula jadi).
 //
-// Nombor ni dikira dari anggaran ketinggian sebenar setiap bahagian pada
-// muka A4 (297mm, tolak padding p-10 ~21mm = ~276mm ruang boleh guna):
-//   Tajuk + garis  ~26mm | Kotak ringkasan (muka pertama sahaja) ~26mm
-//   Header jadual  ~7mm  | Setiap baris jadual (font 9px + padding) ~5mm
-// Muka pertama : (276 - 26 - 26 - 7) / 5 ~= 43 baris -> guna 32 (buffer
-// selamat, sebab telefon/PC kadang cetak guna saiz kertas "Letter" yg
-// LEBIH PENDEK drpd A4 - lihat nota `minHeight` di bawah).
-// Muka sambungan: (276 - 20 - 7) / 5 ~= 50 baris -> guna 42.
-const MAKS_BARIS_MUKA_MULA = 32 // muka pertama bulan - ada ruang kotak ringkasan
-const MAKS_BARIS_MUKA_SAMBUNG = 42 // muka sambungan - jadual sahaja, lebih ruang
+// Nombor ni dilaras TURUN drpd anggaran teori awal (32/42) selepas ujian
+// sebenar (31 baris pada muka pertama MASIH overflow ke muka fizikal
+// kedua bagi sesetengah pelayar/telefon/saiz kertas) - baris sebenar yg
+// muat setiap muka SELALU lebih sedikit drpd kiraan mm teori (fon/braris
+// pelayar berbeza-beza). Guna nombor lebih konservatif supaya SATU
+// keping (satu <table>) SENTIASA muat dlm SATU muka fizikal sepenuhnya -
+// elak overflow tak terkawal merentasi muka (yg buang padding & duplicate
+// baris "Jumlah" - lihat nota <tbody> di bawah).
+const MAKS_BARIS_MUKA_MULA = 20 // muka pertama bulan - ada ruang kotak ringkasan
+const MAKS_BARIS_MUKA_SAMBUNG = 28 // muka sambungan - jadual sahaja, lebih ruang
 
 function pecahBarisMukaSurat(senarai) {
   if (senarai.length === 0) return [[]]
@@ -88,25 +88,32 @@ function BarisTransaksi({ t, no }) {
   )
 }
 
-// Ruang tandatangan Pengerusi & Bendahari KKGS - setiap satu ada 2 garisan
-// (satu utk NAMA ditulis tangan, satu utk tandatangan sebenar), letak
-// bersebelahan supaya kedua-dua pihak sahkan penyata bulanan yang sama.
-function KotakTandatangan({ jawatan }) {
+// Ruang tandatangan Pengerusi & Bendahari KKGS - setiap satu ada garisan
+// tandatangan + nama, letak bersebelahan supaya kedua-dua pihak sahkan
+// penyata bulanan yang sama. Kalau `nama` diberi (pemegang jawatan SEMASA,
+// hanya utk laporan tahun semasa - lihat KewanganKKGS.jsx), papar terus;
+// kalau tidak (laporan tahun lepas/depan, atau jawatan kosong), biar ruang
+// kosong utk tulis tangan - elak cetak nama yang tak sah utk tempoh tu.
+function KotakTandatangan({ jawatan, nama }) {
   return (
     <div className="text-center">
       <div className="w-40 border-b border-black mb-1" style={{ height: '36px' }} />
-      <p className="text-[10px] text-gray-600">(Nama: ……………………………………)</p>
+      {nama ? (
+        <p className="text-[10px] font-semibold">({nama})</p>
+      ) : (
+        <p className="text-[10px] text-gray-600">(Nama: ……………………………………)</p>
+      )}
       <p className="text-xs font-semibold mt-1">{jawatan}</p>
     </div>
   )
 }
 
-function FooterLaporan() {
+function FooterLaporan({ namaBendahari, namaPengerusi }) {
   return (
     <div className="mt-8">
       <div className="flex justify-around gap-6 mb-4">
-        <KotakTandatangan jawatan="Bendahari KKGS" />
-        <KotakTandatangan jawatan="Pengerusi KKGS" />
+        <KotakTandatangan jawatan="Bendahari KKGS" nama={namaBendahari} />
+        <KotakTandatangan jawatan="Pengerusi KKGS" nama={namaPengerusi} />
       </div>
       <p className="text-xs text-gray-600 text-right">Laporan dijana sistem pada {tarikhHariIni()}</p>
     </div>
@@ -115,7 +122,7 @@ function FooterLaporan() {
 
 // Halaman 1 - "sampul" ringkasan keseluruhan tempoh (jumlah besar +
 // pecahan kategori). `akanBersambung` = ada halaman lepas ni.
-function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKeluar, bakiBersihTempoh, bakiAwalTempoh, bakiTerkumpul, pecahanMasuk, pecahanKeluar, akanBersambung }) {
+function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKeluar, bakiBersihTempoh, bakiAwalTempoh, bakiTerkumpul, pecahanMasuk, pecahanKeluar, akanBersambung, namaBendahari, namaPengerusi }) {
   const kotak = []
   if (bakiAwalTempoh != null) kotak.push({ label: labelBakiAwal, nilai: bakiAwalTempoh })
   kotak.push({ label: 'Jumlah Masuk', nilai: jumlahMasuk })
@@ -166,7 +173,7 @@ function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKelua
         </div>
       </div>
 
-      {!akanBersambung && <FooterLaporan />}
+      {!akanBersambung && <FooterLaporan namaBendahari={namaBendahari} namaPengerusi={namaPengerusi} />}
     </div>
   )
 }
@@ -178,9 +185,12 @@ function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKelua
 // KEKAL dapat padding p-10 sendiri (fix "tiada jarak A4 profesional" -
 // dulu overflow jadual biar pelayar sambung sendiri ke muka baru TANPA
 // padding, sekarang KITA yang pecah & bagi setiap muka padding sendiri).
-function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiAwalBulan, bakiAkhirBulan, masuk, keluar, akanBersambung }) {
+function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiAwalBulan, bakiAkhirBulan, masuk, keluar, akanBersambung, namaBendahari, namaPengerusi }) {
   const mukaPertama = keping === 0
   const mukaTerakhirBulan = keping === jumlahKeping - 1
+  const labelBakiBawa = bulan > 1
+    ? `Baki Bawa Ke Hadapan (dari ${NAMA_BULAN[bulan - 2]} ${tahun})`
+    : `Baki Bawa Ke Hadapan (dari Disember ${tahun - 1} / baki pembukaan)`
 
   return (
     <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm' }}>
@@ -215,28 +225,54 @@ function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiA
           </tr>
         </thead>
         <tbody>
+          {/* PENTING (jawab "betul tak?" - ya): baki tak "hilang" bulan
+              kosong - baris B/F ni tunjuk baki tu MASIH tersambung dari
+              bulan lepas, walaupun tiada transaksi langsung bulan ni.
+              Amalan standard buku besar/penyata bank - baris pertama
+              setiap tempoh baharu = baki dibawa ke hadapan. Cuma pada
+              MUKA PERTAMA bulan (bukan muka sambungan, sebab sambungan
+              terus dari baris terakhir muka sebelum, bukan dari bulan
+              lepas). */}
+          {mukaPertama && (
+            <tr className="italic bg-gray-50">
+              <td className="border border-black p-1 text-center">-</td>
+              <td className="border border-black p-1">-</td>
+              <td className="border border-black p-1" colSpan={3}>{labelBakiBawa}</td>
+              <td className="border border-black p-1"></td>
+              <td className="border border-black p-1"></td>
+              <td className="border border-black p-1 text-right font-semibold">{bakiAwalBulan.toFixed(2)}</td>
+            </tr>
+          )}
           {baris.length === 0 ? (
             <tr><td colSpan={8} className="border border-black p-2 text-center text-gray-500">Tiada transaksi bulan ini.</td></tr>
           ) : (
             baris.map((t, i) => <BarisTransaksi key={t.id} t={t} no={noMula + i} />)
           )}
-        </tbody>
-        {mukaTerakhirBulan && baris.length > 0 && (
-          <tfoot>
+          {/* PENTING (fix "Jumlah Mac tercetak DUA KALI"): subtotal diletak
+              sbg baris <tbody> BIASA, BUKAN <tfoot>. Pelayar (ikut piawai
+              CSS) automatik ULANG kandungan <tfoot> pada SETIAP muka surat
+              bila satu <table> terbahagi merentasi >1 muka fizikal semasa
+              cetak (sama macam <thead> ulang tajuk lajur) - itu punca
+              "Jumlah Mac" muncul 2 kali dlm gambar yang dilaporkan. Baris
+              tbody biasa cuma tercetak SEKALI, di tempat asal ia berada. */}
+          {mukaTerakhirBulan && baris.length > 0 && (
             <tr className="bg-gray-100 font-bold">
               <td colSpan={5} className="border border-black p-1 text-right">Jumlah {NAMA_BULAN[bulan - 1]} :</td>
               <td className="border border-black p-1 text-right">{masuk.toFixed(2)}</td>
               <td className="border border-black p-1 text-right">{keluar.toFixed(2)}</td>
               <td className="border border-black p-1 text-right">{bakiAkhirBulan.toFixed(2)}</td>
             </tr>
-          </tfoot>
-        )}
+          )}
+        </tbody>
       </table>
       {!mukaTerakhirBulan && (
         <p className="text-[10px] text-gray-500 mt-2 italic">… bersambung ke muka surat seterusnya.</p>
       )}
 
-      {!akanBersambung && <FooterLaporan />}
+      {/* PENTING: tandatangan ikut SETIAP BULAN (muka TERAKHIR bagi bulan
+          tu), BUKAN cuma di hujung SELURUH laporan 12-bulan - setiap
+          penyata bulanan disahkan berasingan. */}
+      {mukaTerakhirBulan && <FooterLaporan namaBendahari={namaBendahari} namaPengerusi={namaPengerusi} />}
     </div>
   )
 }
@@ -249,7 +285,7 @@ function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiA
 // overflow pelayar). Tapisan tempoh dibuat SEBELUM hantar ke komponen ni;
 // `transaksi` diterima dah tersusun MENAIK ikut tarikh dgn lajur `baki`
 // siap kira.
-export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerkumpul, bakiAwalTahun }) {
+export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerkumpul, bakiAwalTahun, namaPengerusi, namaBendahari }) {
   const jumlahMasuk = transaksi.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
   const jumlahKeluar = transaksi.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
   const bakiBersihTempoh = jumlahMasuk - jumlahKeluar
@@ -296,9 +332,13 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerku
         jumlahMasuk={jumlahMasuk} jumlahKeluar={jumlahKeluar} bakiBersihTempoh={bakiBersihTempoh}
         bakiAwalTempoh={bakiAwalTahun} bakiTerkumpul={bakiTerkumpul}
         pecahanMasuk={pecahanMasuk} pecahanKeluar={pecahanKeluar} akanBersambung={semuaMuka.length > 0}
+        namaBendahari={namaBendahari} namaPengerusi={namaPengerusi}
       />
       {semuaMuka.map((h, i) => (
-        <HalamanBulan key={`${h.bulan}_${h.keping}`} {...h} akanBersambung={i < semuaMuka.length - 1} />
+        <HalamanBulan
+          key={`${h.bulan}_${h.keping}`} {...h} akanBersambung={i < semuaMuka.length - 1}
+          namaBendahari={namaBendahari} namaPengerusi={namaPengerusi}
+        />
       ))}
     </PrintArea>
   )
