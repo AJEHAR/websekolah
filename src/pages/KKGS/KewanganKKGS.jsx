@@ -7,6 +7,7 @@ import { useKkgsKewanganSenarai, tambahKewanganKkgs, kemaskiniKewanganKkgs, pada
 import { useKkgsLedger, kiraBakiTerkumpul, kiraTransaksiDenganBaki, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsBakiPembukaan, simpanBakiPembukaan } from '../../hooks/useKkgsBakiPembukaan.js'
+import { useKkgsNamaSekolahLaporan, simpanKkgsNamaSekolahLaporan } from '../../hooks/useKkgsTetapanLaporan.js'
 import { useKkgsProgramTahun } from '../../hooks/useKkgsProgram.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA, PROGRAM_LAIN_ID } from './kkgsConstants.js'
@@ -185,6 +186,44 @@ function ModalBakiPembukaan({ open, tetapan, onTutup, onSimpan }) {
   )
 }
 
+// Nama sekolah dipapar di kepala (letterhead) Laporan Kewangan KKGS yang
+// dicetak - kosongkan utk sembunyikan baris tu (tak wajib).
+function ModalNamaSekolah({ open, namaSemasa, onTutup, onSimpan }) {
+  const [nama, setNama] = useState(namaSemasa)
+  const [menyimpan, setMenyimpan] = useState(false)
+
+  if (!open) return null
+
+  async function simpan() {
+    setMenyimpan(true)
+    try {
+      await onSimpan(nama)
+      onTutup()
+    } finally {
+      setMenyimpan(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="bg-surface rounded-card w-full max-w-sm p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-ink">Nama Sekolah (Laporan)</h3>
+          <button onClick={onTutup} aria-label="Tutup" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><X size={18} /></button>
+        </div>
+        <p className="text-xs text-inkmuted mb-3">Dipapar di bahagian atas (letterhead) setiap Laporan Kewangan KKGS yang dicetak/save PDF. Kosongkan kalau tak mahu baris ni dipapar.</p>
+        <div>
+          <label className="block text-xs font-medium text-ink mb-1">Nama Sekolah</label>
+          <input type="text" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="cth. SK Pendidikan Khas Kuantan" className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" />
+        </div>
+        <button onClick={simpan} disabled={menyimpan} className="w-full h-11 mt-4 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
+          {menyimpan ? 'Menyimpan…' : 'Simpan'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function CartaBulanan({ transaksi }) {
   const dataBulan = Array.from({ length: 12 }, (_, i) => {
     const bulan = i + 1
@@ -240,9 +279,12 @@ export default function KewanganKKGS() {
   const { senarai: ahliSenarai } = useKkgsAhliSenarai()
   const namaPengerusiSemasa = ahliSenarai.find((a) => a.jawatan === 'Pengerusi')?.nama ?? null
   const namaBendahariSemasa = ahliSenarai.find((a) => a.jawatan === 'Bendahari 1')?.nama ?? null
+  // Nama sekolah (letterhead laporan) - lihat ModalNamaSekolah di atas.
+  const { namaSekolah, muatSemula: muatSemulaNamaSekolah } = useKkgsNamaSekolahLaporan()
   const [tunjukForm, setTunjukForm] = useState(false)
   const [transaksiEdit, setTransaksiEdit] = useState(null)
   const [tunjukTetapanBaki, setTunjukTetapanBaki] = useState(false)
+  const [tunjukTetapanNamaSekolah, setTunjukTetapanNamaSekolah] = useState(false)
   const [dataLaporan, setDataLaporan] = useCetak((d) => `Laporan Kewangan KKGS ${d.bulan ? `${NAMA_BULAN[d.bulan - 1]} ${d.tahun}` : `Tahun ${d.tahun}`}`)
 
   const bukuTunai = bukuTunaiSemua.filter((t) => (t.tarikh ?? '').slice(0, 4) === String(tahun))
@@ -274,6 +316,11 @@ export default function KewanganKKGS() {
     muatSemulaBaki()
   }
 
+  async function simpanTetapanNamaSekolah(nama) {
+    await simpanKkgsNamaSekolahLaporan(nama, user.uid)
+    muatSemulaNamaSekolah()
+  }
+
   const jumlahMasukTahun = transaksiTahun.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
   const jumlahKeluarTahun = transaksiTahun.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
   // Baki Terkumpul SEBENAR (fix bug #1) - baki pembukaan + semua tahun
@@ -296,6 +343,7 @@ export default function KewanganKKGS() {
       transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan, bakiTerkumpul, bakiAwalTahun,
       namaPengerusi: untukTahunSemasa ? namaPengerusiSemasa : null,
       namaBendahari: untukTahunSemasa ? namaBendahariSemasa : null,
+      namaSekolah: namaSekolah || null,
     })
   }
 
@@ -316,6 +364,11 @@ export default function KewanganKKGS() {
         {bolehUrus && tab === 'dashboard' && (
           <button onClick={() => setTunjukTetapanBaki(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
             <Settings size={14} /> Baki Pembukaan
+          </button>
+        )}
+        {bolehUrus && tab === 'laporan' && (
+          <button onClick={() => setTunjukTetapanNamaSekolah(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+            <Settings size={14} /> Nama Sekolah (Laporan)
           </button>
         )}
       </div>
@@ -463,6 +516,7 @@ export default function KewanganKKGS() {
         <>
           <ModalTransaksi key={transaksiEdit?.id ?? 'baru'} open={tunjukForm} tahun={tahun} editData={transaksiEdit} onTutup={() => { setTunjukForm(false); setTransaksiEdit(null) }} onSimpan={simpan} />
           <ModalBakiPembukaan open={tunjukTetapanBaki} tetapan={tetapanBaki} onTutup={() => setTunjukTetapanBaki(false)} onSimpan={simpanTetapanBaki} />
+          <ModalNamaSekolah open={tunjukTetapanNamaSekolah} namaSemasa={namaSekolah} onTutup={() => setTunjukTetapanNamaSekolah(false)} onSimpan={simpanTetapanNamaSekolah} />
         </>
       )}
       {dataLaporan && <LaporanKewanganKKGS {...dataLaporan} />}

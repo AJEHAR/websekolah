@@ -127,14 +127,14 @@ function FooterLaporan({ namaBendahari, namaPengerusi }) {
         <KotakTandatangan jawatan="Bendahari KKGS" nama={namaBendahari} />
         <KotakTandatangan jawatan="Pengerusi KKGS" nama={namaPengerusi} />
       </div>
-      <p className="text-xs text-gray-600 text-right">Laporan dijana sistem pada {tarikhHariIni()}</p>
+      <p className="text-xs text-gray-600 text-center mt-6">Laporan dijana sistem pada {tarikhHariIni()}</p>
     </div>
   )
 }
 
 // Halaman 1 - "sampul" ringkasan keseluruhan tempoh (jumlah besar +
 // pecahan kategori). `akanBersambung` = ada halaman lepas ni.
-function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKeluar, bakiBersihTempoh, bakiAwalTempoh, bakiTerkumpul, pecahanMasuk, pecahanKeluar, akanBersambung, namaBendahari, namaPengerusi }) {
+function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKeluar, bakiBersihTempoh, bakiAwalTempoh, bakiTerkumpul, pecahanMasuk, pecahanKeluar, akanBersambung, namaBendahari, namaPengerusi, namaSekolah }) {
   const kotak = []
   if (bakiAwalTempoh != null) kotak.push({ label: labelBakiAwal, nilai: bakiAwalTempoh })
   kotak.push({ label: 'Jumlah Masuk', nilai: jumlahMasuk })
@@ -152,6 +152,7 @@ function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKelua
     // mula bersih, tak kira saiz kertas A4 atau Letter.
     <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm' }}>
       <div className="text-center mb-6 border-b-2 border-black pb-4">
+        {namaSekolah && <p className="text-sm font-bold uppercase mb-1">{namaSekolah}</p>}
         <p className="text-lg font-extrabold uppercase">Laporan Kewangan KKGS</p>
         <p className="text-xs">Kelab Kebajikan Guru &amp; Staf</p>
         <p className="text-xs font-semibold mt-1">Bagi Tempoh: {tajukPeriod}</p>
@@ -197,7 +198,7 @@ function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKelua
 // KEKAL dapat padding p-10 sendiri (fix "tiada jarak A4 profesional" -
 // dulu overflow jadual biar pelayar sambung sendiri ke muka baru TANPA
 // padding, sekarang KITA yang pecah & bagi setiap muka padding sendiri).
-function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiAwalBulan, bakiAkhirBulan, masuk, keluar, akanBersambung, namaBendahari, namaPengerusi }) {
+function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiAwalBulan, bakiAkhirBulan, masuk, keluar, akanBersambung, namaBendahari, namaPengerusi, namaSekolah }) {
   const mukaPertama = keping === 0
   const mukaTerakhirBulan = keping === jumlahKeping - 1
   const labelBakiBawa = bulan > 1
@@ -207,6 +208,7 @@ function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiA
   return (
     <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm' }}>
       <div className="text-center mb-5 border-b-2 border-black pb-3">
+        {namaSekolah && <p className="text-sm font-bold uppercase mb-1">{namaSekolah}</p>}
         <p className="text-lg font-extrabold uppercase">Laporan Kewangan KKGS</p>
         <p className="text-xs">Kelab Kebajikan Guru &amp; Staf</p>
         <p className="text-xs font-semibold mt-1">
@@ -297,7 +299,7 @@ function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiA
 // overflow pelayar). Tapisan tempoh dibuat SEBELUM hantar ke komponen ni;
 // `transaksi` diterima dah tersusun MENAIK ikut tarikh dgn lajur `baki`
 // siap kira.
-export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerkumpul, bakiAwalTahun, namaPengerusi, namaBendahari }) {
+export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerkumpul, bakiAwalTahun, namaPengerusi, namaBendahari, namaSekolah }) {
   const jumlahMasuk = transaksi.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
   const jumlahKeluar = transaksi.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
   const bakiBersihTempoh = jumlahMasuk - jumlahKeluar
@@ -344,12 +346,12 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerku
         jumlahMasuk={jumlahMasuk} jumlahKeluar={jumlahKeluar} bakiBersihTempoh={bakiBersihTempoh}
         bakiAwalTempoh={bakiAwalTahun} bakiTerkumpul={bakiTerkumpul}
         pecahanMasuk={pecahanMasuk} pecahanKeluar={pecahanKeluar} akanBersambung={semuaMuka.length > 0}
-        namaBendahari={namaBendahari} namaPengerusi={namaPengerusi}
+        namaBendahari={namaBendahari} namaPengerusi={namaPengerusi} namaSekolah={namaSekolah}
       />
       {semuaMuka.map((h, i) => (
         <HalamanBulan
           key={`${h.bulan}_${h.keping}`} {...h} akanBersambung={i < semuaMuka.length - 1}
-          namaBendahari={namaBendahari} namaPengerusi={namaPengerusi}
+          namaBendahari={namaBendahari} namaPengerusi={namaPengerusi} namaSekolah={namaSekolah}
         />
       ))}
     </PrintArea>

@@ -39,7 +39,9 @@ export function useKkgsBakiPembukaan() {
 
 export async function simpanBakiPembukaan({ bakiPembukaan, tahunPembukaan }, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  // merge:true - dokumen ni juga kongsi ruang dgn Nama Sekolah (Laporan)
+  // (useKkgsTetapanLaporan.js), elak timpa/padam medan tu bila simpan sini.
   await setDoc(doc(db, KOLEKSI, DOC_ID), {
     bakiPembukaan: Number(bakiPembukaan), tahunPembukaan: Number(tahunPembukaan), updatedBy: uid,
-  })
+  }, { merge: true })
 }
