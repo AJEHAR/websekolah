@@ -117,4 +117,22 @@ export function kiraBakiTerkumpul(semuaTransaksi, tahunSasaran, bakiPembukaan, t
   return bakiPembukaan + jumlahMasuk - jumlahKeluar
 }
 
+// Susun transaksi MENAIK ikut tarikh (kronologi - lama ke baru, macam Buku
+// Besar/General Ledger sebenar) dan kira BAKI BERGERAK (running balance)
+// bagi SETIAP row - baki bermula (bakiAwalTempoh) + kesan kumulatif setiap
+// transaksi turut serta (fix bug "Ledger tak macam gambar rujukan" - takde
+// lajur Baki sebelum ni).
+export function kiraTransaksiDenganBaki(senaraiTransaksi, bakiAwalTempoh) {
+  const tersusun = [...senaraiTransaksi].sort((a, b) => {
+    const bezaTarikh = (a.tarikh ?? '').localeCompare(b.tarikh ?? '')
+    if (bezaTarikh !== 0) return bezaTarikh
+    return (a.id ?? '').localeCompare(b.id ?? '')
+  })
+  let baki = bakiAwalTempoh
+  return tersusun.map((t) => {
+    baki += t.jenis === 'masuk' ? t.jumlah : -t.jumlah
+    return { ...t, baki }
+  })
+}
+
 export const KATEGORI_KEWANGAN = ['Yuran', 'Sumbangan', 'Imbuhan', 'Belanja Program', 'Perbelanjaan Pentadbiran', 'Lain-lain']

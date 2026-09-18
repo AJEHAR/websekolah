@@ -4,7 +4,7 @@ import { Plus, Trash2, Pencil, X, Printer, Settings } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsKewanganSenarai, tambahKewanganKkgs, kemaskiniKewanganKkgs, padamKewanganKkgs } from '../../hooks/useKkgsKewangan.js'
-import { useKkgsLedger, kiraBakiTerkumpul, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
+import { useKkgsLedger, kiraBakiTerkumpul, kiraTransaksiDenganBaki, KATEGORI_KEWANGAN } from '../../hooks/useKkgsLedger.js'
 import { useKkgsBakiPembukaan, simpanBakiPembukaan } from '../../hooks/useKkgsBakiPembukaan.js'
 import { useKkgsProgramTahun } from '../../hooks/useKkgsProgram.js'
 import { useCetak } from '../../hooks/useCetak.js'
@@ -222,6 +222,10 @@ export default function KewanganKKGS() {
   const [tab, setTab] = useState('dashboard')
   const [tahun, setTahun] = useState(TAHUN_SEMASA)
   const [bulanLaporan, setBulanLaporan] = useState(0) // 0 = tahun penuh
+  // Bulan utk tile Dashboard - default bulan SEKARANG, tapi staff boleh
+  // tukar (fix bug "tak detect tarikh" - dulu hardcode new Date().getMonth(),
+  // jadi transaksi tarikh lama TAK PERNAH kelihatan dlm tile ni).
+  const [bulanDashboard, setBulanDashboard] = useState(new Date().getMonth() + 1)
 
   const { senarai: bukuTunaiSemua, loading: loadingBukuTunai, muatSemula: muatSemulaBukuTunai } = useKkgsKewanganSenarai()
   // semuaTransaksi (SEMUA tahun) perlu untuk Baki Terkumpul (fix bug #1);
@@ -267,14 +271,18 @@ export default function KewanganKKGS() {
   // Baki Terkumpul SEBENAR (fix bug #1) - baki pembukaan + semua tahun
   // dari tahunPembukaan hingga tahun dipilih, BUKAN sekadar satu tahun.
   const bakiTerkumpul = kiraBakiTerkumpul(semuaTransaksi, tahun, tetapanBaki.bakiPembukaan, tetapanBaki.tahunPembukaan)
+  // Baki di AWAL tahun dipilih (sebelum transaksi tahun ni bermula) -
+  // asas utk baki bergerak (running balance) setiap row Ledger/Laporan.
+  const bakiAwalTahun = kiraBakiTerkumpul(semuaTransaksi, tahun - 1, tetapanBaki.bakiPembukaan, tetapanBaki.tahunPembukaan)
+  // Ledger tahun ni, tersusun MENAIK ikut tarikh, dgn lajur baki bergerak.
+  const transaksiTahunDenganBaki = kiraTransaksiDenganBaki(transaksiTahun, bakiAwalTahun)
 
-  const bulanIni = new Date().getMonth() + 1
-  const masukBulanIni = transaksiTahun.filter((t) => t.jenis === 'masuk' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
-  const keluarBulanIni = transaksiTahun.filter((t) => t.jenis === 'keluar' && Number(t.tarikh.slice(5, 7)) === bulanIni).reduce((j, t) => j + t.jumlah, 0)
+  const masukBulanDashboard = transaksiTahun.filter((t) => t.jenis === 'masuk' && Number(t.tarikh.slice(5, 7)) === bulanDashboard).reduce((j, t) => j + t.jumlah, 0)
+  const keluarBulanDashboard = transaksiTahun.filter((t) => t.jenis === 'keluar' && Number(t.tarikh.slice(5, 7)) === bulanDashboard).reduce((j, t) => j + t.jumlah, 0)
 
   function cetakLaporan() {
-    const transaksiTapis = bulanLaporan === 0 ? transaksiTahun : transaksiTahun.filter((t) => Number(t.tarikh.slice(5, 7)) === bulanLaporan)
-    setDataLaporan({ transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan, bakiTerkumpul })
+    const transaksiTapis = bulanLaporan === 0 ? transaksiTahunDenganBaki : transaksiTahunDenganBaki.filter((t) => Number(t.tarikh.slice(5, 7)) === bulanLaporan)
+    setDataLaporan({ transaksi: transaksiTapis, tahun, bulan: bulanLaporan === 0 ? null : bulanLaporan, bakiTerkumpul, bakiAwalTahun })
   }
 
   return (
@@ -306,19 +314,24 @@ export default function KewanganKKGS() {
               <p className="text-xs text-inkmuted">Baki Terkumpul Kelab (akhir {tahun}, merentasi semua tahun)</p>
               <p className="text-2xl font-extrabold text-ink">RM {bakiTerkumpul.toFixed(2)}</p>
             </div>
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-3 gap-2 mb-2">
               <div className="rounded-card border border-border bg-surface p-3 text-center">
                 <p className="text-[10px] text-inkmuted">Bersih {tahun}</p>
                 <p className="text-sm font-bold text-ink">RM {(jumlahMasukTahun - jumlahKeluarTahun).toFixed(2)}</p>
               </div>
               <div className="rounded-card border border-border bg-surface p-3 text-center">
-                <p className="text-[10px] text-inkmuted">Masuk Bulan Ini</p>
-                <p className="text-sm font-bold text-[#0F6E56]">RM {masukBulanIni.toFixed(2)}</p>
+                <p className="text-[10px] text-inkmuted">Masuk {NAMA_BULAN[bulanDashboard - 1]}</p>
+                <p className="text-sm font-bold text-[#0F6E56]">RM {masukBulanDashboard.toFixed(2)}</p>
               </div>
               <div className="rounded-card border border-border bg-surface p-3 text-center">
-                <p className="text-[10px] text-inkmuted">Keluar Bulan Ini</p>
-                <p className="text-sm font-bold text-brand-red">RM {keluarBulanIni.toFixed(2)}</p>
+                <p className="text-[10px] text-inkmuted">Keluar {NAMA_BULAN[bulanDashboard - 1]}</p>
+                <p className="text-sm font-bold text-brand-red">RM {keluarBulanDashboard.toFixed(2)}</p>
               </div>
+            </div>
+            <div className="flex justify-end mb-4">
+              <select value={bulanDashboard} onChange={(e) => setBulanDashboard(Number(e.target.value))} className="h-8 px-2.5 rounded-card border border-border bg-surface text-[11px]">
+                {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
+              </select>
             </div>
             <div className="rounded-card border border-border bg-surface p-4">
               <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-3">Trend Bulanan {tahun}</p>
@@ -363,32 +376,54 @@ export default function KewanganKKGS() {
         </div>
       )}
 
-      {/* ===== LEDGER (gabungan automatik) ===== */}
+      {/* ===== LEDGER (gabungan automatik, gaya Buku Besar) ===== */}
       {tab === 'ledger' && (
         <div>
-          <p className="text-xs text-inkmuted mb-3">Gabungan AUTOMATIK semua pergerakan wang (Yuran + Claim diluluskan + Kewangan manual) tahun {tahun} - gambaran kewangan sebenar &amp; lengkap.</p>
+          <p className="text-xs text-inkmuted mb-3">Gabungan AUTOMATIK semua pergerakan wang (Yuran + Claim diluluskan + Kewangan manual) tahun {tahun}, tersusun ikut tarikh dengan baki bergerak - gambaran kewangan sebenar &amp; lengkap.</p>
+          <div className="rounded-card border border-border bg-surface p-3 mb-3 flex items-center justify-between">
+            <p className="text-xs text-inkmuted">Baki Awal {tahun}</p>
+            <p className="text-sm font-bold text-ink">RM {bakiAwalTahun.toFixed(2)}</p>
+          </div>
           {loadingLedger ? (
             <p className="text-sm text-inkmuted">Memuatkan…</p>
-          ) : transaksiTahun.length === 0 ? (
+          ) : transaksiTahunDenganBaki.length === 0 ? (
             <p className="text-sm text-inkmuted">Tiada transaksi tahun ni.</p>
           ) : (
-            <div className="space-y-2">
-              {transaksiTahun.map((t) => {
-                const w = WarnaSumber(t.sumber)
-                return (
-                  <div key={t.id} className="flex items-center gap-3 p-3.5 rounded-card border border-border bg-surface">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-ink truncate">{t.perkara}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.teks }}>{labelSumber(t.sumber)}</span>
-                        <span className="text-[10px] text-inkmuted">{t.tarikh} · {t.kategori}</span>
-                        {t.programNama && <span className="text-[10px] text-inkmuted">· 📌 {t.programNama}</span>}
-                      </div>
-                    </div>
-                    <p className="text-sm font-bold shrink-0" style={{ color: t.jenis === 'masuk' ? '#0F6E56' : '#C8102E' }}>{t.jenis === 'masuk' ? '+' : '-'} RM {t.jumlah.toFixed(2)}</p>
-                  </div>
-                )
-              })}
+            <div className="overflow-x-auto -mx-1">
+              <table className="w-full border-collapse text-xs min-w-[720px]">
+                <thead>
+                  <tr className="text-[10px] text-inkmuted uppercase tracking-wide">
+                    <th className="text-left px-1.5 py-2 border-b border-border">No</th>
+                    <th className="text-left px-1.5 py-2 border-b border-border">Tarikh</th>
+                    <th className="text-left px-1.5 py-2 border-b border-border">Perkara</th>
+                    <th className="text-left px-1.5 py-2 border-b border-border">Kategori</th>
+                    <th className="text-left px-1.5 py-2 border-b border-border">Program</th>
+                    <th className="text-right px-1.5 py-2 border-b border-border">Debit</th>
+                    <th className="text-right px-1.5 py-2 border-b border-border">Kredit</th>
+                    <th className="text-right px-1.5 py-2 border-b border-border">Baki</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transaksiTahunDenganBaki.map((t, i) => {
+                    const w = WarnaSumber(t.sumber)
+                    return (
+                      <tr key={t.id} className="border-b border-border/60">
+                        <td className="px-1.5 py-2 text-inkmuted">{i + 1}</td>
+                        <td className="px-1.5 py-2 whitespace-nowrap">{t.tarikh}</td>
+                        <td className="px-1.5 py-2">
+                          <p className="font-semibold text-ink">{t.perkara}</p>
+                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full inline-block mt-0.5" style={{ backgroundColor: w.bg, color: w.teks }}>{labelSumber(t.sumber)}</span>
+                        </td>
+                        <td className="px-1.5 py-2 text-inkmuted">{t.kategori}</td>
+                        <td className="px-1.5 py-2 text-inkmuted">{t.programNama || '-'}</td>
+                        <td className="px-1.5 py-2 text-right font-semibold" style={{ color: '#0F6E56' }}>{t.jenis === 'masuk' ? t.jumlah.toFixed(2) : ''}</td>
+                        <td className="px-1.5 py-2 text-right font-semibold text-brand-red">{t.jenis === 'keluar' ? t.jumlah.toFixed(2) : ''}</td>
+                        <td className="px-1.5 py-2 text-right font-bold text-ink whitespace-nowrap">RM {t.baki.toFixed(2)}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
