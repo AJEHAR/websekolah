@@ -29,8 +29,17 @@ function kumpul12Bulan(transaksi, bakiAwalTahun) {
 // "potongan next page tiada jarak A4" (muka surat sambungan hilang padding
 // sebab pelayar cuma letak padding pada MUKA PERTAMA satu div panjang,
 // bukan pada setiap muka surat yang overflow secara semula jadi).
-const MAKS_BARIS_MUKA_MULA = 24 // muka pertama bulan - ada ruang kotak ringkasan
-const MAKS_BARIS_MUKA_SAMBUNG = 34 // muka sambungan - jadual sahaja, lebih ruang
+//
+// Nombor ni dikira dari anggaran ketinggian sebenar setiap bahagian pada
+// muka A4 (297mm, tolak padding p-10 ~21mm = ~276mm ruang boleh guna):
+//   Tajuk + garis  ~26mm | Kotak ringkasan (muka pertama sahaja) ~26mm
+//   Header jadual  ~7mm  | Setiap baris jadual (font 9px + padding) ~5mm
+// Muka pertama : (276 - 26 - 26 - 7) / 5 ~= 43 baris -> guna 32 (buffer
+// selamat, sebab telefon/PC kadang cetak guna saiz kertas "Letter" yg
+// LEBIH PENDEK drpd A4 - lihat nota `minHeight` di bawah).
+// Muka sambungan: (276 - 20 - 7) / 5 ~= 50 baris -> guna 42.
+const MAKS_BARIS_MUKA_MULA = 32 // muka pertama bulan - ada ruang kotak ringkasan
+const MAKS_BARIS_MUKA_SAMBUNG = 42 // muka sambungan - jadual sahaja, lebih ruang
 
 function pecahBarisMukaSurat(senarai) {
   if (senarai.length === 0) return [[]]
@@ -79,14 +88,27 @@ function BarisTransaksi({ t, no }) {
   )
 }
 
+// Ruang tandatangan Pengerusi & Bendahari KKGS - setiap satu ada 2 garisan
+// (satu utk NAMA ditulis tangan, satu utk tandatangan sebenar), letak
+// bersebelahan supaya kedua-dua pihak sahkan penyata bulanan yang sama.
+function KotakTandatangan({ jawatan }) {
+  return (
+    <div className="text-center">
+      <div className="w-40 border-b border-black mb-1" style={{ height: '36px' }} />
+      <p className="text-[10px] text-gray-600">(Nama: ……………………………………)</p>
+      <p className="text-xs font-semibold mt-1">{jawatan}</p>
+    </div>
+  )
+}
+
 function FooterLaporan() {
   return (
-    <div className="flex justify-between items-end mt-8">
-      <p className="text-xs text-gray-600">Laporan dijana sistem pada {tarikhHariIni()}</p>
-      <div className="text-center">
-        <div className="w-48 border-b border-black mb-1" style={{ height: '40px' }} />
-        <p className="text-xs font-semibold">Bendahari KKGS</p>
+    <div className="mt-8">
+      <div className="flex justify-around gap-6 mb-4">
+        <KotakTandatangan jawatan="Bendahari KKGS" />
+        <KotakTandatangan jawatan="Pengerusi KKGS" />
       </div>
+      <p className="text-xs text-gray-600 text-right">Laporan dijana sistem pada {tarikhHariIni()}</p>
     </div>
   )
 }
@@ -101,7 +123,15 @@ function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKelua
   kotak.push({ label: 'Baki Bersih Tempoh Ini', nilai: bakiBersihTempoh })
 
   return (
-    <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm', minHeight: '287mm' }}>
+    // PENTING (fix "muka kosong/separuh bila cetak"): TIADA minHeight
+    // dipaksa di sini. Sebelum ni minHeight:287mm anggap kertas MESTI A4
+    // (297mm) - tapi telefon/pelayar sering default ke saiz "Letter"
+    // (279mm, LEBIH PENDEK drpd A4). Bila kandungan dipaksa 287mm tinggi
+    // atas kertas 279mm, baki ~8mm tu "melimpah" jadi muka tambahan yang
+    // hampir kosong. Biar div ni tinggi ikut kandungan SEBENAR sahaja -
+    // `print-page-break` (page-break-after) tetap pastikan muka SETERUSNYA
+    // mula bersih, tak kira saiz kertas A4 atau Letter.
+    <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm' }}>
       <div className="text-center mb-6 border-b-2 border-black pb-4">
         <p className="text-lg font-extrabold uppercase">Laporan Kewangan KKGS</p>
         <p className="text-xs">Kelab Kebajikan Guru &amp; Staf</p>
@@ -153,7 +183,7 @@ function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiA
   const mukaTerakhirBulan = keping === jumlahKeping - 1
 
   return (
-    <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm', minHeight: '287mm' }}>
+    <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm' }}>
       <div className="text-center mb-5 border-b-2 border-black pb-3">
         <p className="text-lg font-extrabold uppercase">Laporan Kewangan KKGS</p>
         <p className="text-xs">Kelab Kebajikan Guru &amp; Staf</p>
