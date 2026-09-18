@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
-import { Plus, X, Search, CheckSquare, Square, Vote, Radio, Lock, Trophy, Trash2, PlayCircle, Timer, RotateCcw, Settings, Printer } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useOutletContext } from 'react-router-dom'
+import { Plus, X, Search, CheckSquare, Square, Vote, Radio, Lock, Trophy, Trash2, PlayCircle, Timer, RotateCcw, Settings, Printer, MonitorPlay } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
@@ -12,6 +12,60 @@ import {
 import { hantarUndianPusingan, useUndianSaya, useTalliLive, kiraTallyPusingan } from '../../hooks/useKkgsUndian.js'
 import { JAWATAN_URUTAN_PILIHAN_RAYA, JAWATAN_AJK_PILIHAN_RAYA, KERUSI_AJK_LALAI, TEMPOH_UNDI_LALAI_SAAT, TAHUN_SEMASA, labelStatusPilihanRaya } from './kkgsConstants.js'
 import LaporanPilihanRayaKKGS from './LaporanPilihanRayaKKGS.jsx'
+
+// Hash string ringkas (djb2) -> integer, untuk jana "seed" PRNG dari
+// gabungan ID pengundi + jawatan (rentetan boleh apa-apa panjang).
+function hashRentetan(teks) {
+  let h = 5381
+  for (let i = 0; i < teks.length; i++) h = ((h << 5) + h + teks.charCodeAt(i)) | 0
+  return h >>> 0
+}
+
+// PRNG mulberry32 - deterministik ikut seed (bukan Math.random() yang
+// baru setiap panggilan) - PENTING supaya turutan calon KEKAL SAMA bila
+// komponen re-render/refresh (bukan "bergerak-gerak" setiap kali).
+function prngMulberry32(seed) {
+  let a = seed
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+// Kocok (Fisher-Yates) senarai calon guna seed dari (uid pengundi +
+// jawatan) - SETIAP pengundi nampak turutan BERBEZA (hapuskan "position
+// bias" - orang malas pilih calon paling atas sahaja), TAPI turutan tu
+// KEKAL STABIL untuk pengundi yang SAMA sepanjang pusingan tu (elak
+// senarai kelihatan "berubah-ubah" bila skrin refresh - mengelirukan).
+// Jawatan lain (pusingan lain) dapat turutan BERLAINAN juga - calon yang
+// sama tak "untung" kedudukan atas untuk SEMUA race.
+function kocokCalon(senarai, seed) {
+  const rng = prngMulberry32(hashRentetan(seed))
+  const hasil = [...senarai]
+  for (let i = hasil.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[hasil[i], hasil[j]] = [hasil[j], hasil[i]]
+  }
+  return hasil
+}
+
+// Cari SAMA ADA ada SERI tepat pada garis potong kerusi (antara calon
+// kerusi TERAKHIR yang menang dengan calon PERTAMA yang tersingkir).
+// "tally" MESTI tersusun menurun ikut undi (kiraTallyPusingan/
+// useTalliLive dah buat ni). Kalau seri jumpa, PULANGKAN senarai SEMUA
+// calon yang berkongsi skor pada garis potong tu (admin kena pilih
+// manual - sistem TAK boleh pilih sendiri sebab tak adil, cuma
+// bergantung urutan Object.entries/insertion, bukan rawak/keputusan
+// sengaja). Pulangkan null kalau tiada seri (selamat auto-pilih).
+function cariSeriPadaGarisan(tally, kerusi) {
+  if (tally.length <= kerusi) return null // semua calon (kalaupun ada) muat dalam kerusi - tiada persaingan garis potong
+  const skorGarisan = tally[kerusi - 1]?.undi
+  if (!skorGarisan) return null // 0 undi pun - bukan seri "sengit" yang perlu keputusan adil
+  const calonSeri = tally.filter((t) => t.undi === skorGarisan)
+  return calonSeri.length > 1 ? calonSeri : null
+}
 
 function WarnaStatusSesi(status) {
   if (status === 'berjalan') return { bg: '#E1F5EE', teks: '#0F6E56' }
@@ -211,13 +265,24 @@ function JamUndur({ tamatPada }) {
 
 // SATU race jawatan SATU orang - radio pilih SATU calon.
 function RaceSatuOrang({ jawatan, calon, nilai, onPilih }) {
+  const [carian, setCarian] = useState('')
+  const disenarai = calon.filter((a) => a.nama.toLowerCase().includes(carian.toLowerCase()))
   return (
     <div className="p-3.5 rounded-card border border-border bg-surface mb-2.5">
-      <p className="text-sm font-bold text-ink mb-2.5 flex items-center gap-1.5"><Radio size={14} className="text-brand-red" /> {jawatan}</p>
+      <p className="text-sm font-bold text-ink mb-1 flex items-center gap-1.5"><Radio size={14} className="text-brand-red" /> {jawatan}</p>
+      <p className="text-[10px] text-inkmuted mb-2.5">Susunan calon rawak untuk setiap pengundi (elak bias pilih nama teratas sahaja).</p>
+      {calon.length > 5 && (
+        <div className="relative mb-2.5">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-inkmuted" />
+          <input type="text" value={carian} onChange={(e) => setCarian(e.target.value)} placeholder="Cari nama calon…" className="w-full h-9 pl-8 pr-3 rounded-card border border-border bg-base text-xs" />
+        </div>
+      )}
       <div className="space-y-1.5">
         {calon.length === 0 ? (
           <p className="text-xs text-inkmuted">Tiada calon layak tinggal untuk jawatan ni.</p>
-        ) : calon.map((a) => (
+        ) : disenarai.length === 0 ? (
+          <p className="text-xs text-inkmuted">Tiada calon sepadan carian.</p>
+        ) : disenarai.map((a) => (
           <label key={a.id} className={`flex items-center gap-2.5 p-2.5 rounded-card border text-sm cursor-pointer ${nilai === a.id ? 'border-brand-red bg-[#FDEAEA]' : 'border-border'}`}>
             <input type="radio" name={jawatan} checked={nilai === a.id} onChange={() => onPilih(a.id)} className="h-4 w-4 shrink-0" />
             <span className="text-ink">{a.nama}</span>
@@ -230,15 +295,25 @@ function RaceSatuOrang({ jawatan, calon, nilai, onPilih }) {
 
 // Race AJK KKGS - checkbox, MAX bilanganKerusiAjk calon.
 function RaceAjk({ calon, nilai, maksimum, onTogol }) {
+  const [carian, setCarian] = useState('')
+  const disenarai = calon.filter((a) => a.nama.toLowerCase().includes(carian.toLowerCase()))
   return (
     <div className="p-3.5 rounded-card border border-border bg-surface mb-2.5">
       <p className="text-sm font-bold text-ink mb-1 flex items-center gap-1.5"><Vote size={14} className="text-brand-red" /> {JAWATAN_AJK_PILIHAN_RAYA}</p>
+      <p className="text-[10px] text-inkmuted mb-1">Susunan calon rawak untuk setiap pengundi (elak bias pilih nama teratas sahaja).</p>
       {/* Sticky - senarai calon AJK KKGS boleh panjang (sehingga 10 nama
           lebih), counter ni kekal kelihatan semasa scroll supaya staff
           tak perlu scroll balik atas untuk tengok baki boleh pilih. */}
       <p className="text-[11px] font-semibold text-ink mb-2.5 sticky top-2 z-10 bg-surface py-1 -mx-1 px-1 rounded">Pilih SEHINGGA {maksimum} calon ({nilai.length}/{maksimum} dipilih).</p>
+      {calon.length > 5 && (
+        <div className="relative mb-2.5">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-inkmuted" />
+          <input type="text" value={carian} onChange={(e) => setCarian(e.target.value)} placeholder="Cari nama calon…" className="w-full h-9 pl-8 pr-3 rounded-card border border-border bg-base text-xs" />
+        </div>
+      )}
       <div className="space-y-1.5">
-        {calon.map((a) => {
+        {disenarai.length === 0 && <p className="text-xs text-inkmuted">Tiada calon sepadan carian.</p>}
+        {disenarai.map((a) => {
           const dipilih = nilai.includes(a.id)
           const tersekat = !dipilih && nilai.length >= maksimum
           return (
@@ -303,6 +378,46 @@ function PanelTallyLive({ pilihanRayaId, jawatan, kerusi, cariNama, jumlahLayakU
   const { keputusan, jumlahPengundi, loading } = useTalliLive(pilihanRayaId, jawatan, true)
   if (loading) return <p className="text-xs text-inkmuted mb-2.5">Memuatkan tally {jawatan}…</p>
   return <BarisTally jawatan={jawatan} keputusan={keputusan} jumlahPengundi={jumlahPengundi} kerusi={kerusi} cariNama={cariNama} live jumlahLayakUndi={jumlahLayakUndi} />
+}
+
+// Panel pecah seri - keluar GANTI butang "Tutup Pusingan" biasa bila
+// cariSeriPadaGarisan() jumpa seri TEPAT pada garis potong kerusi.
+// Sistem TAK auto-pilih (dulu ikut urutan Object.entries semata-mata -
+// nampak macam pilih orang PERTAMA walhal cuma kebetulan urutan data,
+// BUKAN keputusan sengaja/adil) - admin WAJIB pilih manual (cabutan
+// undi / suara mesyuarat) sebelum pusingan boleh ditutup.
+function PanelPecahSeri({ calonSeri, kerusiBaki, cariNama, onSahkan, menyimpan }) {
+  const [pilih, setPilih] = useState([])
+
+  function togol(id) {
+    setPilih((s) => {
+      if (s.includes(id)) return s.filter((x) => x !== id)
+      if (kerusiBaki === 1) return [id] // 1 kerusi dipertikaikan - kelakuan macam radio (pilih gantikan)
+      if (s.length >= kerusiBaki) return s
+      return [...s, id]
+    })
+  }
+
+  return (
+    <div className="rounded-card border-2 border-brand-red bg-[#FDEAEA] p-4 space-y-2.5">
+      <p className="text-sm font-bold text-brand-red">⚠️ Seri Undi - Perlu Diselesaikan Manual</p>
+      <p className="text-xs text-ink">{calonSeri.length} calon seri tepat undi ({calonSeri[0].undi} undi setiap satu) untuk {kerusiBaki} kerusi yang tinggal. Sistem TAK boleh pilih automatik secara adil dalam keadaan ni - admin perlu putuskan secara manual (cth. cabutan undi / suara terbuka mesyuarat) sebelum pusingan ni boleh ditutup.</p>
+      <div className="space-y-1.5">
+        {calonSeri.map((c) => (
+          <label key={c.calonId} className={`flex items-center justify-between gap-2.5 p-2.5 rounded-card border text-sm cursor-pointer bg-white ${pilih.includes(c.calonId) ? 'border-brand-red' : 'border-border'}`}>
+            <span className="flex items-center gap-2.5">
+              <input type={kerusiBaki === 1 ? 'radio' : 'checkbox'} checked={pilih.includes(c.calonId)} onChange={() => togol(c.calonId)} className="h-4 w-4 shrink-0" />
+              <span className="text-ink">{cariNama(c.calonId)}</span>
+            </span>
+            <span className="text-xs font-bold text-inkmuted">{c.undi} undi</span>
+          </label>
+        ))}
+      </div>
+      <button onClick={() => onSahkan(pilih)} disabled={menyimpan || pilih.length !== kerusiBaki} className="w-full h-10 rounded-card bg-brand-red text-white text-xs font-semibold disabled:opacity-60">
+        {menyimpan ? 'Menyimpan…' : `Sahkan Keputusan (${pilih.length}/${kerusiBaki} dipilih) & Tutup Pusingan`}
+      </button>
+    </div>
+  )
 }
 
 // Keputusan diumumkan SETAKAT NI - BERPERINGKAT (bertambah pusingan
@@ -371,6 +486,7 @@ export default function PilihanRayaKKGS() {
   const [pilihanAjk, setPilihanAjk] = useState([])
   const [menghantar, setMenghantar] = useState(false)
   const [ralatUndi, setRalatUndi] = useState(null)
+  const [seriPusingan, setSeriPusingan] = useState(null)
   const [dataCetak, setDataCetak] = useCetak((d) => `Keputusan Pilihan Raya KKGS ${d.tahun}`)
 
   const sesi = senaraiSesi.find((s) => s.id === sesiId) ?? senaraiSesi[0] ?? null
@@ -387,6 +503,7 @@ export default function PilihanRayaKKGS() {
     setPilihanSatu('')
     setPilihanAjk([])
     setRalatUndi(null)
+    setSeriPusingan(null)
   }, [jawatanSemasa])
 
   const senaraiAhliAktif = senaraiAhli.filter((a) => a.statusKeahlian === 'aktif')
@@ -396,6 +513,17 @@ export default function PilihanRayaKKGS() {
   // "nama sama menang > 1 jawatan sebab orang suka undi nama tu".
   const pemenangSetakatIni = new Set(Object.values(sesi?.pemenang ?? {}).flatMap((v) => (Array.isArray(v) ? v : [v])))
   const calonPusinganIni = calonLayak.filter((a) => !pemenangSetakatIni.has(a.id))
+  // Susunan calon DIRAWAKKAN untuk borang undian sahaja (bukan panel
+  // admin/tidakLayak/laporan - kekal tersusun ikut nama/undi macam
+  // biasa). Seed dari (uid pengundi + jawatan semasa) - lihat kocokCalon()
+  // - setiap pengundi nampak turutan BERBEZA (elak bias "pilih atas
+  // sahaja"), tapi turutan tu KEKAL SAMA untuk pengundi ni sepanjang
+  // pusingan ni (tak "bergerak-gerak" bila skrin refresh).
+  const calonUndianDirawak = useMemo(
+    () => kocokCalon(calonPusinganIni, `${user.uid}_${jawatanSemasa ?? ''}`),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [jawatanSemasa, user.uid, calonPusinganIni.map((a) => a.id).join(',')],
+  )
 
   function cariNama(ahliId) {
     return senaraiAhli.find((a) => a.id === ahliId)?.nama ?? '(ahli dipadam)'
@@ -445,14 +573,46 @@ export default function PilihanRayaKKGS() {
   }
 
   async function tutupPusinganSemasa() {
-    if (!(await konfirm(`Tutup pusingan "${jawatanSemasa}" & umum pemenang sekarang? Staff TAK BOLEH undi jawatan ni lagi lepas ni.`, { bahaya: true }))) return
     setMenutup(true)
     try {
       const tally = await kiraTallyPusingan(sesi.id, jawatanSemasa)
+      const kerusi = adalahPusinganAjk ? sesi.bilanganKerusiAjk : 1
+      // Seri TEPAT pada garis potong kerusi - JANGAN auto-pilih (dulu
+      // ikut urutan Object.entries semata-mata, nampak macam "pilih
+      // orang pertama" walhal cuma kebetulan urutan data masuk, BUKAN
+      // keputusan sengaja/adil). Papar panel pecah seri, JANGAN tutup
+      // pusingan lagi sehingga admin selesaikan manual.
+      const calonSeri = cariSeriPadaGarisan(tally, kerusi)
+      if (calonSeri) {
+        const kerusiSudahPasti = tally.filter((t) => t.undi > calonSeri[0].undi).length
+        setSeriPusingan({ tally, calonSeri, kerusiBaki: kerusi - kerusiSudahPasti })
+        return
+      }
+      if (!(await konfirm(`Tutup pusingan "${jawatanSemasa}" & umum pemenang sekarang? Staff TAK BOLEH undi jawatan ni lagi lepas ni.`, { bahaya: true }))) return
       const pemenangBaru = adalahPusinganAjk
         ? tally.filter((t) => t.undi > 0).slice(0, sesi.bilanganKerusiAjk).map((t) => t.calonId)
         : (tally[0]?.calonId ?? null)
       await tutupPusingan(sesi.id, { jawatan: jawatanSemasa, pemenangBaru, butiran: tally, selesaiSesi: pusinganTerakhir }, user.uid)
+      muatSemulaSesi()
+    } finally {
+      setMenutup(false)
+    }
+  }
+
+  // Admin dah pilih manual pemenang di antara calon yang seri (cabutan
+  // undi / suara mesyuarat, di luar sistem ni) - gabungkan dengan calon
+  // yang MEMANG dah pasti menang (undi lebih tinggi drpd garis seri),
+  // pastu baru tutup pusingan macam biasa.
+  async function selesaikanSeri(idTerpilihDaripadaSeri) {
+    const { tally, calonSeri } = seriPusingan
+    const menangSudahPasti = tally.filter((t) => t.undi > calonSeri[0].undi).map((t) => t.calonId)
+    const pemenangBaru = adalahPusinganAjk
+      ? [...menangSudahPasti, ...idTerpilihDaripadaSeri]
+      : (idTerpilihDaripadaSeri[0] ?? null)
+    setMenutup(true)
+    try {
+      await tutupPusingan(sesi.id, { jawatan: jawatanSemasa, pemenangBaru, butiran: tally, selesaiSesi: pusinganTerakhir }, user.uid)
+      setSeriPusingan(null)
       muatSemulaSesi()
     } finally {
       setMenutup(false)
@@ -559,6 +719,13 @@ export default function PilihanRayaKKGS() {
             <Plus size={14} /> Sesi Baharu
           </button>
         )}
+        {/* Buka page "Paparan" (read-only, tiada butang admin) di tab
+            baharu - untuk disambung ke TV/projektor semasa mesyuarat.
+            Kawalan sebenar (buka/tutup pusingan) tetap di page ni juga,
+            biasanya dari telefon admin yang berasingan drpd laptop TV. */}
+        <Link to="/kkgs/pilihan-raya/paparan" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+          <MonitorPlay size={14} /> Buka Paparan TV/Projektor
+        </Link>
       </div>
 
       {!sesi ? (
@@ -607,10 +774,14 @@ export default function PilihanRayaKKGS() {
                   <p className="text-xs text-inkmuted flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#0F6E56] animate-pulse" /> Pusingan "{jawatanSemasa}" sedang berjalan - tally LIVE di bawah, kemas kini automatik bila undi masuk.</p>
                   <JamUndur tamatPada={sesi.pusinganTamatPada} />
                   <PanelTallyLive pilihanRayaId={sesi.id} jawatan={jawatanSemasa} kerusi={adalahPusinganAjk ? sesi.bilanganKerusiAjk : 1} cariNama={cariNama} jumlahLayakUndi={senaraiAhliAktif.length} />
-                  <div className="flex gap-2 flex-wrap">
-                    <button onClick={tutupPusinganSemasa} disabled={menutup} className="h-10 px-4 rounded-card bg-brand-red text-white text-xs font-semibold disabled:opacity-60 flex items-center gap-1.5"><Lock size={13} /> {menutup ? 'Menutup…' : `Tutup Pusingan "${jawatanSemasa}" & Umum Pemenang`}</button>
-                    <button onClick={padamSesi} className="h-10 px-3 rounded-card border border-brand-red text-brand-red text-xs font-semibold flex items-center gap-1"><Trash2 size={13} /> Padam Sesi</button>
-                  </div>
+                  {seriPusingan ? (
+                    <PanelPecahSeri calonSeri={seriPusingan.calonSeri} kerusiBaki={seriPusingan.kerusiBaki} cariNama={cariNama} onSahkan={selesaikanSeri} menyimpan={menutup} />
+                  ) : (
+                    <div className="flex gap-2 flex-wrap">
+                      <button onClick={tutupPusinganSemasa} disabled={menutup} className="h-10 px-4 rounded-card bg-brand-red text-white text-xs font-semibold disabled:opacity-60 flex items-center gap-1.5"><Lock size={13} /> {menutup ? 'Menyemak…' : `Tutup Pusingan "${jawatanSemasa}" & Umum Pemenang`}</button>
+                      <button onClick={padamSesi} className="h-10 px-3 rounded-card border border-brand-red text-brand-red text-xs font-semibold flex items-center gap-1"><Trash2 size={13} /> Padam Sesi</button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -687,9 +858,9 @@ export default function PilihanRayaKKGS() {
               ) : (
                 <>
                   {adalahPusinganAjk ? (
-                    <RaceAjk calon={calonPusinganIni} nilai={pilihanAjk} maksimum={sesi.bilanganKerusiAjk} onTogol={togolAjk} />
+                    <RaceAjk key={jawatanSemasa} calon={calonUndianDirawak} nilai={pilihanAjk} maksimum={sesi.bilanganKerusiAjk} onTogol={togolAjk} />
                   ) : (
-                    <RaceSatuOrang jawatan={jawatanSemasa} calon={calonPusinganIni} nilai={pilihanSatu} onPilih={setPilihanSatu} />
+                    <RaceSatuOrang key={jawatanSemasa} jawatan={jawatanSemasa} calon={calonUndianDirawak} nilai={pilihanSatu} onPilih={setPilihanSatu} />
                   )}
                   {ralatUndi && <p className="text-xs text-brand-red mb-2.5">{ralatUndi}</p>}
                   <button onClick={hantar} disabled={menghantar} className="w-full h-11 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">

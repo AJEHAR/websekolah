@@ -15,11 +15,17 @@ const TAJUK_SUBPAGE = {
   '/kkgs/claim': 'Claim KKGS',
 }
 
+// Page "Paparan" (disambung ke TV/projektor) SENGAJA tak dapat chrome
+// biasa (link "Kembali", tajuk, padding max-w-6xl) - ia perlu full-bleed
+// gelap untuk dibaca dari jauh dalam dewan, bukan borang/senarai biasa.
+const LALUAN_PAPARAN_PENUH = ['/kkgs/pilihan-raya/paparan']
+
 export default function KKGSLayout() {
   const { user } = useAuth()
   const { dibuka: pendaftaranDibuka } = useTetapanPendaftaran()
   const location = useLocation()
   const adalahHub = location.pathname === '/kkgs'
+  const adalahPaparanPenuh = LALUAN_PAPARAN_PENUH.includes(location.pathname)
 
   if (!user) {
     return <AksesPrompt namaHalaman="KKGS" pendaftaranDibuka={pendaftaranDibuka} />
@@ -27,7 +33,7 @@ export default function KKGSLayout() {
 
   return (
     <AksesGate user={user}>
-      {adalahHub ? (
+      {adalahHub || adalahPaparanPenuh ? (
         <Outlet context={{ user }} />
       ) : (
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">

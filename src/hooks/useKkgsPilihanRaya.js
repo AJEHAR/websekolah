@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { collection, deleteDoc, deleteField, doc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, deleteDoc, deleteField, doc, getDocs, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from '../lib/firebase.js'
 
 const KOLEKSI = 'kkgsPilihanRaya'
@@ -172,4 +172,31 @@ export async function bukaSemulaPusingan(id, jawatan, tempohSaat, uid) {
 export async function padamPilihanRaya(id) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await deleteDoc(doc(db, KOLEKSI, id))
+}
+
+// SATU dokumen sesi, LIVE (onSnapshot) - untuk page "Paparan" yang
+// disambung ke TV/projektor (lihat PaparanPilihanRayaKKGS.jsx). Page
+// admin sendiri guna corak getDocs+muatSemula manual (macam seluruh
+// sistem lain), tapi laptop/skrin projektor tak ada sesiapa nak tekan
+// "refresh" - skrin ni PERLU kemas kini SENDIRI serta-merta bila admin
+// buka/tutup pusingan dari peranti LAIN (telefon admin).
+export function useSesiPilihanRayaLive(id) {
+  const [sesi, setSesi] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !id) {
+      setSesi(null)
+      setLoading(false)
+      return undefined
+    }
+    setLoading(true)
+    const nyahlanggan = onSnapshot(doc(db, KOLEKSI, id), (snap) => {
+      setSesi(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+      setLoading(false)
+    }, () => setLoading(false))
+    return () => nyahlanggan()
+  }, [id])
+
+  return { sesi, loading }
 }

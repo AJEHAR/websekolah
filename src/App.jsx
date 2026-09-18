@@ -45,6 +45,7 @@ const KKGSHub = lazy(() => import('./pages/KKGS/KKGSHub.jsx'))
 const SenaraiAhliKKGS = lazy(() => import('./pages/KKGS/SenaraiAhliKKGS.jsx'))
 const JawatankuasaKKGS = lazy(() => import('./pages/KKGS/JawatankuasaKKGS.jsx'))
 const PilihanRayaKKGS = lazy(() => import('./pages/KKGS/PilihanRayaKKGS.jsx'))
+const PaparanPilihanRayaKKGS = lazy(() => import('./pages/KKGS/PaparanPilihanRayaKKGS.jsx'))
 const ProgramAktivitiKKGS = lazy(() => import('./pages/KKGS/ProgramAktivitiKKGS.jsx'))
 const YuranSumbanganKKGS = lazy(() => import('./pages/KKGS/YuranSumbanganKKGS.jsx'))
 const KewanganKKGS = lazy(() => import('./pages/KKGS/KewanganKKGS.jsx'))
@@ -146,11 +147,18 @@ function MemuatkanPage() {
   )
 }
 
+// Laluan "Paparan" (disambung TV/projektor) - full-bleed gelap SAHAJA,
+// tanpa Navbar/ButangTerapung di atas/bawah (ruang skrin penuh perlu
+// untuk dibaca dari jauh, dan tiada gunanya menu navigasi di situ).
+const LALUAN_TANPA_NAVBAR = ['/kkgs/pilihan-raya/paparan']
+
 export default function App() {
   const { user } = useAuth()
+  const location = useLocation()
+  const sembunyikanNavbar = LALUAN_TANPA_NAVBAR.includes(location.pathname)
   return (
     <div className="min-h-dvh flex flex-col bg-base">
-      <Navbar />
+      {!sembunyikanNavbar && <Navbar />}
       <div className="flex-1">
         <PenggeraAksesTerhad>
         <Suspense fallback={<MemuatkanPage />}>
@@ -205,6 +213,7 @@ export default function App() {
             <Route path="senarai-ahli" element={<SenaraiAhliKKGS />} />
             <Route path="jawatankuasa" element={<JawatankuasaKKGS />} />
             <Route path="pilihan-raya" element={<PilihanRayaKKGS />} />
+            <Route path="pilihan-raya/paparan" element={<PaparanPilihanRayaKKGS />} />
             <Route path="program" element={<ProgramAktivitiKKGS />} />
             <Route path="yuran" element={<YuranSumbanganKKGS />} />
             <Route path="kewangan" element={<KewanganKKGS />} />
@@ -260,7 +269,7 @@ export default function App() {
         </Suspense>
         </PenggeraAksesTerhad>
       </div>
-      {user && <ButangTerapung />}
+      {user && !sembunyikanNavbar && <ButangTerapung />}
     </div>
   )
 }
