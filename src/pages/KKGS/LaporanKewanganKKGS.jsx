@@ -7,10 +7,7 @@ function tarikhHariIni() {
 
 // Kumpul transaksi (tersusun MENAIK ikut tarikh, dgn lajur `baki` dah
 // dikira sebelum sampai sini) ikut SEMUA 12 BULAN (Januari-Disember) -
-// SENTIASA 12 kumpulan walaupun sesetengah bulan tiada transaksi langsung
-// (fix - dulu bulan kosong terus "hilang" dari laporan Tahun Penuh,
-// kelirukan semakan sebab struktur laporan jadi tak konsisten sepanjang
-// tahun; sekarang setiap bulan tetap ada halaman sendiri).
+// SENTIASA 12 kumpulan walaupun sesetengah bulan tiada transaksi langsung.
 function kumpul12Bulan(transaksi, bakiAwalTahun) {
   const kumpulan = Array.from({ length: 12 }, (_, i) => ({ bulan: i + 1, senarai: [] }))
   transaksi.forEach((t) => {
@@ -26,11 +23,43 @@ function kumpul12Bulan(transaksi, bakiAwalTahun) {
   })
 }
 
-function KotakRingkas({ label, nilai }) {
+// Bilangan baris jadual dibenarkan setiap muka surat cetak, supaya SATU
+// bulan yang panjang (banyak transaksi) dipecah kepada beberapa muka surat
+// KAMI SENDIRI kawal (bukan biar pelayar "overflow" automatik) - elak bug
+// "potongan next page tiada jarak A4" (muka surat sambungan hilang padding
+// sebab pelayar cuma letak padding pada MUKA PERTAMA satu div panjang,
+// bukan pada setiap muka surat yang overflow secara semula jadi).
+const MAKS_BARIS_MUKA_MULA = 24 // muka pertama bulan - ada ruang kotak ringkasan
+const MAKS_BARIS_MUKA_SAMBUNG = 34 // muka sambungan - jadual sahaja, lebih ruang
+
+function pecahBarisMukaSurat(senarai) {
+  if (senarai.length === 0) return [[]]
+  const kepingan = []
+  let i = 0
+  let saiz = MAKS_BARIS_MUKA_MULA
+  while (i < senarai.length) {
+    kepingan.push(senarai.slice(i, i + saiz))
+    i += saiz
+    saiz = MAKS_BARIS_MUKA_SAMBUNG
+  }
+  return kepingan
+}
+
+// PENTING (fix "kotak 4 di atas kosong bila cetak"): guna FLEXBOX, BUKAN
+// CSS Grid, utk barisan kotak statistik kecil ni. Chrome ada bug lama -
+// bila `display:grid` dipakai dgn beberapa <p> bertindih dalam satu sel
+// grid + `page-break`/`@page` custom, baris KEDUA (nilai RM) kadang tak
+// tercetak langsung walaupun nampak sempurna di skrin biasa. Flexbox tak
+// ada masalah ni.
+function BarisanKotakRingkas({ kotak }) {
   return (
-    <div className="border border-black p-3 text-center">
-      <p className="text-[10px] text-gray-600">{label}</p>
-      <p className="text-base font-bold">RM {nilai.toFixed(2)}</p>
+    <div className="flex gap-3 mb-4">
+      {kotak.map(({ label, nilai }) => (
+        <div key={label} className="flex-1 border border-black p-3 text-center">
+          <p className="text-[10px] text-gray-600">{label}</p>
+          <p className="text-base font-bold" style={{ color: '#000' }}>RM {nilai.toFixed(2)}</p>
+        </div>
+      ))}
     </div>
   )
 }
@@ -63,9 +92,14 @@ function FooterLaporan() {
 }
 
 // Halaman 1 - "sampul" ringkasan keseluruhan tempoh (jumlah besar +
-// pecahan kategori). `akanBersambung` = ada halaman lepas ni (page-break
-// selepas, guna kelas print-page-break sedia ada dlm index.css).
+// pecahan kategori). `akanBersambung` = ada halaman lepas ni.
 function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKeluar, bakiBersihTempoh, bakiAwalTempoh, bakiTerkumpul, pecahanMasuk, pecahanKeluar, akanBersambung }) {
+  const kotak = []
+  if (bakiAwalTempoh != null) kotak.push({ label: labelBakiAwal, nilai: bakiAwalTempoh })
+  kotak.push({ label: 'Jumlah Masuk', nilai: jumlahMasuk })
+  kotak.push({ label: 'Jumlah Keluar', nilai: jumlahKeluar })
+  kotak.push({ label: 'Baki Bersih Tempoh Ini', nilai: bakiBersihTempoh })
+
   return (
     <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm', minHeight: '287mm' }}>
       <div className="text-center mb-6 border-b-2 border-black pb-4">
@@ -74,12 +108,8 @@ function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKelua
         <p className="text-xs font-semibold mt-1">Bagi Tempoh: {tajukPeriod}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-3">
-        {bakiAwalTempoh != null && <KotakRingkas label={labelBakiAwal} nilai={bakiAwalTempoh} />}
-        <KotakRingkas label="Jumlah Masuk" nilai={jumlahMasuk} />
-        <KotakRingkas label="Jumlah Keluar" nilai={jumlahKeluar} />
-        <KotakRingkas label="Baki Bersih Tempoh Ini" nilai={bakiBersihTempoh} />
-      </div>
+      <BarisanKotakRingkas kotak={kotak} />
+
       {bakiTerkumpul != null && (
         <div className="border-2 border-black p-3 text-center mb-6 bg-gray-50">
           <p className="text-[10px] text-gray-600">Baki Terkumpul Kelab (akhir tempoh ini, merentasi semua tahun)</p>
@@ -111,26 +141,35 @@ function HalamanRingkasan({ tajukPeriod, labelBakiAwal, jumlahMasuk, jumlahKelua
   )
 }
 
-// Satu halaman PENUH bagi SATU bulan - jadual sendiri, ringkasan mini
-// sendiri, sentiasa dipaparkan walaupun `senarai` kosong (fix "kena ada
-// juga" - staff/bendahari boleh nampak terus bulan mana yang memang
-// tiada transaksi, bukan tertanya-tanya kenapa ia hilang dari laporan).
-function HalamanBulan({ tahun, bulan, senarai, bakiAwalBulan, bakiAkhirBulan, noMula, akanBersambung }) {
-  const masuk = senarai.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
-  const keluar = senarai.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
+// SATU muka surat bagi SATU keping (chunk) baris jadual bulan tertentu.
+// `keping === 0` (muka PERTAMA bulan ni) papar tajuk penuh + kotak
+// ringkasan bulan; keping seterusnya (sambungan, sebab jadual terlalu
+// panjang utk 1 muka) papar tajuk ringkas "(Sambungan)" sahaja - tapi
+// KEKAL dapat padding p-10 sendiri (fix "tiada jarak A4 profesional" -
+// dulu overflow jadual biar pelayar sambung sendiri ke muka baru TANPA
+// padding, sekarang KITA yang pecah & bagi setiap muka padding sendiri).
+function HalamanBulan({ tahun, bulan, baris, noMula, keping, jumlahKeping, bakiAwalBulan, bakiAkhirBulan, masuk, keluar, akanBersambung }) {
+  const mukaPertama = keping === 0
+  const mukaTerakhirBulan = keping === jumlahKeping - 1
+
   return (
     <div className={`text-black p-10 ${akanBersambung ? 'print-page-break' : ''}`} style={{ width: '210mm', minHeight: '287mm' }}>
       <div className="text-center mb-5 border-b-2 border-black pb-3">
-        <p className="text-base font-extrabold uppercase">{NAMA_BULAN[bulan - 1]} {tahun}</p>
-        <p className="text-[10px] text-gray-600">Laporan Kewangan KKGS - Buku Besar Bulanan</p>
+        <p className="text-lg font-extrabold uppercase">Laporan Kewangan KKGS</p>
+        <p className="text-xs">Kelab Kebajikan Guru &amp; Staf</p>
+        <p className="text-xs font-semibold mt-1">
+          Bagi Bulan: {NAMA_BULAN[bulan - 1]} {tahun}{!mukaPertama && ` (Sambungan, muka ${keping + 1})`}
+        </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-4">
-        <KotakRingkas label="Baki Awal Bulan" nilai={bakiAwalBulan} />
-        <KotakRingkas label="Masuk Bulan Ini" nilai={masuk} />
-        <KotakRingkas label="Keluar Bulan Ini" nilai={keluar} />
-        <KotakRingkas label="Baki Akhir Bulan" nilai={bakiAkhirBulan} />
-      </div>
+      {mukaPertama && (
+        <BarisanKotakRingkas kotak={[
+          { label: 'Baki Awal Bulan', nilai: bakiAwalBulan },
+          { label: 'Masuk Bulan Ini', nilai: masuk },
+          { label: 'Keluar Bulan Ini', nilai: keluar },
+          { label: 'Baki Akhir Bulan', nilai: bakiAkhirBulan },
+        ]} />
+      )}
 
       <table className="w-full border-collapse border border-black text-[9px]">
         <thead style={{ display: 'table-header-group' }}>
@@ -146,13 +185,13 @@ function HalamanBulan({ tahun, bulan, senarai, bakiAwalBulan, bakiAkhirBulan, no
           </tr>
         </thead>
         <tbody>
-          {senarai.length === 0 ? (
+          {baris.length === 0 ? (
             <tr><td colSpan={8} className="border border-black p-2 text-center text-gray-500">Tiada transaksi bulan ini.</td></tr>
           ) : (
-            senarai.map((t, i) => <BarisTransaksi key={t.id} t={t} no={noMula + i} />)
+            baris.map((t, i) => <BarisTransaksi key={t.id} t={t} no={noMula + i} />)
           )}
         </tbody>
-        {senarai.length > 0 && (
+        {mukaTerakhirBulan && baris.length > 0 && (
           <tfoot>
             <tr className="bg-gray-100 font-bold">
               <td colSpan={5} className="border border-black p-1 text-right">Jumlah {NAMA_BULAN[bulan - 1]} :</td>
@@ -163,6 +202,9 @@ function HalamanBulan({ tahun, bulan, senarai, bakiAwalBulan, bakiAkhirBulan, no
           </tfoot>
         )}
       </table>
+      {!mukaTerakhirBulan && (
+        <p className="text-[10px] text-gray-500 mt-2 italic">… bersambung ke muka surat seterusnya.</p>
+      )}
 
       {!akanBersambung && <FooterLaporan />}
     </div>
@@ -170,12 +212,13 @@ function HalamanBulan({ tahun, bulan, senarai, bakiAwalBulan, bakiAkhirBulan, no
 }
 
 // Laporan Kewangan KKGS - gaya Buku Besar (General Ledger) boleh cetak.
-// SATU BULAN: satu halaman (ringkasan + jadual sekali). TAHUN PENUH:
-// halaman "sampul" ringkasan + 12 HALAMAN BERASINGAN (satu bulan, satu
-// halaman cetak - page-break antara setiap satu), Januari hingga Disember
-// SENTIASA lengkap walaupun sesetengah bulan tiada transaksi.
-// Tapisan tempoh dibuat SEBELUM hantar ke komponen ni; `transaksi` diterima
-// dah tersusun MENAIK ikut tarikh dan sudah ada lajur `baki` siap kira.
+// SATU BULAN: 1 (atau lebih, jika jadual panjang) muka surat bulan tu
+// sahaja. TAHUN PENUH: halaman "sampul" ringkasan + muka surat Januari
+// hingga Disember (setiap bulan mula pada muka BAHARU - `print-page-break`
+// - dan bulan panjang dipecah sendiri kepada beberapa muka, BUKAN dibiar
+// overflow pelayar). Tapisan tempoh dibuat SEBELUM hantar ke komponen ni;
+// `transaksi` diterima dah tersusun MENAIK ikut tarikh dgn lajur `baki`
+// siap kira.
 export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerkumpul, bakiAwalTahun }) {
   const jumlahMasuk = transaksi.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
   const jumlahKeluar = transaksi.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
@@ -191,26 +234,30 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerku
 
   const tajukPeriod = bulan ? `${NAMA_BULAN[bulan - 1]} ${tahun}` : `Tahun ${tahun}`
 
-  if (bulan) {
-    return (
-      <PrintArea>
-        <HalamanRingkasan
-          tajukPeriod={tajukPeriod} labelBakiAwal={`Baki Awal Tahun ${tahun}`}
-          jumlahMasuk={jumlahMasuk} jumlahKeluar={jumlahKeluar} bakiBersihTempoh={bakiBersihTempoh}
-          bakiAwalTempoh={bakiAwalTahun} bakiTerkumpul={bakiTerkumpul}
-          pecahanMasuk={pecahanMasuk} pecahanKeluar={pecahanKeluar} akanBersambung
-        />
-        <HalamanBulan
-          tahun={tahun} bulan={bulan} senarai={transaksi}
-          bakiAwalBulan={bakiAwalTahun} bakiAkhirBulan={transaksi[transaksi.length - 1]?.baki ?? bakiAwalTahun}
-          noMula={1} akanBersambung={false}
-        />
-      </PrintArea>
-    )
-  }
+  // Senarai bulan yg perlu dipaparkan sbg muka surat "Buku Besar" -
+  // SATU bulan sahaja (mod bulan tertentu) atau semua 12 (Tahun Penuh).
+  const kumpulanBulan = bulan
+    ? [{ bulan, senarai: transaksi, bakiAwalBulan: bakiAwalTahun, bakiAkhirBulan: transaksi[transaksi.length - 1]?.baki ?? bakiAwalTahun }]
+    : kumpul12Bulan(transaksi, bakiAwalTahun)
 
-  const kumpulanBulan = kumpul12Bulan(transaksi, bakiAwalTahun)
+  // Pecah setiap bulan kepada beberapa "keping" (muka surat) ikut had
+  // baris setiap muka, sambil kekalkan No siri bersambung sepanjang
+  // laporan dan jumlah masuk/keluar/baki SEBENAR bulan (dikira dari
+  // SENARAI PENUH bulan tu, bukan sekadar keping semasa).
+  const semuaMuka = []
   let noBerjalan = 1
+  kumpulanBulan.forEach((k) => {
+    const kepingan = pecahBarisMukaSurat(k.senarai)
+    const masuk = k.senarai.filter((t) => t.jenis === 'masuk').reduce((j, t) => j + t.jumlah, 0)
+    const keluar = k.senarai.filter((t) => t.jenis === 'keluar').reduce((j, t) => j + t.jumlah, 0)
+    kepingan.forEach((baris, idx) => {
+      semuaMuka.push({
+        tahun, bulan: k.bulan, baris, noMula: noBerjalan, keping: idx, jumlahKeping: kepingan.length,
+        bakiAwalBulan: k.bakiAwalBulan, bakiAkhirBulan: k.bakiAkhirBulan, masuk, keluar,
+      })
+      noBerjalan += baris.length
+    })
+  })
 
   return (
     <PrintArea>
@@ -218,19 +265,11 @@ export default function LaporanKewanganKKGS({ transaksi, tahun, bulan, bakiTerku
         tajukPeriod={tajukPeriod} labelBakiAwal={`Baki Awal Tahun ${tahun}`}
         jumlahMasuk={jumlahMasuk} jumlahKeluar={jumlahKeluar} bakiBersihTempoh={bakiBersihTempoh}
         bakiAwalTempoh={bakiAwalTahun} bakiTerkumpul={bakiTerkumpul}
-        pecahanMasuk={pecahanMasuk} pecahanKeluar={pecahanKeluar} akanBersambung
+        pecahanMasuk={pecahanMasuk} pecahanKeluar={pecahanKeluar} akanBersambung={semuaMuka.length > 0}
       />
-      {kumpulanBulan.map((k, i) => {
-        const halaman = (
-          <HalamanBulan
-            key={k.bulan} tahun={tahun} bulan={k.bulan} senarai={k.senarai}
-            bakiAwalBulan={k.bakiAwalBulan} bakiAkhirBulan={k.bakiAkhirBulan}
-            noMula={noBerjalan} akanBersambung={i < kumpulanBulan.length - 1}
-          />
-        )
-        noBerjalan += k.senarai.length
-        return halaman
-      })}
+      {semuaMuka.map((h, i) => (
+        <HalamanBulan key={`${h.bulan}_${h.keping}`} {...h} akanBersambung={i < semuaMuka.length - 1} />
+      ))}
     </PrintArea>
   )
 }
