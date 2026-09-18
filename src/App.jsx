@@ -112,9 +112,19 @@ function adalahLaluanAwam(pathname) {
 }
 
 function PenggeraAksesTerhad({ children }) {
-  const { user } = useAuth()
+  const { user, loading: loadingAuth } = useAuth()
   const { status, loading } = useAksesStatus(user)
   const location = useLocation()
+
+  // Firebase BARU cuba pulihkan sesi log masuk dari storan (berlaku setiap
+  // kali page dimuat SEGAR - refresh, atau tab BAHARU macam butang "Buka
+  // Paparan TV/Projektor" yang guna target="_blank") - `user` MASIH null
+  // buat sementara waktu walaupun staff SEBENARNYA dah log masuk. Kalau
+  // terus semak `!user` di bawah tanpa tunggu ni dulu, staff yang buka
+  // laluan berdaftar dalam tab baharu akan "ditendang" balik ke Utama
+  // serta-merta - sebelum sempat Firebase habis sahkan sesi (fix bug
+  // "Paparan TV/Projektor terus reset ke sekolah.syazr.com").
+  if (loadingAuth) return children
 
   if (!user) {
     if (!adalahLaluanAwam(location.pathname)) {
