@@ -1,26 +1,9 @@
 import PrintArea from '../../components/cetak/PrintArea.jsx'
 import { NAMA_BULAN } from './kkgsConstants.js'
+import { kumpul12Bulan } from '../../hooks/useKkgsLedger.js'
 
 function tarikhHariIni() {
   return new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
-// Kumpul transaksi (tersusun MENAIK ikut tarikh, dgn lajur `baki` dah
-// dikira sebelum sampai sini) ikut SEMUA 12 BULAN (Januari-Disember) -
-// SENTIASA 12 kumpulan walaupun sesetengah bulan tiada transaksi langsung.
-function kumpul12Bulan(transaksi, bakiAwalTahun) {
-  const kumpulan = Array.from({ length: 12 }, (_, i) => ({ bulan: i + 1, senarai: [] }))
-  transaksi.forEach((t) => {
-    const b = Number((t.tarikh ?? '').slice(5, 7))
-    if (b >= 1 && b <= 12) kumpulan[b - 1].senarai.push(t)
-  })
-  let bakiSebelum = bakiAwalTahun
-  return kumpulan.map((k) => {
-    const bakiAwalBulan = bakiSebelum
-    const bakiAkhirBulan = k.senarai.length > 0 ? k.senarai[k.senarai.length - 1].baki : bakiAwalBulan
-    bakiSebelum = bakiAkhirBulan
-    return { ...k, bakiAwalBulan, bakiAkhirBulan }
-  })
 }
 
 // Bilangan baris jadual dibenarkan setiap muka surat cetak, supaya SATU
