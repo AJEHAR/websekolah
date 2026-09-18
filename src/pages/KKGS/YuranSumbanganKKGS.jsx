@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Trash2, X, Settings, Download, Search, ChevronDown, ChevronRight, CalendarRange, Users, CheckSquare, Square, UserMinus } from 'lucide-react'
+import { Plus, Trash2, X, Settings, Printer, Search, ChevronDown, ChevronRight, Users, CheckSquare, Square, UserMinus } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
@@ -13,6 +13,7 @@ import {
 import { useCetak } from '../../hooks/useCetak.js'
 import { kiraPeruntukanYuran, NAMA_BULAN, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA, labelStatusKeahlian } from './kkgsConstants.js'
 import ResitYuranKKGS from './ResitYuranKKGS.jsx'
+import LaporanYuranKKGS from './LaporanYuranKKGS.jsx'
 
 // Pemalar tahun DIKONGSI (kkgsConstants.js) - elak tak konsisten dengan
 // Kewangan (bug #5 - dulu dua page guna senarai tahun berlainan).
@@ -450,7 +451,8 @@ export default function YuranSumbanganKKGS() {
   const [ahliTempoh, setAhliTempoh] = useState(null)
   const [tunjukTetapan, setTunjukTetapan] = useState(false)
   const [tunjukRoster, setTunjukRoster] = useState(false)
-  const [dataResit, setDataResit] = useCetak()
+  const [dataResit, setDataResit] = useCetak((d) => `Resit Yuran KKGS - ${d.ahli.nama} ${d.tahun}`)
+  const [dataLaporan, setDataLaporan] = useCetak((d) => `Pembayaran Bulanan Ahli KKGS ${d.tahun}`)
   const [menyediakan, setMenyediakan] = useState(false)
   // Ahli tak aktif (bersara/pindah/berhenti) - collapsed LALAI, papan
   // pembayaran ni untuk urus bayaran SEMASA, ahli dah keluar cuma perlu
@@ -489,6 +491,20 @@ export default function YuranSumbanganKKGS() {
 
   function cetakResit(ahli, peruntukan) {
     setDataResit({ ahli, peruntukan, tahun, tetapan })
+  }
+
+  // Laporan Pembayaran Bulanan (papan penuh) - guna SENARAI TERTAPIS
+  // (disenaraiAktif/disenaraiTakAktif, iaitu roster tahun ni SAHAJA,
+  // lepas carian) supaya laporan sepadan dengan apa yang staff nampak
+  // di skrin masa cetak ditekan.
+  function cetakLaporan() {
+    setDataLaporan({
+      tahun,
+      tetapan,
+      senaraiBulan,
+      barisAktif: disenaraiAktif.map((a) => ({ ahli: a, peruntukan: peruntukanAhli(a) })),
+      barisTakAktif: disenaraiTakAktif.map((a) => ({ ahli: a, peruntukan: peruntukanAhli(a) })),
+    })
   }
 
   async function simpanTempoh(data) {
@@ -571,9 +587,12 @@ export default function YuranSumbanganKKGS() {
             <option key={t} value={t}>{t}{t === TAHUN_SEMASA ? ' (semasa)' : ''}</option>
           ))}
         </select>
+        <button onClick={cetakLaporan} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink ml-auto">
+          <Printer size={14} /> Cetak / PDF
+        </button>
         {bolehUrus && (
           <>
-            <button onClick={() => setTunjukRoster(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink ml-auto">
+            <button onClick={() => setTunjukRoster(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
               <Users size={14} /> Urus Senarai ({ahliDalamPapan.length})
             </button>
             <button onClick={() => setTunjukTetapan(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
@@ -741,6 +760,7 @@ export default function YuranSumbanganKKGS() {
         </>
       )}
       {dataResit && <ResitYuranKKGS {...dataResit} />}
+      {dataLaporan && <LaporanYuranKKGS {...dataLaporan} />}
     </div>
   )
 }

@@ -44,6 +44,7 @@ const KKGSLayout = lazy(() => import('./pages/KKGS/KKGSLayout.jsx'))
 const KKGSHub = lazy(() => import('./pages/KKGS/KKGSHub.jsx'))
 const SenaraiAhliKKGS = lazy(() => import('./pages/KKGS/SenaraiAhliKKGS.jsx'))
 const JawatankuasaKKGS = lazy(() => import('./pages/KKGS/JawatankuasaKKGS.jsx'))
+const PilihanRayaKKGS = lazy(() => import('./pages/KKGS/PilihanRayaKKGS.jsx'))
 const ProgramAktivitiKKGS = lazy(() => import('./pages/KKGS/ProgramAktivitiKKGS.jsx'))
 const YuranSumbanganKKGS = lazy(() => import('./pages/KKGS/YuranSumbanganKKGS.jsx'))
 const KewanganKKGS = lazy(() => import('./pages/KKGS/KewanganKKGS.jsx'))
@@ -203,6 +204,7 @@ export default function App() {
             <Route index element={<KKGSHub />} />
             <Route path="senarai-ahli" element={<SenaraiAhliKKGS />} />
             <Route path="jawatankuasa" element={<JawatankuasaKKGS />} />
+            <Route path="pilihan-raya" element={<PilihanRayaKKGS />} />
             <Route path="program" element={<ProgramAktivitiKKGS />} />
             <Route path="yuran" element={<YuranSumbanganKKGS />} />
             <Route path="kewangan" element={<KewanganKKGS />} />

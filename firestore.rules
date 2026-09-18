@@ -474,5 +474,66 @@ service cloud.firestore {
       allow create: if isStaffDiluluskan() && request.resource.data.pemohonUid == request.auth.uid;
       allow update, delete: if isAdminSeksyen('kkgs') || (resource.data.status == 'menunggu' && resource.data.pemohonUid == request.auth.uid);
     }
+
+    // Pilihan Raya KKGS - sesi undian jawatankuasa (setiap 2 tahun).
+    // SEMUA staff boleh BACA (termasuk medan "keputusan" muktamad selepas
+    // sesi ditutup - telus untuk semua), admin 'kkgs' SAHAJA boleh TULIS
+    // (cipta sesi, urus pengecualian calon, tukar status, terbitkan
+    // keputusan). Sama corak macam kkgsAhli/kkgsProgram.
+    match /kkgsPilihanRaya/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isAdminSeksyen('kkgs');
+    }
+
+    // Undian MENTAH - SATU dokumen SATU jawatan SATU pengundi (ID
+    // deterministik `${pilihanRayaId}_${jawatan}_${uid}` - lihat
+    // useKkgsUndian.js). SULIT SELAMANYA - staff HANYA boleh baca UNDIAN
+    // SENDIRI (semak "dah undi ke belum" di borang), admin 'kkgs' SAHAJA
+    // boleh baca SEMUA (untuk kira tally live/keputusan akhir - keputusan
+    // AKHIR sahaja yang diterbitkan balik ke kkgsPilihanRaya.keputusan
+    // untuk staff biasa, BUKAN dokumen undian mentah ni).
+    //
+    // "allow update: if false" ialah KUNCI elak undi dua kali - ID
+    // deterministik bermaksud percubaan hantar KALI KEDUA (jawatan sama,
+    // pengundi sama) jadi operasi "update" (dokumen dah wujud), BUKAN
+    // "create" - jadi automatik ditolak, TANPA perlu query semak dulu di
+    // klien (elak race condition kalau staff double-click hantar).
+    match /kkgsUndian/{docId} {
+      allow read: if isAdminSeksyen('kkgs') || (isStaffDiluluskan() && resource.data.pengundiUid == request.auth.uid);
+      // docId MESTI ikut corak deterministik `${pilihanRayaId}_..._${uid}`
+      // (lihat idUndian() di useKkgsUndian.js) - sekat percubaan cipta
+      // dokumen ID SEWENANG-WENANGNYA (cth. guna addDoc ID rawak) untuk
+      // pintas had "satu undi setiap jawatan" (yang bergantung KEPADA ID
+      // SAMA ditolak sebagai "update", bukan ID baharu tiap kali).
+      // Undian LIVE - SATU jawatan SATU masa (pusingan), BUKAN semua
+      // jawatan sekali gus. Rules semak DUA perkara terhadap sesi: (1)
+      // pusingan SEMASA memang MASIH 'berjalan' (belum ditutup admin/
+      // tempoh belum tamat direkod), (2) jawatan pada dokumen undian ni
+      // SAMA dengan pusinganJawatan semasa (elak staff hantar undi untuk
+      // jawatan yang BUKAN pusingan aktif sekarang, cth. cuba "curi
+      // start" jawatan seterusnya sebelum admin buka).
+      // Sebelum ni had "berapa calon boleh dipilih" (1 untuk jawatan
+      // tunggal, maks bilanganKerusiAjk untuk AJK KKGS) HANYA disekat
+      // sisi klien (borang) - klien tak jujur/buggy boleh terus panggil
+      // hantarUndianPusingan() dengan calonIds sesuka hati (cth. undi 10
+      // orang untuk race yang cuma ada 5 kerusi) tanpa disekat, songsang
+      // tally senyap-senyap. Rule di bawah sahkan SEKALI LAGI sisi
+      // server: sekurang-kurangnya 1 calon, dan untuk AJK KKGS tak
+      // melebihi bilanganKerusiAjk sesi (jawatan tunggal automatik had 1
+      // sebab bukan senarai 'AJK KKGS').
+      allow create: if isStaffDiluluskan()
+        && request.resource.data.pengundiUid == request.auth.uid
+        && docId.matches(request.resource.data.pilihanRayaId + '_.*_' + request.auth.uid)
+        && request.resource.data.calonIds.size() >= 1
+        && request.resource.data.calonIds.size() <= (
+          request.resource.data.jawatan == 'AJK KKGS'
+            ? get(/databases/$(database)/documents/kkgsPilihanRaya/$(request.resource.data.pilihanRayaId)).data.bilanganKerusiAjk
+            : 1
+        )
+        && get(/databases/$(database)/documents/kkgsPilihanRaya/$(request.resource.data.pilihanRayaId)).data.pusinganStatus == 'berjalan'
+        && get(/databases/$(database)/documents/kkgsPilihanRaya/$(request.resource.data.pilihanRayaId)).data.pusinganJawatan == request.resource.data.jawatan;
+      allow update: if false;
+      allow delete: if isAdminSeksyen('kkgs');
+    }
   }
 }

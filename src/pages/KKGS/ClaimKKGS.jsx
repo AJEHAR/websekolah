@@ -25,6 +25,13 @@ const TAB = [
   { id: 'sumbangan', label: 'Sumbangan' },
 ]
 
+// Tajuk laporan/nama fail ikut jenis - dikongsi dengan LaporanClaimKKGS.
+const TAJUK_LAPORAN_JENIS = {
+  imbuhan: 'Claim Imbuhan',
+  resit: 'Tuntutan Resit',
+  sumbangan: 'Sumbangan',
+}
+
 const WARNA_STATUS = {
   menunggu: { bg: '#FCEFC7', teks: '#8A6D00', label: 'Menunggu' },
   diluluskan: { bg: '#E1F5EE', teks: '#0F6E56', label: 'Selesai' },
@@ -252,7 +259,7 @@ export default function ClaimKKGS() {
   const { senarai: senaraiAhli } = useKkgsAhliSenarai()
   const [tab, setTab] = useState('imbuhan')
   const [tahun, setTahun] = useState(TAHUN_SEMASA)
-  const [dataCetak, setDataCetak] = useCetak()
+  const [dataCetak, setDataCetak] = useCetak((d) => `Laporan ${TAJUK_LAPORAN_JENIS[d.jenis] ?? 'Tuntutan'} KKGS ${d.tahun}`)
 
   // SEMUA staff (bukan admin sahaja) nampak SEMUA tuntutan - telus atas
   // permintaan, elak double-claim & staff nampak keadilan taburan.

@@ -8,6 +8,7 @@ import { useTetapanPendaftaran } from '../../hooks/useTetapanPendaftaran.js'
 const TAJUK_SUBPAGE = {
   '/kkgs/senarai-ahli': 'Senarai Ahli',
   '/kkgs/jawatankuasa': 'Jawatankuasa',
+  '/kkgs/pilihan-raya': 'Pilihan Raya',
   '/kkgs/program': 'Program/Aktiviti',
   '/kkgs/yuran': 'Yuran Sumbangan',
   '/kkgs/kewangan': 'Kewangan',

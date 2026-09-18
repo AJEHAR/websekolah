@@ -231,7 +231,7 @@ export default function KewanganKKGS() {
   const [tunjukForm, setTunjukForm] = useState(false)
   const [transaksiEdit, setTransaksiEdit] = useState(null)
   const [tunjukTetapanBaki, setTunjukTetapanBaki] = useState(false)
-  const [dataLaporan, setDataLaporan] = useCetak()
+  const [dataLaporan, setDataLaporan] = useCetak((d) => `Laporan Kewangan KKGS ${d.bulan ? `${NAMA_BULAN[d.bulan - 1]} ${d.tahun}` : `Tahun ${d.tahun}`}`)
 
   const bukuTunai = bukuTunaiSemua.filter((t) => (t.tarikh ?? '').slice(0, 4) === String(tahun))
 

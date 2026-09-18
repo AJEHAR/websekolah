@@ -22,6 +22,49 @@ export const JAWATAN_KKGS = [
 // pegang jawatan sama serentak tanpa disedari.
 export const JAWATAN_SATU_ORANG = ['Penasihat', 'Pengerusi', 'Naib Pengerusi', 'Setiausaha', 'Bendahari 1', 'Bendahari 2']
 
+// Jawatan yang DIPILIH melalui Pilihan Raya KKGS (setiap 2 tahun) -
+// SEMUA jawatan satu-orang KECUALI Penasihat (disandang Guru Besar
+// secara automatik, bukan jawatan boleh diundi). AJK KKGS (ramai kerusi)
+// diundi berasingan - lihat KERUSI_AJK_LALAI.
+export const JAWATAN_DIPILIH = JAWATAN_SATU_ORANG.filter((j) => j !== 'Penasihat')
+
+// Bilangan kerusi AJK KKGS (kumpulan, bukan satu orang) LALAI untuk
+// sesi Pilihan Raya baharu - admin boleh ubah ikut sesi (cth. jumlah
+// keseluruhan jawatankuasa 10 kerusi = 5 jawatan bernama di atas + 5
+// AJK KKGS biasa).
+export const KERUSI_AJK_LALAI = 5
+
+// Label untuk kumpulan AJK KKGS dalam undian - SATU pemalar dikongsi
+// (bukan string literal ulang-ulang) supaya kod & UI konsisten.
+export const JAWATAN_AJK_PILIHAN_RAYA = 'AJK KKGS'
+
+// SUSUNAN PUSINGAN undian - LIVE, SATU jawatan SATU masa (bukan semua
+// sekali gus) - ikut hierarki jawatan, AJK KKGS di akhir. Pemenang
+// pusingan awal AUTOMATIK "hilang" (dikeluarkan) dari senarai calon
+// pusingan SETERUSNYA - fix keluhan "nama sama menang lebih 1 jawatan
+// sebab orang suka undi nama tu" - lepas seseorang menang Pengerusi cth.,
+// dia TAK muncul lagi sebagai calon Naib Pengerusi/Setiausaha/.../AJK.
+export const JAWATAN_URUTAN_PILIHAN_RAYA = [...JAWATAN_DIPILIH, JAWATAN_AJK_PILIHAN_RAYA]
+
+// Tempoh undi LALAI (saat) setiap pusingan - admin boleh ubah nilai ni
+// SETIAP KALI buka pusingan (medan input terus sebelum butang "Mula
+// Pusingan"), bukan tetapan tetap seluruh sesi.
+export const TEMPOH_UNDI_LALAI_SAAT = 90
+
+// Status sesi Pilihan Raya KKGS - "draf" (admin sediakan tetapan/senarai
+// tak layak dulu, belum boleh undi), "berjalan" (staff boleh undi
+// SEKALI setiap jawatan), "selesai" (ditutup, keputusan diterbitkan -
+// TIDAK boleh diundi/diubah lagi).
+export const STATUS_PILIHAN_RAYA = [
+  { nilai: 'draf', label: 'Draf' },
+  { nilai: 'berjalan', label: 'Sedang Berjalan' },
+  { nilai: 'selesai', label: 'Selesai' },
+]
+
+export function labelStatusPilihanRaya(nilai) {
+  return STATUS_PILIHAN_RAYA.find((s) => s.nilai === nilai)?.label ?? nilai
+}
+
 export function labelJawatan(jawatan) {
   return jawatan === 'Ahli' ? 'Ahli KKGS (Selain Di Atas)' : jawatan
 }
