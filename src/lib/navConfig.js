@@ -74,6 +74,8 @@ export const NAV_ITEMS = [
     children: [
       { label: 'Senarai Ahli', to: '/kkgs/senarai-ahli' },
       { label: 'Jawatankuasa', to: '/kkgs/jawatankuasa' },
+      { label: 'Pilihan Raya', to: '/kkgs/pilihan-raya' },
+      { label: 'Program/Aktiviti', to: '/kkgs/program' },
       { label: 'Yuran Sumbangan', to: '/kkgs/yuran' },
       { label: 'Kewangan', to: '/kkgs/kewangan' },
       { label: 'Claim KKGS', to: '/kkgs/claim' },
