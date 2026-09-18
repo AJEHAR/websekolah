@@ -94,12 +94,24 @@ function BarisTransaksi({ t, no }) {
 // hanya utk laporan tahun semasa - lihat KewanganKKGS.jsx), papar terus;
 // kalau tidak (laporan tahun lepas/depan, atau jawatan kosong), biar ruang
 // kosong utk tulis tangan - elak cetak nama yang tak sah utk tempoh tu.
+// PENTING (fix "alignment tandatangan tak simetri" DAN elak bug grid print
+// yg sama macam kotak ringkasan tadi - "kotak 4 kosong bila cetak"):
+// - Guna FLEXBOX `flex-1` (BUKAN CSS Grid) utk 2 lajur - `flex-1` paksa
+//   kedua-dua lajur SAMA LEBAR (50%-50%) tak kira panjang nama, sama
+//   konsep dgn grid-cols-2 tapi TANPA risiko bug cetak Chrome pada grid
+//   item yg ada beberapa baris teks bertindih.
+// - Garisan (mx-auto) DIKUNCI pada lebar tetap SAMA (45mm) utk Bendahari
+//   & Pengerusi, diletak di TENGAH lajur masing-masing.
+// - Nama panjang WRAP ke bawah (break-words) - TAK meleret keluar lajur -
+//   jadi lebar lajur kekal tetap tak kira panjang nama, dan garisan
+//   kedua-dua pihak kekal di kedudukan cermin yg sama-sama jarak dari
+//   tengah muka surat, tak kira satu nama jauh lebih panjang drpd lain.
 function KotakTandatangan({ jawatan, nama }) {
   return (
-    <div className="text-center">
-      <div className="w-40 border-b border-black mb-1" style={{ height: '36px' }} />
+    <div className="flex-1 text-center px-4">
+      <div className="mx-auto border-b border-black mb-1" style={{ width: '45mm', height: '36px' }} />
       {nama ? (
-        <p className="text-[10px] font-semibold">({nama})</p>
+        <p className="text-[10px] font-semibold break-words">({nama})</p>
       ) : (
         <p className="text-[10px] text-gray-600">(Nama: ……………………………………)</p>
       )}
@@ -111,7 +123,7 @@ function KotakTandatangan({ jawatan, nama }) {
 function FooterLaporan({ namaBendahari, namaPengerusi }) {
   return (
     <div className="mt-8">
-      <div className="flex justify-around gap-6 mb-4">
+      <div className="flex mb-4">
         <KotakTandatangan jawatan="Bendahari KKGS" nama={namaBendahari} />
         <KotakTandatangan jawatan="Pengerusi KKGS" nama={namaPengerusi} />
       </div>
