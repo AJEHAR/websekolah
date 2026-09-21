@@ -8,7 +8,7 @@ const WARNA_STATUS_CETAK = {
 }
 
 const TAJUK_JENIS = {
-  imbuhan: 'Claim (Imbuhan)',
+  imbuhan: 'Pemberian Imbuhan',
   resit: 'Resit',
   sumbangan: 'Sumbangan',
 }
@@ -68,12 +68,14 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan, 
 
   return (
     <PrintArea>
-      {/* flex-col + minHeight 297mm (1 muka A4 penuh) supaya footer/ruang
-          tandatangan di bawah TERPAKSA turun ke PALING BAWAH muka surat
-          (mt-auto) bila kandungan jadual pendek - bukan terapung sejurus
-          lepas jadual macam dulu. Kalau kandungan panjang (>1 muka),
-          overflow biasa (pecah muka surat baharu) - footer tetap muncul
-          SEKALI sahaja, di hujung SEMUA kandungan. */}
+      {/* flex-col + minHeight 297mm (1 muka A4 penuh) - SIGN != FOOTER:
+          tandatangan (KotakTandatanganPengerusi) kekal DEKAT dgn jadual
+          (aliran biasa, terus lepas jadual), TAPI baris "Laporan dijana
+          sistem pada..." (footer sebenar) yang ditolak ke PALING BAWAH
+          muka surat (mt-auto) bila kandungan jadual pendek. Kalau
+          kandungan panjang (>1 muka), overflow biasa (pecah muka surat
+          baharu) - footer tetap muncul SEKALI sahaja, di hujung SEMUA
+          kandungan. */}
       <div className="text-black p-10 flex flex-col" style={{ width: '210mm', minHeight: '297mm' }}>
         <div>
           {/* Kepala/header disamakan dgn gaya LaporanKewanganKKGS.jsx -
@@ -143,19 +145,19 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan, 
               )}
             </tbody>
           </table>
-        </div>
 
-        {/* mt-auto - dorong footer ni ke bawah SEKALI, kekal di bahagian
-            bawah div (mengisi baki ruang selepas kandungan atas). Gaya
-            tandatangan + susunan disamakan dgn LaporanKewanganKKGS.jsx
-            (garisan 45mm, nama dlm kurungan, jawatan bawah nama), cuma
-            SATU kotak (Pengerusi) berbanding dua kat Kewangan. */}
-        <div className="mt-auto pt-8">
-          <div className="flex justify-center mb-4">
+          {/* SIGN - kekal DEKAT dgn jadual (aliran biasa, mt-8, bukan
+              ditolak ke bawah). Gaya disamakan dgn LaporanKewanganKKGS.jsx
+              (garisan 45mm, nama dlm kurungan, jawatan bawah nama), cuma
+              SATU kotak (Pengerusi) berbanding dua kat Kewangan. */}
+          <div className="flex justify-center mt-8">
             <KotakTandatanganPengerusi nama={namaPengerusi} />
           </div>
-          <p className="text-xs text-gray-600 text-center" style={{ color: '#000' }}>Laporan dijana sistem pada {tarikhHariIni()}</p>
         </div>
+
+        {/* FOOTER (bukan sign) - mt-auto dorong baris ni ke PALING BAWAH
+            muka surat sekali, berasingan drpd blok sign di atas. */}
+        <p className="text-xs text-gray-600 text-center mt-auto pt-8" style={{ color: '#000' }}>Laporan dijana sistem pada {tarikhHariIni()}</p>
       </div>
     </PrintArea>
   )

@@ -28,7 +28,7 @@ const TAB = [
 
 // Tajuk laporan/nama fail ikut jenis - dikongsi dengan LaporanClaimKKGS.
 const TAJUK_LAPORAN_JENIS = {
-  imbuhan: 'Claim Imbuhan',
+  imbuhan: 'Pemberian Imbuhan',
   resit: 'Tuntutan Resit',
   sumbangan: 'Sumbangan',
 }
