@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { Plus, X, Upload, Check, X as XIcon, Pencil, Trash2, Printer, RotateCcw } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
+import { useKkgsNamaSekolahLaporan } from '../../hooks/useKkgsTetapanLaporan.js'
 import { useKkgsClaimSemua, hantarClaimKkgs, kemaskiniClaimKkgs, padamClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
 import { useKkgsProgramTahun } from '../../hooks/useKkgsProgram.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
@@ -296,8 +297,14 @@ export default function ClaimKKGS() {
   // sesiapa yang dilantik terkini (bukan taip manual/hardcode).
   const namaPengerusi = senaraiAhli.find((a) => a.jawatan === 'Pengerusi')?.nama ?? ''
 
+  // Nama sekolah kepala laporan - tetapan KONGSI sama dgn Laporan
+  // Kewangan KKGS (useKkgsNamaSekolahLaporan, disimpan dlm dokumen
+  // kkgsTetapanUmum/utama), supaya kedua-dua laporan KKGS papar nama
+  // sekolah yang sama tanpa perlu tetapan berasingan.
+  const { namaSekolah } = useKkgsNamaSekolahLaporan()
+
   function cetakLaporan() {
-    setDataCetak({ senarai: senaraiPapar, jenis: tab, tahun, tapisImbuhan: tab === 'imbuhan' ? tapisImbuhan : '', namaPengerusi })
+    setDataCetak({ senarai: senaraiPapar, jenis: tab, tahun, tapisImbuhan: tab === 'imbuhan' ? tapisImbuhan : '', namaPengerusi, namaSekolah })
   }
 
   async function putuskan(claim, status) {

@@ -1,5 +1,4 @@
 import PrintArea from '../../components/cetak/PrintArea.jsx'
-import KepalaSuratCetak from '../../components/cetak/KepalaSuratCetak.jsx'
 import { warnaImbuhan } from './kkgsConstants.js'
 
 const WARNA_STATUS_CETAK = {
@@ -32,6 +31,26 @@ function namaBerkenaan(c) {
   return c.ahliNama || c.pemohonNama || '-'
 }
 
+// Kotak tandatangan Pengerusi - gaya disamakan dgn LaporanKewanganKKGS.jsx
+// (KotakTandatangan): garisan 45mm di tengah, nama dlm kurungan (kalau
+// ada) di bawah garisan, jawatan di bawah nama. Kewangan ada 2 kotak
+// (Bendahari + Pengerusi) sebab ada peranan Bendahari - Claim cuma perlu
+// SATU (Pengerusi sahaja, tiada peranan Bendahari dlm modul Claim), jadi
+// diletak di tengah muka surat (bukan flex-1 dua lajur).
+function KotakTandatanganPengerusi({ nama }) {
+  return (
+    <div className="text-center">
+      <div className="mx-auto border-b border-black mb-1" style={{ width: '45mm', height: '36px' }} />
+      {nama ? (
+        <p className="text-[10px] font-semibold" style={{ color: '#000' }}>({nama})</p>
+      ) : (
+        <p className="text-[10px] text-gray-600">(Nama: ……………………………………)</p>
+      )}
+      <p className="text-xs font-semibold mt-1" style={{ color: '#000' }}>Pengerusi KKGS</p>
+    </div>
+  )
+}
+
 // Laporan Claim/Resit/Sumbangan - jadual boleh cetak/PDF, senang kongsi
 // dengan Jawatankuasa/pihak luar. senarai (dah ditapis ikut jenis+tahun+
 // imbuhan SEBELUM hantar ke komponen ni).
@@ -40,7 +59,7 @@ function namaBerkenaan(c) {
 // Resit wajibkan pilih Program/Aktiviti). Imbuhan & Sumbangan tak pernah
 // isi medan ni langsung - dulu column ni tetap dipaparkan untuk semua
 // jenis dan sentiasa tunjuk "-" untuk Imbuhan/Sumbangan, mengelirukan.
-export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan, namaPengerusi }) {
+export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan, namaPengerusi, namaSekolah }) {
   // (c.jumlah || 0) - elak NaN kalau ada rekod lama/rosak tiada medan
   // jumlah, yang akan buat SELURUH jumlah keseluruhan jadi "RM NaN".
   const jumlahBesar = senarai.reduce((j, c) => j + (c.jumlah || 0), 0)
@@ -57,10 +76,14 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan, 
           SEKALI sahaja, di hujung SEMUA kandungan. */}
       <div className="text-black p-10 flex flex-col" style={{ width: '210mm', minHeight: '297mm' }}>
         <div>
-          <KepalaSuratCetak tajukLaporan={`Laporan ${TAJUK_JENIS[jenis] ?? 'Tuntutan'} KKGS`} />
+          {/* Kepala/header disamakan dgn gaya LaporanKewanganKKGS.jsx -
+              nama sekolah sbg TEKS sahaja (TIADA logo/imej), guna tetapan
+              nama sekolah kongsi yg sama (useKkgsNamaSekolahLaporan). */}
           <div className="text-center mb-6 border-b-2 border-black pb-4">
-            <p className="text-xs">Kelab Kebajikan Guru &amp; Staf</p>
-            <p className="text-xs font-semibold mt-1">Bagi Tahun: {tahun}{tapisImbuhan ? ` — Jenis Imbuhan: ${tapisImbuhan}` : ''}</p>
+            {namaSekolah && <p className="text-sm font-bold uppercase mb-1" style={{ color: '#000' }}>{namaSekolah}</p>}
+            <p className="text-lg font-extrabold uppercase" style={{ color: '#000' }}>Laporan {TAJUK_JENIS[jenis] ?? 'Tuntutan'} KKGS</p>
+            <p className="text-xs" style={{ color: '#000' }}>Kelab Kebajikan Guru &amp; Staf</p>
+            <p className="text-xs font-semibold mt-1" style={{ color: '#000' }}>Bagi Tahun: {tahun}{tapisImbuhan ? ` — Jenis Imbuhan: ${tapisImbuhan}` : ''}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-6">
@@ -123,14 +146,15 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan, 
         </div>
 
         {/* mt-auto - dorong footer ni ke bawah SEKALI, kekal di bahagian
-            bawah div (mengisi baki ruang selepas kandungan atas). */}
-        <div className="flex justify-between items-end mt-auto pt-8">
-          <p className="text-xs text-gray-600">Laporan dijana sistem pada {tarikhHariIni()}</p>
-          <div className="text-center">
-            <div className="w-48 border-b border-black mb-1" style={{ height: '40px' }} />
-            <p className="text-xs font-semibold" style={{ color: '#000' }}>{namaPengerusi || '……………………………………'}</p>
-            <p className="text-xs font-semibold" style={{ color: '#000' }}>Pengerusi KKGS</p>
+            bawah div (mengisi baki ruang selepas kandungan atas). Gaya
+            tandatangan + susunan disamakan dgn LaporanKewanganKKGS.jsx
+            (garisan 45mm, nama dlm kurungan, jawatan bawah nama), cuma
+            SATU kotak (Pengerusi) berbanding dua kat Kewangan. */}
+        <div className="mt-auto pt-8">
+          <div className="flex justify-center mb-4">
+            <KotakTandatanganPengerusi nama={namaPengerusi} />
           </div>
+          <p className="text-xs text-gray-600 text-center" style={{ color: '#000' }}>Laporan dijana sistem pada {tarikhHariIni()}</p>
         </div>
       </div>
     </PrintArea>
