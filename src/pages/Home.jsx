@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 lg:py-16">
+    <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-8 lg:py-16">
       <div className="bg-surface border border-border rounded-card shadow-soft p-8 sm:p-12 lg:p-16 text-center">
         <img
           src="/logo.png"

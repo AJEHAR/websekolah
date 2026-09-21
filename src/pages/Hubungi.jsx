@@ -33,7 +33,7 @@ export default function Hubungi() {
   const namaAkaunFB = tetapan.facebook.replace(/\/$/, '').split('/').pop()
 
   return (
-    <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8 lg:py-16">
+    <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-8 lg:py-16">
       <div className="text-center mb-8">
         <h1 className="text-xl sm:text-2xl font-bold text-ink">Hubungi Kami</h1>
         <p className="text-inkmuted mt-2 text-sm">Sekolah Kebangsaan Pendidikan Khas Kuantan</p>

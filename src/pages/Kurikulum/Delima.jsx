@@ -8,6 +8,7 @@ import { useCetak } from '../../hooks/useCetak.js'
 import { NAMA_SEKOLAH } from './rpiConstants.js'
 import ImportDelimaModal from './ImportDelimaModal.jsx'
 import CetakDelima from './CetakDelima.jsx'
+import CetakKadDelima from './CetakKadDelima.jsx'
 
 // Modal tambah/edit satu rekod Delima (emel + kata laluan) bagi SATU murid.
 function ModalDelima({ open, murid, rekod, onTutup, onSimpan }) {
@@ -222,6 +223,7 @@ export default function Delima() {
   const [dipilihSet, setDipilihSet] = useState(() => new Set())
   const [tunjukKataLaluanPukal, setTunjukKataLaluanPukal] = useState(false)
   const [kelasCetak, setKelasCetak] = useState('') // '' = semua kelas
+  const [formatCetak, setFormatCetak] = useState('jadual') // jadual | kad
   const [dataCetak, setDataCetak] = useCetak((d) => `Senarai Delima - ${d.tajuk}`)
   const [tab, setTab] = useState('senarai') // senarai | cleanup
   const [dipilihCleanupSet, setDipilihCleanupSet] = useState(() => new Set())
@@ -285,7 +287,7 @@ export default function Delima() {
     const kumpulanKelas = Object.entries(kelasMap)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([kelas, murid]) => ({ kelas, murid: [...murid].sort((a, b) => (a.nama ?? '').localeCompare(b.nama ?? '')) }))
-    setDataCetak({ kumpulanKelas, tajuk: kelasCetak === '' ? 'Semua Kelas' : kelasCetak })
+    setDataCetak({ kumpulanKelas, tajuk: kelasCetak === '' ? 'Semua Kelas' : kelasCetak, formatCetak })
   }
 
   async function simpan(data) {
@@ -344,6 +346,10 @@ export default function Delima() {
       {tab === 'senarai' && (
       <>
       <div className="flex gap-2 mb-3 flex-wrap justify-end">
+        <div className="flex gap-1 p-1 rounded-card bg-base">
+          <button onClick={() => setFormatCetak('jadual')} className={`h-8 px-2.5 rounded-card text-[11px] font-semibold ${formatCetak === 'jadual' ? 'bg-surface text-ink shadow-sm' : 'text-inkmuted'}`}>Jadual</button>
+          <button onClick={() => setFormatCetak('kad')} className={`h-8 px-2.5 rounded-card text-[11px] font-semibold ${formatCetak === 'kad' ? 'bg-surface text-ink shadow-sm' : 'text-inkmuted'}`}>Kad</button>
+        </div>
         <select value={kelasCetak} onChange={(e) => setKelasCetak(e.target.value)} className="h-10 px-3 rounded-card border border-border bg-surface text-xs">
           <option value="">Cetak: Semua Kelas</option>
           {senaraiKelas.map((k) => <option key={k} value={k}>Cetak: {k}</option>)}
@@ -452,7 +458,8 @@ export default function Delima() {
         onTutup={() => setTunjukKataLaluanPukal(false)}
         onSimpan={simpanKataLaluanPukal}
       />
-      {dataCetak && <CetakDelima {...dataCetak} namaSekolah={NAMA_SEKOLAH} />}
+      {dataCetak && dataCetak.formatCetak === 'kad' && <CetakKadDelima {...dataCetak} namaSekolah={NAMA_SEKOLAH} />}
+      {dataCetak && dataCetak.formatCetak !== 'kad' && <CetakDelima {...dataCetak} namaSekolah={NAMA_SEKOLAH} />}
     </div>
   )
 }

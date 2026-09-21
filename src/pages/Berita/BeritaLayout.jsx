@@ -6,7 +6,7 @@ import { Outlet } from 'react-router-dom'
 // letak di sini supaya terpakai pada semua sub-page.
 export default function BeritaLayout() {
   return (
-    <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 lg:py-16">
+    <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-8 lg:py-16">
       <Outlet />
     </main>
   )

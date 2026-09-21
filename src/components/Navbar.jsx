@@ -36,7 +36,7 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-ink text-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="px-4 sm:px-6 lg:px-10 xl:px-16">
           <div className="flex h-16 items-center justify-between gap-2">
             {/* Group kiri: hamburger (mobile) + logo - sentiasa kekal kiri */}
             <div className="flex items-center gap-1 min-w-0">
