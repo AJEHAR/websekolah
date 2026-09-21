@@ -291,8 +291,13 @@ export default function ClaimKKGS() {
     muatSemulaSemua()
   }
 
+  // Nama Pengerusi KKGS SEMASA (jawatan='Pengerusi' dlm Jawatankuasa KKGS -
+  // page sedia ada) - untuk ruang tandatangan laporan, automatik ikut
+  // sesiapa yang dilantik terkini (bukan taip manual/hardcode).
+  const namaPengerusi = senaraiAhli.find((a) => a.jawatan === 'Pengerusi')?.nama ?? ''
+
   function cetakLaporan() {
-    setDataCetak({ senarai: senaraiPapar, jenis: tab, tahun, tapisImbuhan: tab === 'imbuhan' ? tapisImbuhan : '' })
+    setDataCetak({ senarai: senaraiPapar, jenis: tab, tahun, tapisImbuhan: tab === 'imbuhan' ? tapisImbuhan : '', namaPengerusi })
   }
 
   async function putuskan(claim, status) {
