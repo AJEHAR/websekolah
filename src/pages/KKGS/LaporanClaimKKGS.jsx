@@ -148,9 +148,12 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan, 
 
           {/* SIGN - kekal DEKAT dgn jadual (aliran biasa, mt-8, bukan
               ditolak ke bawah). Gaya disamakan dgn LaporanKewanganKKGS.jsx
-              (garisan 45mm, nama dlm kurungan, jawatan bawah nama), cuma
-              SATU kotak (Pengerusi) berbanding dua kat Kewangan. */}
-          <div className="flex justify-center mt-8">
+              (garisan 45mm, nama dlm kurungan, jawatan bawah nama).
+              justify-end (bukan justify-center) - Kewangan letak
+              Pengerusi di LAJUR KANAN (sebelah Bendahari di kiri); Claim
+              tiada Bendahari, jadi kotak Pengerusi terus diletak di
+              bahagian KANAN kertas, kedudukan sama macam Kewangan. */}
+          <div className="flex justify-end mt-8">
             <KotakTandatanganPengerusi nama={namaPengerusi} />
           </div>
         </div>
