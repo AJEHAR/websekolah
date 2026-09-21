@@ -1,4 +1,5 @@
 import PrintArea from '../../components/cetak/PrintArea.jsx'
+import { warnaImbuhan } from './kkgsConstants.js'
 
 const WARNA_STATUS_CETAK = {
   menunggu: 'Menunggu',
@@ -38,7 +39,7 @@ function namaBerkenaan(c) {
 // Resit wajibkan pilih Program/Aktiviti). Imbuhan & Sumbangan tak pernah
 // isi medan ni langsung - dulu column ni tetap dipaparkan untuk semua
 // jenis dan sentiasa tunjuk "-" untuk Imbuhan/Sumbangan, mengelirukan.
-export default function LaporanClaimKKGS({ senarai, jenis, tahun }) {
+export default function LaporanClaimKKGS({ senarai, jenis, tahun, tapisImbuhan }) {
   const jumlahBesar = senarai.reduce((j, c) => j + c.jumlah, 0)
   const adaProgram = jenis === 'resit'
   const jumlahLajur = adaProgram ? 6 : 5
@@ -49,7 +50,7 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun }) {
         <div className="text-center mb-6 border-b-2 border-black pb-4">
           <p className="text-lg font-extrabold uppercase">Laporan {TAJUK_JENIS[jenis] ?? 'Tuntutan'} KKGS</p>
           <p className="text-xs">Kelab Kebajikan Guru &amp; Staf</p>
-          <p className="text-xs font-semibold mt-1">Bagi Tahun: {tahun}</p>
+          <p className="text-xs font-semibold mt-1">Bagi Tahun: {tahun}{tapisImbuhan ? ` — Jenis Imbuhan: ${tapisImbuhan}` : ''}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -82,7 +83,11 @@ export default function LaporanClaimKKGS({ senarai, jenis, tahun }) {
                 <tr key={c.id}>
                   <td className="border border-black p-1.5 text-center">{i + 1}</td>
                   <td className="border border-black p-1.5">{namaBerkenaan(c)}</td>
-                  <td className="border border-black p-1.5">{butiran(c)}</td>
+                  <td className="border border-black p-1.5">
+                    {c.jenisClaim === 'imbuhan' ? (
+                      <span className="px-1.5 py-0.5 rounded" style={{ backgroundColor: warnaImbuhan(c.jenisImbuhan).bg, color: warnaImbuhan(c.jenisImbuhan).teks }}>{butiran(c)}</span>
+                    ) : butiran(c)}
+                  </td>
                   {adaProgram && <td className="border border-black p-1.5">{c.programNama || '-'}</td>}
                   <td className="border border-black p-1.5 text-right">{c.jumlah.toFixed(2)}</td>
                   <td className="border border-black p-1.5 text-center">{WARNA_STATUS_CETAK[c.status] ?? c.status}</td>

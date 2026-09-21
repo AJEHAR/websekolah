@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, X, Upload, Check, X as XIcon, Pencil, Trash2, Printer } from 'lucide-react'
+import { Plus, X, Upload, Check, X as XIcon, Pencil, Trash2, Printer, RotateCcw } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useKkgsAhliSenarai } from '../../hooks/useKkgsAhli.js'
 import { useKkgsClaimSemua, hantarClaimKkgs, kemaskiniClaimKkgs, padamClaimKkgs, putuskanClaimKkgs } from '../../hooks/useKkgsClaim.js'
@@ -8,7 +8,7 @@ import { useKkgsProgramTahun } from '../../hooks/useKkgsProgram.js'
 import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
-import { JENIS_IMBUHAN_KKGS, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA, PROGRAM_LAIN_ID } from './kkgsConstants.js'
+import { JENIS_IMBUHAN_KKGS, PILIHAN_TAHUN_KKGS, TAHUN_SEMASA, PROGRAM_LAIN_ID, warnaImbuhan } from './kkgsConstants.js'
 import DropdownCari from './DropdownCari.jsx'
 import LaporanClaimKKGS from './LaporanClaimKKGS.jsx'
 
@@ -41,6 +41,14 @@ const WARNA_STATUS = {
 function BadgeStatus({ status }) {
   const w = WARNA_STATUS[status] ?? WARNA_STATUS.menunggu
   return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: w.bg, color: w.teks }}>{w.label}</span>
+}
+
+// Lencana jenis imbuhan - warna BERBEZA setiap jenis (lihat warnaImbuhan
+// dlm kkgsConstants.js) supaya senang bezakan sekali imbas mata dalam
+// senarai bercampur (bukan cuma teks biasa macam dulu).
+function BadgeImbuhan({ label }) {
+  const w = warnaImbuhan(label)
+  return <span className="text-xs font-semibold px-2 py-0.5 rounded-full inline-block" style={{ backgroundColor: w.bg, color: w.teks }}>{label}</span>
 }
 
 // Borang hantar/edit - reka bentuk BERBEZA ikut tab (bukan togol dalam
@@ -259,7 +267,8 @@ export default function ClaimKKGS() {
   const { senarai: senaraiAhli } = useKkgsAhliSenarai()
   const [tab, setTab] = useState('imbuhan')
   const [tahun, setTahun] = useState(TAHUN_SEMASA)
-  const [dataCetak, setDataCetak] = useCetak((d) => `Laporan ${TAJUK_LAPORAN_JENIS[d.jenis] ?? 'Tuntutan'} KKGS ${d.tahun}`)
+  const [tapisImbuhan, setTapisImbuhan] = useState('') // '' = semua jenis imbuhan
+  const [dataCetak, setDataCetak] = useCetak((d) => `Laporan ${TAJUK_LAPORAN_JENIS[d.jenis] ?? 'Tuntutan'} KKGS ${d.tapisImbuhan ? `- ${d.tapisImbuhan} ` : ''}${d.tahun}`)
 
   // SEMUA staff (bukan admin sahaja) nampak SEMUA tuntutan - telus atas
   // permintaan, elak double-claim & staff nampak keadilan taburan.
@@ -269,21 +278,39 @@ export default function ClaimKKGS() {
   const [claimEdit, setClaimEdit] = useState(null)
 
   const senaraiPenuh = claimSemua
-  // Tapisan JENIS (tab) + TAHUN (ikut tarikh mohon) - memudahkan semakan
+  // Tapisan JENIS (tab) + TAHUN (ikut tarikh mohon) + JENIS IMBUHAN
+  // (pilihan, cuma relevan bila tab==='imbuhan') - memudahkan semakan
   // (dulu semua tahun bercampur, susah semak rekod tahun tertentu).
-  const senaraiPapar = senaraiPenuh.filter((c) => (c.jenisClaim || 'resit') === tab && tarikhMohonKeTahun(c) === tahun)
+  const senaraiPapar = senaraiPenuh.filter((c) =>
+    (c.jenisClaim || 'resit') === tab
+    && tarikhMohonKeTahun(c) === tahun
+    && (tab !== 'imbuhan' || !tapisImbuhan || c.jenisImbuhan === tapisImbuhan)
+  )
 
   async function muatSemulaSemuanya() {
     muatSemulaSemua()
   }
 
   function cetakLaporan() {
-    setDataCetak({ senarai: senaraiPapar, jenis: tab, tahun })
+    setDataCetak({ senarai: senaraiPapar, jenis: tab, tahun, tapisImbuhan: tab === 'imbuhan' ? tapisImbuhan : '' })
   }
 
   async function putuskan(claim, status) {
     await putuskanClaimKkgs(claim.id, { status, catatanKeputusan: '' }, user.uid)
     muatSemulaSemuanya()
+  }
+
+  // Batal keputusan (Selesai/Tolak tersalah tekan) - kembali ke "Menunggu"
+  // supaya boleh diputuskan semula. Rekod "diluluskan" dah termaktub dalam
+  // Ledger/Kewangan (dikira TERUS drpd status semasa, bukan salinan
+  // berasingan) - amaran khas sebab batal akan KELUARKAN rekod ni drpd
+  // Ledger serta-merta.
+  async function batalKeputusan(c) {
+    const amaran = c.status === 'diluluskan'
+      ? '⚠️ Rekod ni DAH DILULUSKAN dan termaktub dalam Ledger/Kewangan. Batal akan KELUARKAN rekod ni drpd Ledger serta-merta (kembali "Menunggu"). Teruskan?'
+      : 'Kembalikan rekod ni ke status "Menunggu"?'
+    if (!(await konfirm(amaran, { bahaya: c.status === 'diluluskan' }))) return
+    await putuskan(c, 'menunggu')
   }
 
   // Edit/Padam DIBENARKAN (padan firestore.rules) untuk: admin KKGS BILA-
@@ -331,6 +358,12 @@ export default function ClaimKKGS() {
         <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="h-10 px-3 rounded-card border border-border bg-surface text-sm">
           {PILIHAN_TAHUN_KKGS.map((t) => <option key={t} value={t}>{t}{t === TAHUN_SEMASA ? ' (semasa)' : ''}</option>)}
         </select>
+        {tab === 'imbuhan' && (
+          <select value={tapisImbuhan} onChange={(e) => setTapisImbuhan(e.target.value)} className="h-10 px-3 rounded-card border border-border bg-surface text-sm">
+            <option value="">Semua Jenis Imbuhan</option>
+            {JENIS_IMBUHAN_KKGS.map((j) => <option key={j.label} value={j.label}>{j.label}</option>)}
+          </select>
+        )}
         <button onClick={cetakLaporan} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
           <Printer size={14} /> Cetak / PDF
         </button>
@@ -372,7 +405,11 @@ export default function ClaimKKGS() {
                       Sumbangan {c.arahSumbangan === 'masuk' ? 'Masuk' : 'Keluar'}
                     </span>
                   )}
-                  <p className="text-sm font-semibold text-ink truncate">{c.jenisClaim === 'imbuhan' ? c.jenisImbuhan : (c.tujuan || (c.jenisClaim === 'sumbangan' ? '-' : '-'))}</p>
+                  {c.jenisClaim === 'imbuhan' ? (
+                    <div className="mt-0.5"><BadgeImbuhan label={c.jenisImbuhan} /></div>
+                  ) : (
+                    <p className="text-sm font-semibold text-ink truncate">{c.tujuan || (c.jenisClaim === 'sumbangan' ? '-' : '-')}</p>
+                  )}
                 </div>
                 <BadgeStatus status={c.status} />
               </div>
@@ -398,6 +435,13 @@ export default function ClaimKKGS() {
                   </button>
                   <button onClick={() => putuskan(c, 'ditolak')} className="flex-1 h-9 rounded-card border border-brand-red text-brand-red text-xs font-semibold flex items-center justify-center gap-1">
                     <XIcon size={13} /> Tolak
+                  </button>
+                </div>
+              )}
+              {sayaJawatankuasa && c.status !== 'menunggu' && (
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => batalKeputusan(c)} className="flex-1 h-9 rounded-card border border-border text-ink text-xs font-semibold flex items-center justify-center gap-1">
+                    <RotateCcw size={13} /> Batal - Tandakan Menunggu Semula
                   </button>
                 </div>
               )}

@@ -128,13 +128,22 @@ export const TAHUN_SEMASA = TAHUN_SEMASA_KKGS
 // yang dikongsi pengguna. BOLEH kemas kini di sini bila-bila (tambah/
 // buang/ubah jumlah) - senarai ni dikongsi seluruh sistem Claim.
 export const JENIS_IMBUHAN_KKGS = [
-  { label: 'Sakit masuk wad (3 hari)', jumlah: 30, keterangan: 'Kemasukan wad tahun semasa sahaja (tidak termasuk tahun-tahun lepas).' },
-  { label: 'Kahwin Kali Pertama', jumlah: 100, keterangan: 'Mana-mana perkahwinan PERTAMA anda semasa menjadi ahli KKGS SKPK.' },
-  { label: 'Kematian Ahli Keluarga Terdekat', jumlah: 50, keterangan: 'Ahli keluarga terdekat bermaksud: Ibu, Bapa, Adik-beradik, Suami/Isteri, atau Anak.' },
-  { label: 'Bersalin Kali Pertama', jumlah: 50, keterangan: 'Kelahiran anak PERTAMA (lelaki atau perempuan bersalin) semasa berada/berkhidmat di SKPK.' },
-  { label: 'Pertukaran', jumlah: 100, keterangan: 'Pertukaran rasmi keluar dari SKPK.' },
-  { label: 'Bersara', jumlah: 100, keterangan: 'Persaraan rasmi daripada perkhidmatan.' },
+  { label: 'Sakit masuk wad (3 hari)', jumlah: 30, keterangan: 'Kemasukan wad tahun semasa sahaja (tidak termasuk tahun-tahun lepas).', warna: { bg: '#E3EEFC', teks: '#1E56A0' } },
+  { label: 'Kahwin Kali Pertama', jumlah: 100, keterangan: 'Mana-mana perkahwinan PERTAMA anda semasa menjadi ahli KKGS SKPK.', warna: { bg: '#FCE4EC', teks: '#AD1457' } },
+  { label: 'Kematian Ahli Keluarga Terdekat', jumlah: 50, keterangan: 'Ahli keluarga terdekat bermaksud: Ibu, Bapa, Adik-beradik, Suami/Isteri, atau Anak.', warna: { bg: '#ECEFF1', teks: '#455A64' } },
+  { label: 'Bersalin Kali Pertama', jumlah: 50, keterangan: 'Kelahiran anak PERTAMA (lelaki atau perempuan bersalin) semasa berada/berkhidmat di SKPK.', warna: { bg: '#F1E7FC', teks: '#6A3FA0' } },
+  { label: 'Pertukaran', jumlah: 100, keterangan: 'Pertukaran rasmi keluar dari SKPK.', warna: { bg: '#E8EAF9', teks: '#3949AB' } },
+  { label: 'Bersara', jumlah: 100, keterangan: 'Persaraan rasmi daripada perkhidmatan.', warna: { bg: '#FBE9DD', teks: '#A15A2A' } },
 ]
+
+// Warna lalai untuk jenis imbuhan yang tiada dlm senarai (rekod lama /
+// jenis dah dibuang dari JENIS_IMBUHAN_KKGS) - elak crash cuba baca
+// .bg/.teks pada undefined.
+const WARNA_IMBUHAN_LALAI = { bg: '#EEEEEE', teks: '#555555' }
+
+export function warnaImbuhan(label) {
+  return JENIS_IMBUHAN_KKGS.find((j) => j.label === label)?.warna ?? WARNA_IMBUHAN_LALAI
+}
 
 // Nama 12 bulan kalendar (TETAP - Jan hingga Dis) - "bilanganBulan" (10-12)
 // tentukan berapa BANYAK bulan PERTAMA dikenakan yuran (cth. 10 = Jan-Okt
