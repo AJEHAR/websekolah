@@ -85,6 +85,7 @@ const OPPM = lazy(() => import('./pages/Kurikulum/OPPM.jsx'))
 const OPPMDetail = lazy(() => import('./pages/Kurikulum/OPPMDetail.jsx'))
 const SuratSpi = lazy(() => import('./components/SuratSpi.jsx'))
 const OPR = lazy(() => import('./pages/Kurikulum/OPR.jsx'))
+const Delima = lazy(() => import('./pages/Kurikulum/Delima.jsx'))
 
 // Kawal akaun yang belum LENGKAP diluluskan - dua kes:
 // 1. 'belum-profile' (staff kali pertama log masuk, tak ada profile
@@ -272,6 +273,7 @@ export default function App() {
             <Route path="surat-spi" element={<SuratSpi seksyen="kurikulum" />} />
             <Route path="koleksi-pekeliling" element={<Navigate to="/kurikulum/surat-spi" replace />} />
             <Route path="opr" element={<OPR seksyen="kurikulum" />} />
+            <Route path="delima" element={<Delima />} />
           </Route>
 
           {/* Tambah <Route> baru di sini setiap kali page/sub-page baru dibina */}

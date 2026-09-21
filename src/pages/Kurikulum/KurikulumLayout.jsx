@@ -13,6 +13,7 @@ const TAJUK_SUBPAGE = {
   '/kurikulum/surat-spi': 'Surat/SPI',
   '/kurikulum/opr': 'OPR',
   '/kurikulum/oppm': 'OPPM',
+  '/kurikulum/delima': 'Delima',
 }
 
 function tajukSubpage(pathname) {

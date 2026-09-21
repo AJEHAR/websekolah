@@ -13,6 +13,7 @@ export const NAV_ITEMS = [
       { label: 'OPPM', to: '/kurikulum/oppm' },
       { label: 'Surat/SPI', to: '/kurikulum/surat-spi' },
       { label: 'OPR', to: '/kurikulum/opr' },
+      { label: 'Delima', to: '/kurikulum/delima' },
       // Tambah subpage baru di sini bila dah tahu apa lagi diperlukan -
       // update juga kurikulumAksesPantas.js dan TAJUK_SUBPAGE dalam
       // KurikulumLayout.jsx, + <Route> baru dalam App.jsx.

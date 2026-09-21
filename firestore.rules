@@ -296,6 +296,18 @@ service cloud.firestore {
       allow write: if isAdminSeksyen('kurikulum');
     }
 
+    // Delima (Kurikulum) - rekod emel & kata laluan akaun DELIMa setiap
+    // murid (murid berkeperluan khas selalunya tak urus akaun sendiri,
+    // jadi guru kelas simpan rekod ni sbg rujukan). docId = SAMA dgn ID
+    // murid (koleksi 'murid' di atas) - satu dokumen setiap murid, senang
+    // get/set terus tanpa query. Mana-mana staff DILULUSKAN boleh
+    // tambah/kemas kini (guru kelas sendiri), bukan cuma admin kurikulum -
+    // sama corak dgn /laporanRPT/ di bawah.
+    match /kurikulumDelima/{docId} {
+      allow read: if isStaffDiluluskan();
+      allow write: if isStaffDiluluskan();
+    }
+
     // Laporan RPT (dokumen PDF dimuat naik) - mana-mana staff DILULUSKAN
     // boleh muat naik/kemas kini (termasuk tukar guru bagi pihak orang lain).
     match /laporanRPT/{docId} {
