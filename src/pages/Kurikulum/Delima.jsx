@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Search, Pencil, Trash2, Eye, EyeOff, Copy, KeyRound, Upload, CheckSquare, Square, Printer, X } from 'lucide-react'
+import { Search, Pencil, Trash2, Eye, EyeOff, Copy, KeyRound, Upload, CheckSquare, Square, Printer, X, UserX } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useMuridList } from '../../hooks/useMurid.js'
-import { useKurikulumDelimaSenarai, simpanKurikulumDelima, padamKurikulumDelima, tetapkanKataLaluanPukal } from '../../hooks/useKurikulumDelima.js'
+import { useKurikulumDelimaSenarai, simpanKurikulumDelima, padamKurikulumDelima, padamKurikulumDelimaPukal, tetapkanKataLaluanPukal } from '../../hooks/useKurikulumDelima.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { NAMA_SEKOLAH } from './rpiConstants.js'
 import ImportDelimaModal from './ImportDelimaModal.jsx'
@@ -180,6 +180,25 @@ function BarisMurid({ murid, rekod, tunjukKataLaluan, onTogolTunjuk, onEdit, onP
   )
 }
 
+// Satu baris murid dalam tab "Rekod Tak Sepadan" - murid dah TIADA dlm
+// koleksi 'murid' semasa (cth. dah tamat/pindah & disingkir masa staff
+// sync semula Excel Buku Daftar), tapi rekod Delima dia masih tertinggal
+// dlm sistem. Papar `nama` SNAPSHOT (bukan rujuk 'murid' - dah takde).
+function BarisTakSepadan({ rekod, dipilih, onTogolPilih, onPadam }) {
+  return (
+    <div className={`flex items-center gap-3 p-3.5 rounded-card border bg-surface ${dipilih ? 'border-brand-red' : 'border-border'}`}>
+      <button onClick={() => onTogolPilih(rekod.id)} aria-label="Pilih rekod" className="text-inkmuted shrink-0">
+        {dipilih ? <CheckSquare size={18} className="text-brand-red" /> : <Square size={18} />}
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-ink truncate">{rekod.nama || '(nama tak direkod)'}</p>
+        <p className="text-xs text-inkmuted truncate">{rekod.kelasDelima || '-'} · {rekod.emel || 'tiada emel'}</p>
+      </div>
+      <button onClick={() => onPadam(rekod)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red shrink-0"><Trash2 size={15} /></button>
+    </div>
+  )
+}
+
 // Delima - rujukan emel & kata laluan akaun DELIMa (portal pembelajaran
 // digital KPM) bagi setiap murid. Murid berkeperluan khas kebanyakannya
 // tak urus akaun sendiri, jadi guru kelas simpan rekod ni sbg rujukan
@@ -194,6 +213,7 @@ export default function Delima() {
 
   const [carian, setCarian] = useState('')
   const [tapisStatus, setTapisStatus] = useState('semua') // semua | direkod | belum
+  const [tapisKelas, setTapisKelas] = useState('') // '' = semua kelas
   const [muridEdit, setMuridEdit] = useState(null)
   const [rekodEdit, setRekodEdit] = useState(null)
   const [tunjukSet, setTunjukSet] = useState(() => new Set())
@@ -203,12 +223,19 @@ export default function Delima() {
   const [tunjukKataLaluanPukal, setTunjukKataLaluanPukal] = useState(false)
   const [kelasCetak, setKelasCetak] = useState('') // '' = semua kelas
   const [dataCetak, setDataCetak] = useCetak((d) => `Senarai Delima - ${d.tajuk}`)
+  const [tab, setTab] = useState('senarai') // senarai | cleanup
+  const [dipilihCleanupSet, setDipilihCleanupSet] = useState(() => new Set())
 
   const rekodMap = Object.fromEntries(senaraiRekod.map((r) => [r.id, r]))
   const senaraiKelas = [...new Set(senaraiMurid.map((m) => m.namaKelas).filter(Boolean))].sort()
+  const idMuridSet = new Set(senaraiMurid.map((m) => m.id))
+  // Rekod Delima yang muridId dia TAK ADA lagi dlm koleksi 'murid' semasa -
+  // calon "cleanup" (murid dah tamat/pindah & disingkir masa sync Excel).
+  const rekodTakSepadan = senaraiRekod.filter((r) => !idMuridSet.has(r.id))
 
   const disenarai = senaraiMurid
     .filter((m) => `${m.nama ?? ''} ${m.namaKelas ?? ''}`.toLowerCase().includes(carian.toLowerCase()))
+    .filter((m) => !tapisKelas || m.namaKelas === tapisKelas)
     .filter((m) => {
       if (tapisStatus === 'direkod') return Boolean(rekodMap[m.id])
       if (tapisStatus === 'belum') return !rekodMap[m.id]
@@ -262,13 +289,35 @@ export default function Delima() {
   }
 
   async function simpan(data) {
-    await simpanKurikulumDelima(muridEdit.id, data, user.uid)
+    await simpanKurikulumDelima(muridEdit.id, { ...data, nama: muridEdit.nama }, user.uid)
     muatSemula()
   }
 
   async function padam(murid) {
     if (!(await konfirm(`Padam rekod Delima ${murid.nama}?`, { bahaya: true }))) return
     await padamKurikulumDelima(murid.id)
+    muatSemula()
+  }
+
+  function togolPilihCleanup(rekodId) {
+    setDipilihCleanupSet((s) => {
+      const baru = new Set(s)
+      if (baru.has(rekodId)) baru.delete(rekodId); else baru.add(rekodId)
+      return baru
+    })
+  }
+
+  async function padamSatuCleanup(rekod) {
+    if (!(await konfirm(`Padam rekod Delima ${rekod.nama || 'murid ni'}?`, { bahaya: true }))) return
+    await padamKurikulumDelima(rekod.id)
+    muatSemula()
+  }
+
+  async function padamPukalCleanup() {
+    if (dipilihCleanupSet.size === 0) return
+    if (!(await konfirm(`Padam ${dipilihCleanupSet.size} rekod dipilih? Tindakan ni tak boleh dibatalkan.`, { bahaya: true }))) return
+    await padamKurikulumDelimaPukal([...dipilihCleanupSet])
+    setDipilihCleanupSet(new Set())
     muatSemula()
   }
 
@@ -283,6 +332,17 @@ export default function Delima() {
         </p>
       </div>
 
+      <div className="flex gap-1.5 mb-4 p-1 rounded-card bg-base w-fit">
+        <button onClick={() => setTab('senarai')} className={`h-9 px-3.5 rounded-card text-xs font-semibold ${tab === 'senarai' ? 'bg-brand-red text-white' : 'text-inkmuted'}`}>
+          Senarai Murid
+        </button>
+        <button onClick={() => setTab('cleanup')} className={`flex items-center gap-1.5 h-9 px-3.5 rounded-card text-xs font-semibold ${tab === 'cleanup' ? 'bg-brand-red text-white' : 'text-inkmuted'}`}>
+          <UserX size={14} /> Rekod Tak Sepadan {rekodTakSepadan.length > 0 && `(${rekodTakSepadan.length})`}
+        </button>
+      </div>
+
+      {tab === 'senarai' && (
+      <>
       <div className="flex gap-2 mb-3 flex-wrap justify-end">
         <select value={kelasCetak} onChange={(e) => setKelasCetak(e.target.value)} className="h-10 px-3 rounded-card border border-border bg-surface text-xs">
           <option value="">Cetak: Semua Kelas</option>
@@ -316,6 +376,10 @@ export default function Delima() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-inkmuted" />
           <input type="text" value={carian} onChange={(e) => setCarian(e.target.value)} placeholder="Cari nama murid/kelas…" className="w-full h-10 pl-9 pr-3 rounded-card border border-border bg-surface text-sm" />
         </div>
+        <select value={tapisKelas} onChange={(e) => setTapisKelas(e.target.value)} className="h-10 px-3 rounded-card border border-border bg-surface text-sm">
+          <option value="">Semua Kelas</option>
+          {senaraiKelas.map((k) => <option key={k} value={k}>{k}</option>)}
+        </select>
         <select value={tapisStatus} onChange={(e) => setTapisStatus(e.target.value)} className="h-10 px-3 rounded-card border border-border bg-surface text-sm">
           <option value="semua">Semua Murid</option>
           <option value="direkod">Dah Direkod</option>
@@ -339,6 +403,37 @@ export default function Delima() {
               modPilih={modPilih} dipilih={dipilihSet.has(m.id)} onTogolPilih={togolPilihSatu}
             />
           ))}
+        </div>
+      )}
+      </>
+      )}
+
+      {tab === 'cleanup' && (
+        <div>
+          <p className="text-xs text-inkmuted mb-3">
+            Rekod Delima bagi murid yang <strong className="text-ink">dah tiada dalam koleksi Murid semasa</strong> (cth. dah tamat/pindah sekolah & disingkir masa sync semula Excel Buku Daftar). Semak & padam yang tak relevan lagi supaya senang urus.
+          </p>
+          {rekodTakSepadan.length === 0 ? (
+            <p className="text-sm text-inkmuted">Tiada rekod tak sepadan buat masa ni - semua rekod Delima ada padanan murid semasa.</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <button onClick={() => setDipilihCleanupSet(new Set(rekodTakSepadan.map((r) => r.id)))} className="h-8 px-2.5 rounded-card border border-border bg-surface text-[11px] font-semibold text-ink">Pilih Semua</button>
+                <button onClick={() => setDipilihCleanupSet(new Set())} className="h-8 px-2.5 rounded-card border border-border bg-surface text-[11px] font-semibold text-ink">Nyahpilih Semua</button>
+                <button onClick={padamPukalCleanup} disabled={dipilihCleanupSet.size === 0} className="h-8 px-3 rounded-card bg-brand-red text-white text-[11px] font-semibold disabled:opacity-50 ml-auto">
+                  Padam {dipilihCleanupSet.size} Rekod Dipilih
+                </button>
+              </div>
+              <div className="space-y-2">
+                {rekodTakSepadan.map((r) => (
+                  <BarisTakSepadan
+                    key={r.id} rekod={r} dipilih={dipilihCleanupSet.has(r.id)}
+                    onTogolPilih={togolPilihCleanup} onPadam={padamSatuCleanup}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 

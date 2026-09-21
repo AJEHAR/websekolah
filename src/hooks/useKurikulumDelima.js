@@ -37,12 +37,18 @@ export function useKurikulumDelimaSenarai() {
   return { senarai, loading, muatSemula }
 }
 
-export async function simpanKurikulumDelima(muridId, { emel, kataLaluan, catatan }, uid) {
+export async function simpanKurikulumDelima(muridId, { emel, kataLaluan, catatan, nama }, uid) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   // { merge: true } - elak timpa kosong medan kelasDelima/moeisId yang
   // datang dari import CSV (lihat importPukalKurikulumDelima di bawah).
+  // `nama` - SNAPSHOT nama murid semasa disimpan (bukan rujukan langsung
+  // ke koleksi 'murid') - kekal senang dibaca dlm tab "Rekod Tak Sepadan"
+  // walaupun murid tu kemudian dipadam terus dari koleksi 'murid' (cth.
+  // sync semula Excel bila murid dah tamat/pindah - lihat useMurid.js
+  // gantiSemuaMurid, yang PADAM TERUS rekod murid tiada dlm fail baru).
   await setDoc(doc(db, KOLEKSI, muridId), {
     emel: emel.trim(), kataLaluan: kataLaluan.trim(), catatan: (catatan ?? '').trim(),
+    ...(nama ? { nama } : {}),
     updatedAt: serverTimestamp(), updatedBy: uid,
   }, { merge: true })
 }
@@ -50,6 +56,19 @@ export async function simpanKurikulumDelima(muridId, { emel, kataLaluan, catatan
 export async function padamKurikulumDelima(muridId) {
   if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
   await deleteDoc(doc(db, KOLEKSI, muridId))
+}
+
+// Padam BEBERAPA rekod sekali gus - untuk tab "Rekod Tak Sepadan" (cleanup
+// pukal murid yang dah tiada dlm koleksi 'murid').
+export async function padamKurikulumDelimaPukal(muridIds) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  for (let i = 0; i < muridIds.length; i += SAIZ_KELOMPOK) {
+    const kumpulan = muridIds.slice(i, i + SAIZ_KELOMPOK)
+    const batch = writeBatch(db)
+    kumpulan.forEach((muridId) => batch.delete(doc(db, KOLEKSI, muridId)))
+    await batch.commit()
+  }
+  return { bilangan: muridIds.length }
 }
 
 // Tetapkan SATU kata laluan yang SAMA pada beberapa murid dipilih sekali
@@ -89,7 +108,7 @@ export async function importPukalKurikulumDelima(barisSepadan, uid, onProgress) 
     kumpulan.forEach((b) => {
       const ref = doc(db, KOLEKSI, b.muridId)
       batch.set(ref, {
-        emel: b.emel, kelasDelima: b.kelas, moeisId: b.moeisId,
+        emel: b.emel, kelasDelima: b.kelas, moeisId: b.moeisId, nama: b.nama,
         updatedAt: serverTimestamp(), updatedBy: uid,
       }, { merge: true })
     })
