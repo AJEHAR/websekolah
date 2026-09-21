@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Search, Pencil, Trash2, Eye, EyeOff, Copy, KeyRound, Upload } from 'lucide-react'
+import { Search, Pencil, Trash2, Eye, EyeOff, Copy, KeyRound, Upload, CheckSquare, Square, Printer, X } from 'lucide-react'
 import { useDialog } from '../../context/DialogContext.jsx'
 import { useMuridList } from '../../hooks/useMurid.js'
-import { useKurikulumDelimaSenarai, simpanKurikulumDelima, padamKurikulumDelima } from '../../hooks/useKurikulumDelima.js'
+import { useKurikulumDelimaSenarai, simpanKurikulumDelima, padamKurikulumDelima, tetapkanKataLaluanPukal } from '../../hooks/useKurikulumDelima.js'
+import { useCetak } from '../../hooks/useCetak.js'
+import { NAMA_SEKOLAH } from './rpiConstants.js'
 import ImportDelimaModal from './ImportDelimaModal.jsx'
+import CetakDelima from './CetakDelima.jsx'
 
 // Modal tambah/edit satu rekod Delima (emel + kata laluan) bagi SATU murid.
 function ModalDelima({ open, murid, rekod, onTutup, onSimpan }) {
@@ -64,24 +67,81 @@ function ModalDelima({ open, murid, rekod, onTutup, onSimpan }) {
   )
 }
 
-function BarisMurid({ murid, rekod, tunjukKataLaluan, onTogolTunjuk, onEdit, onPadam }) {
+// Tetapkan SATU kata laluan sama pada semua murid DIPILIH sekali gus -
+// staff selalunya guna kata laluan piawai untuk semua murid, kecuali yang
+// baru dikemas kini individu (staff nyahpilih murid tu dulu di senarai
+// sebelum buka modal ni, supaya rekod dia tak disentuh).
+function ModalKataLaluanPukal({ open, bilangan, onTutup, onSimpan }) {
+  const [kataLaluan, setKataLaluan] = useState('')
+  const [menyimpan, setMenyimpan] = useState(false)
+  const [ralat, setRalat] = useState(null)
+
+  if (!open) return null
+
+  async function simpan() {
+    if (!kataLaluan.trim()) return setRalat('Sila isi kata laluan.')
+    setRalat(null)
+    setMenyimpan(true)
+    try {
+      await onSimpan(kataLaluan)
+      onTutup()
+    } catch (err) {
+      setRalat(err.message || 'Gagal simpan.')
+    } finally {
+      setMenyimpan(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="bg-surface rounded-card w-full max-w-sm p-5">
+        <div className="mb-4">
+          <h3 className="text-sm font-bold text-ink">Tetapkan Kata Laluan Sama</h3>
+          <p className="text-xs text-inkmuted mt-0.5">Akan diterapkan pada <strong className="text-ink">{bilangan}</strong> murid dipilih. Emel & catatan sedia ada TAK disentuh.</p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-ink mb-1">Kata Laluan Piawai</label>
+          <input type="text" value={kataLaluan} onChange={(e) => setKataLaluan(e.target.value)} className="w-full h-11 px-3 rounded-card border border-border bg-base text-sm" autoFocus />
+        </div>
+        {ralat && <p className="text-xs text-brand-red mt-3">{ralat}</p>}
+        <div className="flex gap-2 mt-4">
+          <button onClick={onTutup} className="flex-1 h-11 rounded-card border border-border text-sm font-semibold text-ink">Batal</button>
+          <button onClick={simpan} disabled={menyimpan || bilangan === 0} className="flex-1 h-11 rounded-card bg-brand-red text-white text-sm font-semibold disabled:opacity-60">
+            {menyimpan ? 'Menyimpan…' : `Terapkan (${bilangan})`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BarisMurid({ murid, rekod, tunjukKataLaluan, onTogolTunjuk, onEdit, onPadam, modPilih, dipilih, onTogolPilih }) {
   async function salin(teks) {
     try { await navigator.clipboard.writeText(teks) } catch { /* abaikan - pelayar lama tak sokong */ }
   }
 
   return (
-    <div className="p-3.5 rounded-card border border-border bg-surface">
+    <div className={`p-3.5 rounded-card border bg-surface ${modPilih && dipilih ? 'border-brand-red' : 'border-border'}`}>
       <div className="flex items-start justify-between gap-2 mb-1">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-ink truncate">{murid.nama}</p>
-          <p className="text-xs text-inkmuted truncate">{murid.namaKelas || '-'}</p>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <button onClick={() => onEdit(murid, rekod)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><Pencil size={14} /></button>
-          {rekod && (
-            <button onClick={() => onPadam(murid, rekod)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red"><Trash2 size={15} /></button>
+        <div className="flex items-start gap-2 min-w-0">
+          {modPilih && (
+            <button onClick={() => onTogolPilih(murid.id)} aria-label="Pilih murid" className="p-0.5 mt-0.5 text-inkmuted shrink-0">
+              {dipilih ? <CheckSquare size={18} className="text-brand-red" /> : <Square size={18} />}
+            </button>
           )}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink truncate">{murid.nama}</p>
+            <p className="text-xs text-inkmuted truncate">{murid.namaKelas || '-'}</p>
+          </div>
         </div>
+        {!modPilih && (
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={() => onEdit(murid, rekod)} aria-label="Edit" className="p-1.5 rounded-card hover:bg-base text-inkmuted"><Pencil size={14} /></button>
+            {rekod && (
+              <button onClick={() => onPadam(murid, rekod)} aria-label="Padam" className="p-1.5 rounded-card hover:bg-base text-brand-red"><Trash2 size={15} /></button>
+            )}
+          </div>
+        )}
       </div>
 
       {!rekod ? (
@@ -138,8 +198,14 @@ export default function Delima() {
   const [rekodEdit, setRekodEdit] = useState(null)
   const [tunjukSet, setTunjukSet] = useState(() => new Set())
   const [tunjukImport, setTunjukImport] = useState(false)
+  const [modPilih, setModPilih] = useState(false)
+  const [dipilihSet, setDipilihSet] = useState(() => new Set())
+  const [tunjukKataLaluanPukal, setTunjukKataLaluanPukal] = useState(false)
+  const [kelasCetak, setKelasCetak] = useState('') // '' = semua kelas
+  const [dataCetak, setDataCetak] = useCetak((d) => `Senarai Delima - ${d.tajuk}`)
 
   const rekodMap = Object.fromEntries(senaraiRekod.map((r) => [r.id, r]))
+  const senaraiKelas = [...new Set(senaraiMurid.map((m) => m.namaKelas).filter(Boolean))].sort()
 
   const disenarai = senaraiMurid
     .filter((m) => `${m.nama ?? ''} ${m.namaKelas ?? ''}`.toLowerCase().includes(carian.toLowerCase()))
@@ -155,6 +221,44 @@ export default function Delima() {
       if (baru.has(muridId)) baru.delete(muridId); else baru.add(muridId)
       return baru
     })
+  }
+
+  function mulaModPilih() {
+    setModPilih(true)
+    setDipilihSet(new Set(disenarai.map((m) => m.id))) // "Pilih Semua" secara lalai - senang nyahpilih yang baru dikemas kini
+  }
+
+  function batalModPilih() {
+    setModPilih(false)
+    setDipilihSet(new Set())
+  }
+
+  function togolPilihSatu(muridId) {
+    setDipilihSet((s) => {
+      const baru = new Set(s)
+      if (baru.has(muridId)) baru.delete(muridId); else baru.add(muridId)
+      return baru
+    })
+  }
+
+  async function simpanKataLaluanPukal(kataLaluan) {
+    await tetapkanKataLaluanPukal([...dipilihSet], kataLaluan, user.uid)
+    muatSemula()
+    batalModPilih()
+  }
+
+  function cetak() {
+    const sumber = kelasCetak === '' ? senaraiMurid : senaraiMurid.filter((m) => (m.namaKelas || '') === kelasCetak)
+    const kelasMap = {}
+    sumber.forEach((m) => {
+      const k = m.namaKelas || 'Tiada Kelas'
+      if (!kelasMap[k]) kelasMap[k] = []
+      kelasMap[k].push({ ...m, ...(rekodMap[m.id] ?? {}) })
+    })
+    const kumpulanKelas = Object.entries(kelasMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([kelas, murid]) => ({ kelas, murid: [...murid].sort((a, b) => (a.nama ?? '').localeCompare(b.nama ?? '')) }))
+    setDataCetak({ kumpulanKelas, tajuk: kelasCetak === '' ? 'Semua Kelas' : kelasCetak })
   }
 
   async function simpan(data) {
@@ -179,11 +283,33 @@ export default function Delima() {
         </p>
       </div>
 
-      <div className="flex justify-end mb-3">
+      <div className="flex gap-2 mb-3 flex-wrap justify-end">
+        <select value={kelasCetak} onChange={(e) => setKelasCetak(e.target.value)} className="h-10 px-3 rounded-card border border-border bg-surface text-xs">
+          <option value="">Cetak: Semua Kelas</option>
+          {senaraiKelas.map((k) => <option key={k} value={k}>Cetak: {k}</option>)}
+        </select>
+        <button onClick={cetak} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+          <Printer size={14} /> Cetak PDF
+        </button>
+        {!modPilih && (
+          <button onClick={mulaModPilih} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
+            <CheckSquare size={14} /> Tetapkan Kata Laluan Sama
+          </button>
+        )}
         <button onClick={() => setTunjukImport(true)} className="flex items-center gap-1.5 h-10 px-3 rounded-card border border-border text-xs font-semibold text-ink">
           <Upload size={14} /> Muat Naik CSV DELIMa
         </button>
       </div>
+
+      {modPilih && (
+        <div className="flex items-center gap-2 mb-3 flex-wrap p-2.5 rounded-card border border-brand-red/30 bg-[#FCEBEB]">
+          <p className="text-xs font-semibold text-ink mr-auto">{dipilihSet.size} murid dipilih</p>
+          <button onClick={() => setDipilihSet(new Set(disenarai.map((m) => m.id)))} className="h-8 px-2.5 rounded-card border border-border bg-surface text-[11px] font-semibold text-ink">Pilih Semua</button>
+          <button onClick={() => setDipilihSet(new Set())} className="h-8 px-2.5 rounded-card border border-border bg-surface text-[11px] font-semibold text-ink">Nyahpilih Semua</button>
+          <button onClick={() => setTunjukKataLaluanPukal(true)} disabled={dipilihSet.size === 0} className="h-8 px-3 rounded-card bg-brand-red text-white text-[11px] font-semibold disabled:opacity-50">Tetapkan Kata Laluan</button>
+          <button onClick={batalModPilih} aria-label="Batal" className="h-8 w-8 rounded-card border border-border bg-surface text-ink flex items-center justify-center"><X size={14} /></button>
+        </div>
+      )}
 
       <div className="flex gap-2 mb-3 flex-wrap items-center">
         <div className="relative flex-1 min-w-[200px]">
@@ -210,6 +336,7 @@ export default function Delima() {
               onTogolTunjuk={togolTunjuk}
               onEdit={(murid, rekod) => { setMuridEdit(murid); setRekodEdit(rekod) }}
               onPadam={padam}
+              modPilih={modPilih} dipilih={dipilihSet.has(m.id)} onTogolPilih={togolPilihSatu}
             />
           ))}
         </div>
@@ -225,6 +352,12 @@ export default function Delima() {
         open={tunjukImport} user={user} senaraiMurid={senaraiMurid}
         onClose={() => setTunjukImport(false)} onSelesai={muatSemula}
       />
+      <ModalKataLaluanPukal
+        open={tunjukKataLaluanPukal} bilangan={dipilihSet.size}
+        onTutup={() => setTunjukKataLaluanPukal(false)}
+        onSimpan={simpanKataLaluanPukal}
+      />
+      {dataCetak && <CetakDelima {...dataCetak} namaSekolah={NAMA_SEKOLAH} />}
     </div>
   )
 }

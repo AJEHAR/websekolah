@@ -52,6 +52,28 @@ export async function padamKurikulumDelima(muridId) {
   await deleteDoc(doc(db, KOLEKSI, muridId))
 }
 
+// Tetapkan SATU kata laluan yang SAMA pada beberapa murid dipilih sekali
+// gus - staff KPK selalunya guna satu kata laluan piawai untuk semua
+// murid (kecuali yang baru dikemas kini secara individu - staff NYAHPILIH
+// murid tu dulu sebelum "Terapkan", jadi rekod dia tak disentuh langsung).
+// `{ merge: true }` - emel/kelasDelima/moeisId/catatan sedia ada KEKAL,
+// cuma kataLaluan (+ updatedAt/updatedBy) yang ditulis ganti.
+export async function tetapkanKataLaluanPukal(muridIds, kataLaluan, uid) {
+  if (!isFirebaseConfigured) throw new Error('Firebase belum disetup')
+  const kataLaluanBersih = kataLaluan.trim()
+  for (let i = 0; i < muridIds.length; i += SAIZ_KELOMPOK) {
+    const kumpulan = muridIds.slice(i, i + SAIZ_KELOMPOK)
+    const batch = writeBatch(db)
+    kumpulan.forEach((muridId) => {
+      batch.set(doc(db, KOLEKSI, muridId), {
+        kataLaluan: kataLaluanBersih, updatedAt: serverTimestamp(), updatedBy: uid,
+      }, { merge: true })
+    })
+    await batch.commit()
+  }
+  return { bilangan: muridIds.length }
+}
+
 // Import PUKAL dari fail CSV DELIMa (lihat delimaCsvImport.js) - HANYA
 // baris yang berjaya sepadan dgn Murid semasa (muridId != null) yang
 // diimport. `{ merge: true }` WAJIB di sini - fail CSV rasmi DELIMa TAK
