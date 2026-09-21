@@ -281,21 +281,30 @@ function PecahanKategoriDashboard({ transaksi }) {
   const masuk = Object.entries(map).filter(([k]) => k.startsWith('masuk_')).map(([k, v]) => [k.replace('masuk_', ''), v])
   const keluar = Object.entries(map).filter(([k]) => k.startsWith('keluar_')).map(([k, v]) => [k.replace('keluar_', ''), v])
 
+  // FIX "tak cantik pada phone": label kategori panjang (cth. "Belanja
+  // Program") + "RM 257.10" dulu guna `justify-between` tanpa had lebar -
+  // pada skrin sempit dua-dua bertembung dan value terpaksa wrap ke baris
+  // baharu (tak sama tinggi antara row). Fix: `min-w-0 truncate` pada
+  // label (potong "…" kalau terlalu panjang drpd papar 2 baris pincang)
+  // + `shrink-0 whitespace-nowrap` pada value (value TAK PERNAH wrap),
+  // buang perkataan "RM" berulang pada setiap baris (dah ada di tajuk).
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="rounded-card border border-border bg-surface p-3">
-        <p className="text-[10px] font-bold text-inkmuted uppercase tracking-wide mb-2">Pecahan Masuk</p>
-        {masuk.length === 0 ? <p className="text-xs text-inkmuted">-</p> : masuk.map(([kat, jum]) => (
-          <div key={kat} className="flex justify-between text-xs py-0.5">
-            <span className="text-inkmuted">{kat}</span><span className="font-semibold" style={{ color: '#0F6E56' }}>RM {jum.toFixed(2)}</span>
+    <div className="grid grid-cols-2 gap-2">
+      <div className="rounded-card border border-border bg-surface p-3 min-w-0">
+        <p className="text-[10px] font-bold text-inkmuted uppercase tracking-wide mb-1.5">Masuk (RM)</p>
+        {masuk.length === 0 ? <p className="text-[11px] text-inkmuted">-</p> : masuk.map(([kat, jum]) => (
+          <div key={kat} className="flex items-center justify-between gap-2 text-[11px] py-1 border-b border-border/60 last:border-0">
+            <span className="text-inkmuted truncate min-w-0">{kat}</span>
+            <span className="font-semibold shrink-0 whitespace-nowrap" style={{ color: '#0F6E56' }}>{jum.toFixed(2)}</span>
           </div>
         ))}
       </div>
-      <div className="rounded-card border border-border bg-surface p-3">
-        <p className="text-[10px] font-bold text-inkmuted uppercase tracking-wide mb-2">Pecahan Keluar</p>
-        {keluar.length === 0 ? <p className="text-xs text-inkmuted">-</p> : keluar.map(([kat, jum]) => (
-          <div key={kat} className="flex justify-between text-xs py-0.5">
-            <span className="text-inkmuted">{kat}</span><span className="font-semibold text-brand-red">RM {jum.toFixed(2)}</span>
+      <div className="rounded-card border border-border bg-surface p-3 min-w-0">
+        <p className="text-[10px] font-bold text-inkmuted uppercase tracking-wide mb-1.5">Keluar (RM)</p>
+        {keluar.length === 0 ? <p className="text-[11px] text-inkmuted">-</p> : keluar.map(([kat, jum]) => (
+          <div key={kat} className="flex items-center justify-between gap-2 text-[11px] py-1 border-b border-border/60 last:border-0">
+            <span className="text-inkmuted truncate min-w-0">{kat}</span>
+            <span className="font-semibold text-brand-red shrink-0 whitespace-nowrap">{jum.toFixed(2)}</span>
           </div>
         ))}
       </div>
@@ -528,45 +537,59 @@ export default function KewanganKKGS() {
       {/* ===== DASHBOARD ===== */}
       {tab === 'dashboard' && (
         (loadingLedger || loadingBaki) ? <p className="text-sm text-inkmuted">Memuatkan…</p> : (
-          <div>
+          // FIX "saiz label/tulisan tak cantik pada phone": susun semula
+          // dgn HIERARKI teks konsisten (label 10px uppercase kelabu ->
+          // nilai bold), `space-y` seragam antara seksyen (dulu campur
+          // mb-2/mb-3/mb-4 x tak tentu), tajuk panjang dipendekkan (elak
+          // wrap 2 baris di skrin sempit), dan kad "Bersih/Masuk/Keluar"
+          // guna saiz fon TETAP (text-[13px]) supaya SEMUA tiga kad sama
+          // tinggi & tak wrap pincang macam gambar yg dilaporkan.
+          <div className="space-y-4">
             {/* Baki SEMASA - SENTIASA ikut tarikh SEBENAR hari ini, tak
                 kira tahun mana staff sedang tengok pada dropdown "Tahun"
-                di atas (fix "Dashboard kena pastikan tunjuk baki semasa"). */}
-            <div className="rounded-card border-2 border-ink bg-surface p-4 text-center mb-3">
-              <p className="text-xs text-inkmuted">Baki Semasa Kelab (hari ini, {tarikhHariIniDashboard()})</p>
-              <p className="text-2xl font-extrabold text-ink">RM {bakiSemasa.toFixed(2)}</p>
+                di atas. */}
+            <div className="rounded-card border-2 border-ink bg-surface px-4 py-5 text-center">
+              <p className="text-[11px] text-inkmuted uppercase tracking-wide">Baki Semasa Kelab</p>
+              <p className="text-[26px] leading-tight font-extrabold text-ink mt-1">RM {bakiSemasa.toFixed(2)}</p>
+              <p className="text-[10px] text-inkmuted mt-1">Setakat {tarikhHariIniDashboard()}</p>
             </div>
+
             {tahun !== TAHUN_SEMASA && (
-              <div className="rounded-card border border-border bg-surface p-3 text-center mb-3">
-                <p className="text-[10px] text-inkmuted">Baki Terkumpul (akhir tahun {tahun} dipilih)</p>
-                <p className="text-sm font-bold text-ink">RM {bakiTerkumpul.toFixed(2)}</p>
+              <div className="rounded-card border border-border bg-surface px-3.5 py-2.5 flex items-center justify-between gap-2">
+                <p className="text-[11px] text-inkmuted">Baki Akhir Tahun {tahun}</p>
+                <p className="text-sm font-bold text-ink whitespace-nowrap">RM {bakiTerkumpul.toFixed(2)}</p>
               </div>
             )}
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              <div className="rounded-card border border-border bg-surface p-3 text-center">
-                <p className="text-[10px] text-inkmuted">Bersih {tahun}</p>
-                <p className="text-sm font-bold text-ink">RM {(jumlahMasukTahun - jumlahKeluarTahun).toFixed(2)}</p>
+
+            <div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-card border border-border bg-surface px-1.5 py-3 text-center">
+                  <p className="text-[10px] text-inkmuted mb-1 truncate">Bersih {tahun}</p>
+                  <p className="text-[13px] leading-tight font-bold text-ink">RM {(jumlahMasukTahun - jumlahKeluarTahun).toFixed(2)}</p>
+                </div>
+                <div className="rounded-card border border-border bg-surface px-1.5 py-3 text-center">
+                  <p className="text-[10px] text-inkmuted mb-1 truncate">Masuk {NAMA_BULAN[bulanDashboard - 1].slice(0, 3)}</p>
+                  <p className="text-[13px] leading-tight font-bold" style={{ color: '#0F6E56' }}>RM {masukBulanDashboard.toFixed(2)}</p>
+                </div>
+                <div className="rounded-card border border-border bg-surface px-1.5 py-3 text-center">
+                  <p className="text-[10px] text-inkmuted mb-1 truncate">Keluar {NAMA_BULAN[bulanDashboard - 1].slice(0, 3)}</p>
+                  <p className="text-[13px] leading-tight font-bold text-brand-red">RM {keluarBulanDashboard.toFixed(2)}</p>
+                </div>
               </div>
-              <div className="rounded-card border border-border bg-surface p-3 text-center">
-                <p className="text-[10px] text-inkmuted">Masuk {NAMA_BULAN[bulanDashboard - 1]}</p>
-                <p className="text-sm font-bold text-[#0F6E56]">RM {masukBulanDashboard.toFixed(2)}</p>
-              </div>
-              <div className="rounded-card border border-border bg-surface p-3 text-center">
-                <p className="text-[10px] text-inkmuted">Keluar {NAMA_BULAN[bulanDashboard - 1]}</p>
-                <p className="text-sm font-bold text-brand-red">RM {keluarBulanDashboard.toFixed(2)}</p>
+              <div className="flex justify-end mt-2">
+                <select value={bulanDashboard} onChange={(e) => setBulanDashboard(Number(e.target.value))} className="h-8 px-2.5 rounded-card border border-border bg-surface text-[11px]">
+                  {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
+                </select>
               </div>
             </div>
-            <div className="flex justify-end mb-4">
-              <select value={bulanDashboard} onChange={(e) => setBulanDashboard(Number(e.target.value))} className="h-8 px-2.5 rounded-card border border-border bg-surface text-[11px]">
-                {NAMA_BULAN.map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
-              </select>
-            </div>
-            <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">Pecahan Ikut Kategori {tahun} (Yuran, Sumbangan, Claim, dll)</p>
-            <div className="mb-4">
+
+            <div>
+              <p className="text-[11px] font-bold text-inkmuted uppercase tracking-wide mb-2">Pecahan Kategori {tahun}</p>
               <PecahanKategoriDashboard transaksi={transaksiTahun} />
             </div>
+
             <div className="rounded-card border border-border bg-surface p-4">
-              <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-3">Trend Bulanan {tahun}</p>
+              <p className="text-[11px] font-bold text-inkmuted uppercase tracking-wide mb-3">Trend Bulanan {tahun}</p>
               <CartaBulanan transaksi={transaksiTahun} />
             </div>
           </div>
