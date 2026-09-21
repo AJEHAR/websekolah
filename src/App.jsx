@@ -64,6 +64,7 @@ const SemakanMurid = lazy(() => import('./pages/MaklumatMurid/SemakanMurid.jsx')
 const Analisis = lazy(() => import('./pages/MaklumatMurid/Analisis.jsx'))
 const KehadiranMurid = lazy(() => import('./pages/MaklumatMurid/KehadiranMurid.jsx'))
 const KehadiranRMT = lazy(() => import('./pages/MaklumatMurid/PapanRMT.jsx'))
+const KehadiranBulanan = lazy(() => import('./pages/MaklumatMurid/KehadiranBulanan.jsx'))
 const EUBKSLayout = lazy(() => import('./pages/EUBKS/EUBKSLayout.jsx'))
 const EUBKSHub = lazy(() => import('./pages/EUBKS/EUBKSHub.jsx'))
 const MuridUBKS = lazy(() => import('./pages/EUBKS/MuridUBKS.jsx'))
@@ -239,6 +240,7 @@ export default function App() {
             <Route path="daftar-keluar" element={<DaftarKeluar />} />
             <Route path="kehadiran-murid" element={<KehadiranMurid />} />
             <Route path="kehadiran-rmt" element={<KehadiranRMT />} />
+            <Route path="kehadiran-bulanan" element={<KehadiranBulanan />} />
             <Route path="surat-spi" element={<SuratSpi seksyen="hem" />} />
             <Route path="opr" element={<OPR seksyen="hem" />} />
           </Route>

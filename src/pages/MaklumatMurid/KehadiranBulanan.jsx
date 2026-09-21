@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { Printer, FileSpreadsheet, CalendarDays, CalendarRange } from 'lucide-react'
 import { namaHari, bilanganHariDalamBulan } from '../../lib/dateUtils.js'
 import { useKehadiranJulat, ambilKehadiranJulat } from '../../hooks/useKehadiranMurid.js'
+import { useMuridList } from '../../hooks/useMurid.js'
 import { useCetak } from '../../hooks/useCetak.js'
 import { muatTurunXlsx } from '../../lib/xlsxExport.js'
-import CetakPapanRMT from './CetakPapanRMT.jsx'
-import CetakPapanRMTTahunan from './CetakPapanRMTTahunan.jsx'
+import CetakKehadiranBulanan from './CetakKehadiranBulanan.jsx'
+import CetakKehadiranTahunan from './CetakKehadiranTahunan.jsx'
 import { useDialog } from '../../context/DialogContext.jsx'
 
 const NAMA_BULAN = [
@@ -31,18 +32,23 @@ function pad2(n) {
 }
 
 // Pivot data kehadiran mentah -> { pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari }
-// Diekstrak supaya boleh dipakai semula untuk cetak (bukan cuma paparan langsung).
+// Sama macam kiraDataRMT (PapanRMT.jsx) TAPI TANPA tapisan `adalahRMT` -
+// SEMUA murid yang ada rekod kehadiran dikira, bukan cuma yang RMT.
+// kelasFilter (pilihan): kalau diisi, cuma kira rekod kelas tu sahaja -
+// supaya jumlah hadir/tak hadir sekali cetak/excel pun betul ikut kelas
+// dipilih, bukan jumlah keseluruhan sekolah.
 // Setiap murid juga dikira jumlahHadirMurid/jumlahTakHadirMurid/peratus
 // (kehadiran bulan tu) - dipapar sebagai lajur tambahan di hujung baris.
-export function kiraDataRMT(kehadiranBulan) {
+export function kiraDataKehadiranBulanan(kehadiranBulan, kelasFilter) {
+  const rekodDitapis = kelasFilter ? kehadiranBulan.filter((r) => r.namaKelas === kelasFilter) : kehadiranBulan
+
   const peta = {}
   const hadirIkutHari = {}
   const takHadirIkutHari = {}
 
-  kehadiranBulan.forEach((rekod) => {
+  rekodDitapis.forEach((rekod) => {
     const hari = Number(rekod.tarikh.slice(8, 10))
     rekod.senaraiMurid.forEach((m) => {
-      if (!m.adalahRMT) return
       if (!peta[m.idMurid]) {
         peta[m.idMurid] = { idMurid: m.idMurid, nama: m.nama, namaKelas: rekod.namaKelas, tick: {} }
       }
@@ -66,14 +72,15 @@ export function kiraDataRMT(kehadiranBulan) {
   return { pelajar: senarai, jumlahHadirIkutHari: hadirIkutHari, jumlahTakHadirIkutHari: takHadirIkutHari }
 }
 
-// Pivot TAHUNAN (murid RMT sahaja) - baris=murid, lajur=Jan..Dis (jumlah
-// hari hadir bulan tu), + Jumlah Setahun. Guna untuk tab "Jumlah Tahunan".
-export function kiraDataRMTTahunan(kehadiranTahun) {
+// Pivot TAHUNAN - baris=murid, lajur=Jan..Dis (jumlah hari hadir bulan tu),
+// + Jumlah Setahun. Guna untuk tab "Jumlah Tahunan".
+export function kiraDataTahunan(kehadiranTahun, kelasFilter) {
+  const rekodDitapis = kelasFilter ? kehadiranTahun.filter((r) => r.namaKelas === kelasFilter) : kehadiranTahun
+
   const peta = {}
-  kehadiranTahun.forEach((rekod) => {
+  rekodDitapis.forEach((rekod) => {
     const bulan = Number(rekod.tarikh.slice(5, 7))
     rekod.senaraiMurid.forEach((m) => {
-      if (!m.adalahRMT) return
       if (!peta[m.idMurid]) {
         peta[m.idMurid] = { idMurid: m.idMurid, nama: m.nama, namaKelas: rekod.namaKelas, hadirBulan: {} }
       }
@@ -98,11 +105,18 @@ export function kiraDataRMTTahunan(kehadiranTahun) {
   return { pelajar: senarai, jumlahBulanKeseluruhan, jumlahBesar }
 }
 
-export default function PapanRMT() {
+export default function KehadiranBulanan() {
   const { amaran } = useDialog()
+  const { senarai: senaraiMurid } = useMuridList()
   const [tab, setTab] = useState('bulanan') // bulanan | tahunan
   const [tahun, setTahun] = useState(TAHUN_SEMASA)
   const [bulan, setBulan] = useState(new Date().getMonth() + 1)
+  const [tapisKelas, setTapisKelas] = useState('') // '' = semua kelas
+
+  const senaraiKelas = useMemo(
+    () => [...new Set(senaraiMurid.map((m) => m.namaKelas).filter(Boolean))].sort(),
+    [senaraiMurid]
+  )
 
   const hariDalamBulan = bilanganHariDalamBulan(tahun, bulan)
   const dari = `${tahun}-${pad2(bulan)}-01`
@@ -111,18 +125,19 @@ export default function PapanRMT() {
   const { senarai: kehadiranBulan, loading } = useKehadiranJulat(dari, hingga)
 
   const { pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari } = useMemo(
-    () => kiraDataRMT(kehadiranBulan),
-    [kehadiranBulan]
+    () => kiraDataKehadiranBulanan(kehadiranBulan, tapisKelas),
+    [kehadiranBulan, tapisKelas]
   )
 
-  // Data tahunan - HANYA diambil bila tab "tahunan" aktif.
+  // Data tahunan - HANYA diambil bila tab "tahunan" aktif (dari/hingga
+  // kosong bila tak aktif, useKehadiranJulat terus set senarai=[] tanpa fetch).
   const { senarai: kehadiranTahun, loading: loadingTahun } = useKehadiranJulat(
     tab === 'tahunan' ? `${tahun}-01-01` : null,
     tab === 'tahunan' ? `${tahun}-12-31` : null
   )
   const { pelajar: pelajarTahunan, jumlahBulanKeseluruhan, jumlahBesar } = useMemo(
-    () => kiraDataRMTTahunan(kehadiranTahun),
-    [kehadiranTahun]
+    () => kiraDataTahunan(kehadiranTahun, tapisKelas),
+    [kehadiranTahun, tapisKelas]
   )
 
   const senaraiHari = Array.from({ length: hariDalamBulan }, (_, i) => i + 1)
@@ -150,7 +165,8 @@ export default function PapanRMT() {
 
   function excelBulanIni() {
     const aoa = janaAOA({ tahun, bulan, hariDalamBulan, pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari })
-    muatTurunXlsx(`Papan-RMT-${NAMA_BULAN[bulan - 1]}-${tahun}.xlsx`, [{ namaHelaian: `${NAMA_BULAN[bulan - 1]} ${tahun}`, aoa }])
+    const namaKelasFail = tapisKelas ? `-${tapisKelas.replace(/\s+/g, '')}` : ''
+    muatTurunXlsx(`Kehadiran-Bulanan${namaKelasFail}-${NAMA_BULAN[bulan - 1]}-${tahun}.xlsx`, [{ namaHelaian: `${NAMA_BULAN[bulan - 1]} ${tahun}`, aoa }])
   }
 
   async function excelTahunPenuh() {
@@ -162,7 +178,7 @@ export default function PapanRMT() {
         const dariB = `${tahun}-${pad2(b)}-01`
         const hinggaB = `${tahun}-${pad2(b)}-${pad2(hariDlmBulanNi)}`
         const kehadiranB = await ambilKehadiranJulat(dariB, hinggaB)
-        const dataB = kiraDataRMT(kehadiranB)
+        const dataB = kiraDataKehadiranBulanan(kehadiranB, tapisKelas)
         if (dataB.pelajar.length > 0) {
           helaianSenarai.push({
             namaHelaian: NAMA_BULAN[b - 1],
@@ -171,17 +187,18 @@ export default function PapanRMT() {
         }
       }
       if (helaianSenarai.length === 0) {
-        await amaran('Tiada rekod RMT untuk tahun ni langsung.')
+        await amaran('Tiada rekod kehadiran untuk tahun ni langsung.')
         return
       }
-      muatTurunXlsx(`Papan-RMT-${tahun}-Tahun-Penuh.xlsx`, helaianSenarai)
+      const namaKelasFail = tapisKelas ? `-${tapisKelas.replace(/\s+/g, '')}` : ''
+      muatTurunXlsx(`Kehadiran-Bulanan${namaKelasFail}-${tahun}-Tahun-Penuh.xlsx`, helaianSenarai)
     } finally {
       setMemuatkanExcel(false)
     }
   }
 
   function cetakBulanIni() {
-    setDataCetak([{ tahun, bulan, hariDalamBulan, pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari }])
+    setDataCetak([{ tahun, bulan, hariDalamBulan, tapisKelas, pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari }])
   }
 
   async function cetakTahunPenuh() {
@@ -193,13 +210,13 @@ export default function PapanRMT() {
         const dariB = `${tahun}-${pad2(b)}-01`
         const hinggaB = `${tahun}-${pad2(b)}-${pad2(hariDlmBulanNi)}`
         const kehadiranB = await ambilKehadiranJulat(dariB, hinggaB)
-        const { pelajar: pelajarB, jumlahHadirIkutHari: hadirB, jumlahTakHadirIkutHari: takHadirB } = kiraDataRMT(kehadiranB)
+        const { pelajar: pelajarB, jumlahHadirIkutHari: hadirB, jumlahTakHadirIkutHari: takHadirB } = kiraDataKehadiranBulanan(kehadiranB, tapisKelas)
         if (pelajarB.length > 0) {
-          semuaBulan.push({ tahun, bulan: b, hariDalamBulan: hariDlmBulanNi, pelajar: pelajarB, jumlahHadirIkutHari: hadirB, jumlahTakHadirIkutHari: takHadirB })
+          semuaBulan.push({ tahun, bulan: b, hariDalamBulan: hariDlmBulanNi, tapisKelas, pelajar: pelajarB, jumlahHadirIkutHari: hadirB, jumlahTakHadirIkutHari: takHadirB })
         }
       }
       if (semuaBulan.length === 0) {
-        await amaran('Tiada rekod RMT untuk tahun ni langsung.')
+        await amaran('Tiada rekod kehadiran untuk tahun ni langsung.')
         return
       }
       setDataCetak(semuaBulan)
@@ -209,7 +226,7 @@ export default function PapanRMT() {
   }
 
   function cetakTahunan() {
-    setDataCetakTahunan({ tahun, pelajar: pelajarTahunan, jumlahBulanKeseluruhan, jumlahBesar })
+    setDataCetakTahunan({ tahun, tapisKelas, pelajar: pelajarTahunan, jumlahBulanKeseluruhan, jumlahBesar })
   }
 
   function excelTahunan() {
@@ -223,7 +240,8 @@ export default function PapanRMT() {
     ])
     const jumlah = ['', '', 'Jumlah Keseluruhan', ...Array.from({ length: 12 }, (_, i) => jumlahBulanKeseluruhan[i + 1] ?? ''), jumlahBesar]
     const aoa = [header, ...baris, jumlah]
-    muatTurunXlsx(`Kehadiran-RMT-Tahunan-${tahun}.xlsx`, [{ namaHelaian: `${tahun}`, aoa }])
+    const namaKelasFail = tapisKelas ? `-${tapisKelas.replace(/\s+/g, '')}` : ''
+    muatTurunXlsx(`Kehadiran-Tahunan${namaKelasFail}-${tahun}.xlsx`, [{ namaHelaian: `${tahun}`, aoa }])
   }
 
   return (
@@ -258,6 +276,14 @@ export default function PapanRMT() {
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <select
+          value={tapisKelas}
+          onChange={(e) => setTapisKelas(e.target.value)}
+          className="h-11 px-3 rounded-card border border-border bg-surface text-sm"
+        >
+          <option value="">Semua Kelas</option>
+          {senaraiKelas.map((k) => <option key={k} value={k}>{k}</option>)}
+        </select>
         <button onClick={cetakBulanIni} className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink">
           <Printer size={14} /> Cetak Bulan Ini
         </button>
@@ -275,7 +301,7 @@ export default function PapanRMT() {
       {loading ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
       ) : pelajar.length === 0 ? (
-        <p className="text-sm text-inkmuted">Tiada rekod RMT untuk {NAMA_BULAN[bulan - 1]} {tahun} lagi.</p>
+        <p className="text-sm text-inkmuted">Tiada rekod kehadiran untuk {NAMA_BULAN[bulan - 1]} {tahun}{tapisKelas ? ` (${tapisKelas})` : ''} lagi.</p>
       ) : (
         <div className="overflow-auto border border-border rounded-card max-h-[75vh]">
           <table className="text-xs border-collapse">
@@ -311,7 +337,7 @@ export default function PapanRMT() {
                   <td className="sticky z-10 bg-surface px-2 py-2 border-r border-border whitespace-nowrap font-medium text-ink" style={{ left: KIRI.nama, width: LEBAR.nama }}>{p.nama}</td>
                   <td className="sticky z-10 bg-surface px-2 py-2 border-r border-border whitespace-nowrap text-inkmuted" style={{ left: KIRI.kelas, width: LEBAR.kelas }}>{p.namaKelas}</td>
                   {senaraiHari.map((h) => {
-                    const status = p.tick[h] // true = hadir, false = tak hadir (RMT tapi tak hadir), undefined = tiada data
+                    const status = p.tick[h] // true = hadir, false = tak hadir, undefined = tiada data
                     return (
                       <td key={h} className="text-center px-1.5 py-2">
                         {status === true && <span style={{ color: '#27500A' }} className="font-bold">/</span>}
@@ -355,10 +381,10 @@ export default function PapanRMT() {
       )}
 
       <p className="text-xs text-inkmuted mt-3">
-        / = hadir (RMT hari tu) · 0 = RMT tapi tak hadir · petak kosong = tiada data / bukan RMT hari tu (contoh: berubah ke Asrama) · Jumlah Hadir &amp; % dikira drpd hari yang ADA rekod sahaja
+        / = hadir · 0 = tak hadir · petak kosong = tiada data (cth. belum diisi guru kelas hari tu) · Jumlah Hadir &amp; % dikira drpd hari yang ADA rekod sahaja
       </p>
 
-      {dataCetak && <CetakPapanRMT kumpulan={dataCetak} />}
+      {dataCetak && <CetakKehadiranBulanan kumpulan={dataCetak} />}
       </>
       )}
 
@@ -374,6 +400,14 @@ export default function PapanRMT() {
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <select
+          value={tapisKelas}
+          onChange={(e) => setTapisKelas(e.target.value)}
+          className="h-11 px-3 rounded-card border border-border bg-surface text-sm"
+        >
+          <option value="">Semua Kelas</option>
+          {senaraiKelas.map((k) => <option key={k} value={k}>{k}</option>)}
+        </select>
         <button onClick={cetakTahunan} className="flex items-center gap-1.5 h-11 px-4 rounded-card border border-border text-xs font-semibold text-ink">
           <Printer size={14} /> Cetak
         </button>
@@ -385,7 +419,7 @@ export default function PapanRMT() {
       {loadingTahun ? (
         <p className="text-sm text-inkmuted">Memuatkan…</p>
       ) : pelajarTahunan.length === 0 ? (
-        <p className="text-sm text-inkmuted">Tiada rekod RMT untuk tahun {tahun} lagi.</p>
+        <p className="text-sm text-inkmuted">Tiada rekod kehadiran untuk tahun {tahun}{tapisKelas ? ` (${tapisKelas})` : ''} lagi.</p>
       ) : (
         <div className="overflow-auto border border-border rounded-card">
           <table className="text-xs border-collapse w-full">
@@ -427,10 +461,10 @@ export default function PapanRMT() {
       )}
 
       <p className="text-xs text-inkmuted mt-3">
-        Setiap sel = bilangan hari hadir murid RMT tu untuk bulan berkenaan · "-" = tiada rekod bulan tu
+        Setiap sel = bilangan hari hadir murid tu untuk bulan berkenaan · "-" = tiada rekod kehadiran bulan tu
       </p>
 
-      {dataCetakTahunan && <CetakPapanRMTTahunan data={dataCetakTahunan} />}
+      {dataCetakTahunan && <CetakKehadiranTahunan data={dataCetakTahunan} />}
       </>
       )}
     </div>

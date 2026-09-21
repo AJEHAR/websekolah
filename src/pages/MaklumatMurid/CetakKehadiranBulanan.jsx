@@ -12,15 +12,15 @@ function pad2(n) {
   return String(n).padStart(2, '0')
 }
 
-// kumpulan: [{ tahun, bulan, hariDalamBulan, pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari }]
-export default function CetakPapanRMT({ kumpulan }) {
+// kumpulan: [{ tahun, bulan, hariDalamBulan, tapisKelas, pelajar, jumlahHadirIkutHari, jumlahTakHadirIkutHari }]
+export default function CetakKehadiranBulanan({ kumpulan }) {
   return (
     <PrintArea>
       {kumpulan.map((k, i) => {
         const senaraiHari = Array.from({ length: k.hariDalamBulan }, (_, idx) => idx + 1)
         return (
           <div key={`${k.tahun}-${k.bulan}`} className={`cetak-landskap p-8 text-black ${i < kumpulan.length - 1 ? 'print-page-break' : ''}`}>
-            <KepalaSuratCetak tajukLaporan={`Kehadiran RMT — ${NAMA_BULAN[k.bulan - 1]} ${k.tahun}`} />
+            <KepalaSuratCetak tajukLaporan={`Kehadiran Bulanan — ${NAMA_BULAN[k.bulan - 1]} ${k.tahun} — ${k.tapisKelas || 'Semua Kelas'}`} />
 
             <table className="w-full border-collapse text-[9px]">
               <thead>

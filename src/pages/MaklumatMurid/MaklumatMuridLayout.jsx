@@ -12,6 +12,7 @@ const TAJUK_SUBPAGE = {
   '/maklumat-murid/daftar-keluar': 'Daftar Keluar Murid',
   '/maklumat-murid/kehadiran-murid': 'Kehadiran Murid',
   '/maklumat-murid/kehadiran-rmt': 'Kehadiran RMT',
+  '/maklumat-murid/kehadiran-bulanan': 'Kehadiran Bulanan',
   '/maklumat-murid/surat-spi': 'Surat/SPI',
   '/maklumat-murid/opr': 'OPR',
 }
