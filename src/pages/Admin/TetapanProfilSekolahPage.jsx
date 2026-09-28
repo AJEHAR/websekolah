@@ -31,7 +31,7 @@ function Medan({ label, children }) {
   )
 }
 
-const kelasInput = 'w-full max-w-2xl rounded-card border border-border px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-red/30'
+const kelasInput = 'w-full rounded-card border border-border px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-red/30'
 
 // mampatkan=false WAJIB utk gambar yg mesti kekal latar TELUS (lencana/logo
 // PNG) - mampatan tukar ke JPEG (tiada sokongan alpha), latar telus jadi
@@ -128,15 +128,14 @@ function Isi({ user }) {
   if (loading) return <p className="text-sm text-inkmuted">Memuatkan…</p>
 
   return (
-    // TIADA max-w di sini (beza drpd draf awal) - lain-lain subpage Admin
-    // (LatarHubPage.jsx dll) tak hadkan lebar kandungan, guna sepenuhnya
-    // ruang yg AdminLayout dah sediakan (padding responsive px-4/sm:6/
-    // lg:10/xl:16) - max-w-2xl sebelum ni tinggalkan ruang KOSONG BESAR di
-    // kanan pada skrin desktop (bug yg dilaporkan). Medan teks/textarea
-    // sendiri dikekalkan max-w-2xl (lihat kelasInput) supaya baris tak jadi
-    // terlalu panjang dibaca pada skrin sangat lebar, tanpa hadkan
-    // KESELURUHAN kandungan halaman.
-    <div>
+    // SATU bekas lebar tetap (max-w-3xl, ditengahkan) utk SEMUA elemen -
+    // tajuk, input, kotak gambar, jadual, senarai - supaya semuanya sama
+    // tepi kiri/kanan, tak berselerak (bug sebelum ni: kelasInput dihadkan
+    // max-w-2xl tapi GambarUpload/jadual/senarai tiada had lebar langsung,
+    // jadi nampak tak selaras - input sempit sebelah kotak gambar penuh
+    // lebar). Bekas ini juga elak ruang KOSONG BESAR di kanan pada skrin
+    // sangat lebar (bug asal) sambil kekal cukup lebar utk dibaca selesa.
+    <div className="max-w-3xl mx-auto">
       <p className="text-xs text-inkmuted mb-5">
         Kandungan di sini dipaparkan pada halaman awam <strong>Maklumat Sekolah → Profil Sekolah</strong> (boleh dilihat sesiapa sahaja, tanpa log masuk).
       </p>
