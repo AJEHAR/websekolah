@@ -52,12 +52,17 @@ function Isi({ user }) {
   }
 
   return (
-    <div className="max-w-3xl">
+    // TIADA max-w pada div LUAR (dulu max-w-3xl hadkan SELURUH halaman
+    // termasuk grid gambar di bawah - punca ruang kosong besar di kanan
+    // pada skrin desktop). Cuma kotak borang "Tambah Gambar" dihadkan
+    // (max-w-xl) sbb ia sekadar SATU input+butang, grid gambar di bawah
+    // guna ruang penuh supaya lebih banyak thumbnail setiap baris.
+    <div>
       <p className="text-xs text-inkmuted mb-5">
         Gambar di sini dipaparkan pada halaman awam <strong>Utama</strong> (pratonton) dan <strong>Galeri</strong> penuh (boleh dilihat sesiapa sahaja, tanpa log masuk).
       </p>
 
-      <div className="bg-surface border border-border rounded-card p-4 mb-5">
+      <div className="bg-surface border border-border rounded-card p-4 mb-5 max-w-xl">
         <p className="text-xs font-semibold text-ink mb-2">Tambah Gambar Baharu</p>
         <input
           className="w-full rounded-card border border-border px-3 py-2 text-sm bg-surface mb-2"
@@ -76,7 +81,7 @@ function Isi({ user }) {
       ) : senarai.length === 0 ? (
         <p className="text-sm text-inkmuted">Belum ada gambar dalam Galeri Sekolah.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           {senarai.map((g) => (
             <div key={g.id} className="rounded-card border border-border overflow-hidden bg-surface">
               <div className="aspect-square bg-base">

@@ -31,9 +31,14 @@ function Medan({ label, children }) {
   )
 }
 
-const kelasInput = 'w-full rounded-card border border-border px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-red/30'
+const kelasInput = 'w-full max-w-2xl rounded-card border border-border px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-red/30'
 
-function GambarUpload({ label, url, subfolder, onNaik }) {
+// mampatkan=false WAJIB utk gambar yg mesti kekal latar TELUS (lencana/logo
+// PNG) - mampatan tukar ke JPEG (tiada sokongan alpha), latar telus jadi
+// HITAM PEKAT bila ditukar (bug yg sama macam fail tandatangan digital -
+// lihat nota dlm driveUpload.js). Pelan Kawasan/Kecemasan (gambar/peta
+// biasa, tiada keperluan telus) kekal dimampatkan spy muat naik laju.
+function GambarUpload({ label, url, subfolder, onNaik, mampatkan = true }) {
   const { amaran } = useDialog()
   const [memuat, setMemuat] = useState(false)
 
@@ -42,7 +47,7 @@ function GambarUpload({ label, url, subfolder, onNaik }) {
     if (!fail) return
     setMemuat(true)
     try {
-      const hasil = await muatNaikKeDrive(fail, subfolder)
+      const hasil = await muatNaikKeDrive(fail, subfolder, { mampatkan })
       await onNaik(hasil.url)
     } catch (err) {
       await amaran(err.message || 'Gagal muat naik.')
@@ -123,7 +128,15 @@ function Isi({ user }) {
   if (loading) return <p className="text-sm text-inkmuted">Memuatkan…</p>
 
   return (
-    <div className="max-w-2xl">
+    // TIADA max-w di sini (beza drpd draf awal) - lain-lain subpage Admin
+    // (LatarHubPage.jsx dll) tak hadkan lebar kandungan, guna sepenuhnya
+    // ruang yg AdminLayout dah sediakan (padding responsive px-4/sm:6/
+    // lg:10/xl:16) - max-w-2xl sebelum ni tinggalkan ruang KOSONG BESAR di
+    // kanan pada skrin desktop (bug yg dilaporkan). Medan teks/textarea
+    // sendiri dikekalkan max-w-2xl (lihat kelasInput) supaya baris tak jadi
+    // terlalu panjang dibaca pada skrin sangat lebar, tanpa hadkan
+    // KESELURUHAN kandungan halaman.
+    <div>
       <p className="text-xs text-inkmuted mb-5">
         Kandungan di sini dipaparkan pada halaman awam <strong>Maklumat Sekolah → Profil Sekolah</strong> (boleh dilihat sesiapa sahaja, tanpa log masuk).
       </p>
@@ -139,7 +152,7 @@ function Isi({ user }) {
       <h2 className="text-sm font-bold text-ink mb-3 mt-6">Pelan &amp; Lencana</h2>
       <GambarUpload label="Pelan Kawasan Sekolah" url={draf.pelanKawasanUrl} subfolder="profilSekolah" onNaik={(url) => simpanGambar('pelanKawasanUrl', url)} />
       <GambarUpload label="Pelan Laluan Kecemasan Sekolah" url={draf.pelanKecemasanUrl} subfolder="profilSekolah" onNaik={(url) => simpanGambar('pelanKecemasanUrl', url)} />
-      <GambarUpload label="Lencana Sekolah" url={draf.lencanaUrl} subfolder="profilSekolah" onNaik={(url) => simpanGambar('lencanaUrl', url)} />
+      <GambarUpload label="Lencana Sekolah (PNG latar telus disyorkan)" url={draf.lencanaUrl} subfolder="profilSekolah" mampatkan={false} onNaik={(url) => simpanGambar('lencanaUrl', url)} />
       <Medan label="Pereka / Pencipta Lencana">
         <input className={kelasInput} value={draf.penciptaLencana} onChange={(e) => set('penciptaLencana', e.target.value)} />
       </Medan>
