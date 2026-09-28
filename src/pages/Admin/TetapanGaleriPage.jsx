@@ -52,21 +52,17 @@ function Isi({ user }) {
   }
 
   return (
-    // TIADA max-w pada div LUAR (dulu max-w-3xl hadkan SELURUH halaman
-    // termasuk grid gambar di bawah - punca ruang kosong besar di kanan
-    // pada skrin desktop). Kotak borang "Tambah Gambar" dihadkan max-w-3xl
-    // - SAMA lebar dgn bekas borang di TetapanProfilSekolahPage.jsx supaya
-    // konsisten antara halaman tetapan (bukan max-w-xl macam sebelum ni,
-    // yg nampak tak sepadan bila dibandingkan dgn borang lain). Grid gambar
-    // di bawah kekal guna ruang PENUH (tiada max-w) sbb ia data/gallery
-    // grid, bukan borang - lebih banyak thumbnail setiap baris memang
-    // tujuannya, bukan bug.
+    // TIADA max-w LANGSUNG di mana-mana bahagian halaman ini (termasuk kotak
+    // borang "Tambah Gambar") - konsisten dgn TetapanProfilSekolahPage.jsx:
+    // semua isi guna w-full, penuhkan ruang kiri-kanan yg AdminLayout
+    // sediakan. Grid gambar di bawah kekal guna ruang penuh jugak - lebih
+    // banyak thumbnail setiap baris.
     <div>
       <p className="text-xs text-inkmuted mb-5">
         Gambar di sini dipaparkan pada halaman awam <strong>Utama</strong> (pratonton) dan <strong>Galeri</strong> penuh (boleh dilihat sesiapa sahaja, tanpa log masuk).
       </p>
 
-      <div className="bg-surface border border-border rounded-card p-4 mb-5 max-w-3xl">
+      <div className="bg-surface border border-border rounded-card p-4 mb-5">
         <p className="text-xs font-semibold text-ink mb-2">Tambah Gambar Baharu</p>
         <input
           className="w-full rounded-card border border-border px-3 py-2 text-sm bg-surface mb-2"

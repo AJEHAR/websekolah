@@ -128,14 +128,14 @@ function Isi({ user }) {
   if (loading) return <p className="text-sm text-inkmuted">Memuatkan…</p>
 
   return (
-    // SATU bekas lebar tetap (max-w-3xl, ditengahkan) utk SEMUA elemen -
-    // tajuk, input, kotak gambar, jadual, senarai - supaya semuanya sama
-    // tepi kiri/kanan, tak berselerak (bug sebelum ni: kelasInput dihadkan
-    // max-w-2xl tapi GambarUpload/jadual/senarai tiada had lebar langsung,
-    // jadi nampak tak selaras - input sempit sebelah kotak gambar penuh
-    // lebar). Bekas ini juga elak ruang KOSONG BESAR di kanan pada skrin
-    // sangat lebar (bug asal) sambil kekal cukup lebar utk dibaca selesa.
-    <div className="max-w-3xl mx-auto">
+    // TIADA had lebar (max-w) langsung pada bekas INI mahupun pada mana-mana
+    // elemen di dalamnya (kelasInput, GambarUpload, jadual, senarai) - semua
+    // guna w-full supaya penuh isi ruang kiri-KANAN yg AdminLayout sediakan,
+    // sama macam kotak "Sejarah Penubuhan" (textarea) yg dari awal lagi
+    // sudah penuh. Percubaan lepas (max-w-3xl mx-auto) tersilap tengahkan
+    // kandungan dlm kotak sempit di tengah skrin, jadi TERBALIK punca ruang
+    // kosong asal - ruang kosong kiri DAN kanan pada skrin lebar.
+    <div>
       <p className="text-xs text-inkmuted mb-5">
         Kandungan di sini dipaparkan pada halaman awam <strong>Maklumat Sekolah → Profil Sekolah</strong> (boleh dilihat sesiapa sahaja, tanpa log masuk).
       </p>
