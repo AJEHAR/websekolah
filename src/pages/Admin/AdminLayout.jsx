@@ -13,6 +13,8 @@ const TAJUK_SUBPAGE = {
   '/admin/panitia-rpt': 'Panitia',
   '/admin/latar-hub': 'Latar Belakang Hub',
   '/admin/reset-data': 'Reset Data Ujian',
+  '/admin/profil-sekolah': 'Profil Sekolah (Awam)',
+  '/admin/galeri-sekolah': 'Galeri Sekolah (Awam)',
 }
 
 export default function AdminLayout() {

@@ -150,6 +150,14 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
+    // Galeri Sekolah (gambar aktiviti/kemudahan) untuk halaman AWAM (Utama
+    // + /galeri) - sama corak dgn tetapanAwam di atas: baca sesiapa
+    // sahaja, tulis superadmin sahaja.
+    match /galeriSekolah/{docId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
     match /profiles/{docId} {
       // Staff diluluskan/admin boleh baca semua profile (termasuk No. IC).
       // Staff SENDIRI (walaupun masih 'menunggu', atau malah SEBELUM

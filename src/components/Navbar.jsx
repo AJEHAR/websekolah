@@ -6,7 +6,7 @@ import { useAksesStatus } from '../hooks/useAksesStatus.js'
 import { useIsAdmin } from '../hooks/useIsAdmin.js'
 import { useAdminMode } from '../context/AdminModeContext.jsx'
 import { useTetapanPendaftaran } from '../hooks/useTetapanPendaftaran.js'
-import { NAV_ITEMS, ADMIN_NAV_ITEM } from '../lib/navConfig.js'
+import { NAV_ITEMS, NAV_ITEMS_AWAM, ADMIN_NAV_ITEM } from '../lib/navConfig.js'
 import SideDrawer from './SideDrawer.jsx'
 
 export default function Navbar() {
@@ -17,16 +17,16 @@ export default function Navbar() {
   const { dibuka: pendaftaranDibuka } = useTetapanPendaftaran()
 
   // 3 peringkat penglihatan menu:
-  // 1. Awam (belum log masuk LANGSUNG) - cuma "Utama". Elak dedah nama
-  //    seksyen dalaman (KURI/HEM/KOKU/dll) kepada orang yang tak akan
-  //    pernah boleh akses pun - setiap klik jadi jalan buntu "sila log
-  //    masuk", tak berguna untuk pengunjung yang memang bukan staff.
+  // 1. Awam (belum log masuk LANGSUNG) - menu awam sendiri (Utama,
+  //    Maklumat Sekolah, Galeri, Hubungi - lihat NAV_ITEMS_AWAM). Elak
+  //    dedah nama seksyen dalaman staff (KURI/HEM/KOKU/dll) kepada orang
+  //    yang tak akan pernah boleh akses pun.
   // 2. Staff log masuk tapi belum diluluskan/isi profile - cuma "Profil"
   //    (perlu untuk semak status/isi maklumat semasa menunggu).
-  // 3. Staff diluluskan (atau admin) - menu penuh.
+  // 3. Staff diluluskan (atau admin) - menu penuh (staff dalaman).
   const belumLulus = Boolean(user) && (status === 'menunggu' || status === 'belum-profile' || status === 'disekat')
   const itemAsas = !user
-    ? NAV_ITEMS.filter((l) => l.to === '/')
+    ? NAV_ITEMS_AWAM
     : belumLulus
       ? NAV_ITEMS.filter((l) => l.to === '/profil')
       : NAV_ITEMS

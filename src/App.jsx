@@ -15,6 +15,7 @@ import { useAksesStatus } from './hooks/useAksesStatus.js'
 // staff benar-benar navigate ke situ. Navbar/Home/ButangTerapung kekal
 // dimuat terus (kecil, perlu untuk paparan pertama).
 const Galeri = lazy(() => import('./pages/Galeri.jsx'))
+const ProfilSekolah = lazy(() => import('./pages/MaklumatSekolah/ProfilSekolah.jsx'))
 const Hubungi = lazy(() => import('./pages/Hubungi.jsx'))
 const TetapanHubungiPage = lazy(() => import('./pages/TetapanHubungiPage.jsx'))
 const Profile = lazy(() => import('./pages/Profile/Profile.jsx'))
@@ -39,6 +40,8 @@ const PanitiaRPTPage = lazy(() => import('./pages/Admin/PanitiaRPTPage.jsx'))
 const KategoriRPTPage = lazy(() => import('./pages/Admin/KategoriRPTPage.jsx'))
 const LatarHubPage = lazy(() => import('./pages/Admin/LatarHubPage.jsx'))
 const ResetDataPage = lazy(() => import('./pages/Admin/ResetDataPage.jsx'))
+const TetapanProfilSekolahPage = lazy(() => import('./pages/Admin/TetapanProfilSekolahPage.jsx'))
+const TetapanGaleriPage = lazy(() => import('./pages/Admin/TetapanGaleriPage.jsx'))
 const GuruBertugasLayout = lazy(() => import('./pages/GuruBertugas/GuruBertugasLayout.jsx'))
 const KKGSLayout = lazy(() => import('./pages/KKGS/KKGSLayout.jsx'))
 const KKGSHub = lazy(() => import('./pages/KKGS/KKGSHub.jsx'))
@@ -108,7 +111,7 @@ const Delima = lazy(() => import('./pages/Kurikulum/Delima.jsx'))
 // /profil (papar skrin Log Masuk/Daftar sahaja untuk pengunjung belum log
 // masuk - lihat Profile.jsx, TIADA data sebenar terdedah, sifar Firestore
 // read - jadi selamat jadi destinasi butang Log Masuk/Daftar di Navbar).
-const LALUAN_AWAM = ['/', '/galeri', '/hubungi', '/profil']
+const LALUAN_AWAM = ['/', '/maklumat-sekolah', '/galeri', '/hubungi', '/profil']
 function adalahLaluanAwam(pathname) {
   return LALUAN_AWAM.includes(pathname) || pathname.startsWith('/berita')
 }
@@ -182,6 +185,7 @@ export default function App() {
             <Route path=":slug" element={<BeritaDetail />} />
           </Route>
           <Route path="/galeri" element={<Galeri />} />
+          <Route path="/maklumat-sekolah" element={<ProfilSekolah />} />
           <Route path="/hubungi" element={<Hubungi />} />
           <Route path="/hubungi/tetapan" element={<TetapanHubungiPage />} />
 
@@ -209,6 +213,8 @@ export default function App() {
             <Route path="kategori-rpt" element={<KategoriRPTPage />} />
             <Route path="latar-hub" element={<LatarHubPage />} />
             <Route path="reset-data" element={<ResetDataPage />} />
+            <Route path="profil-sekolah" element={<TetapanProfilSekolahPage />} />
+            <Route path="galeri-sekolah" element={<TetapanGaleriPage />} />
           </Route>
 
           <Route path="/guru-bertugas" element={<GuruBertugasLayout />}>

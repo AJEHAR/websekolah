@@ -1,4 +1,4 @@
-import { Users, ClipboardList, Table2, Award, Image, BookMarked, Layers, ShieldBan } from 'lucide-react'
+import { Users, ClipboardList, Table2, Award, Image, BookMarked, Layers, ShieldBan, Landmark, Images } from 'lucide-react'
 
 export const ADMIN_AKSES_PANTAS = [
   { label: 'Staf/Admin', to: '/admin/staff', Ikon: Users },
@@ -9,4 +9,6 @@ export const ADMIN_AKSES_PANTAS = [
   { label: 'Kategori', to: '/admin/kategori-rpt', Ikon: Layers },
   { label: 'Panitia', to: '/admin/panitia-rpt', Ikon: BookMarked },
   { label: 'Latar Belakang Hub', to: '/admin/latar-hub', Ikon: Image },
+  { label: 'Profil Sekolah (Awam)', to: '/admin/profil-sekolah', Ikon: Landmark },
+  { label: 'Galeri Sekolah (Awam)', to: '/admin/galeri-sekolah', Ikon: Images },
 ]

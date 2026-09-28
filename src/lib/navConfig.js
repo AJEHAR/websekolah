@@ -1,3 +1,18 @@
+// Nav untuk PELAWAT AWAM (belum log masuk langsung) - berasingan drpd
+// NAV_ITEMS (menu staff dalaman). Dulu pelawat awam cuma nampak "Utama"
+// (sengaja sorok nama seksyen dalaman staff), tapi laluan awam SEBENAR
+// (/maklumat-sekolah, /galeri, /hubungi - lihat LALUAN_AWAM di App.jsx)
+// kini ada kandungan sebenar, jadi perlu menu sendiri utk pelawat jumpa
+// laluan-laluan ni. "Takwim"/"Perpustakaan Maya" (rujukan Looker Studio
+// asal) sengaja BELUM ditambah - kandungan belum dibina lagi, elak pautan
+// mati.
+export const NAV_ITEMS_AWAM = [
+  { label: 'Utama', to: '/' },
+  { label: 'Maklumat Sekolah', to: '/maklumat-sekolah' },
+  { label: 'Galeri', to: '/galeri' },
+  { label: 'Hubungi', to: '/hubungi' },
+]
+
 // Struktur nav dikongsi antara Navbar (desktop, guna terus 'to' - abaikan children)
 // dan SideDrawer (mobile, expand/collapse 'children' sebagai accordion).
 export const NAV_ITEMS = [
@@ -100,5 +115,7 @@ export const ADMIN_NAV_ITEM = {
     { label: 'Panitia', to: '/admin/panitia-rpt' },
     { label: 'Latar Belakang Hub', to: '/admin/latar-hub' },
     { label: 'Reset Data Ujian', to: '/admin/reset-data' },
+    { label: 'Profil Sekolah (Awam)', to: '/admin/profil-sekolah' },
+    { label: 'Galeri Sekolah (Awam)', to: '/admin/galeri-sekolah' },
   ],
 }

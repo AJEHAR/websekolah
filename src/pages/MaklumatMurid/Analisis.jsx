@@ -1,11 +1,53 @@
 import { useMemo, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
 import { Users, Baby, GraduationCap } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext.jsx'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
+import { useDialog } from '../../context/DialogContext.jsx'
 import { useMuridList } from '../../hooks/useMurid.js'
+import { kemaskiniStatistikMuridAwam } from '../../hooks/useStatistikMuridAwam.js'
 import { adalahPra, kiraIkutMedan, kiraIkutKelas, kiraIkutKategoriOKU } from './statistikMurid.js'
 import KadAnalisis from './KadAnalisis.jsx'
 import KadKategoriOKU, { BarisKecil } from './KadKategoriOKU.jsx'
 import JadualIkutKelas from './JadualIkutKelas.jsx'
 import { warnaCeria } from './paletCeria.js'
+
+// Kad "Statistik Murid" di halaman UTAMA AWAM (Home.jsx) papar ANGKA
+// AGGREGAT sahaja (bukan baca terus koleksi 'murid' - lihat nota privasi
+// dlm useStatistikMuridAwam.js). Butang ni benarkan admin kira semula &
+// tulis angka aggregat tu dari senarai murid SEBENAR yang page ni dah ada
+// dlm ingatan (elak baca 'murid' sekali lagi).
+function ButangKemaskiniStatistikAwam({ senarai }) {
+  const { user } = useAuth()
+  const { isSuperAdmin } = useIsAdmin(user)
+  const { amaran } = useDialog()
+  const [sedang, setSedang] = useState(false)
+
+  if (!isSuperAdmin) return null
+
+  async function kemaskini() {
+    setSedang(true)
+    try {
+      await kemaskiniStatistikMuridAwam(senarai, user.uid)
+      await amaran('Statistik Murid di halaman Utama (awam) berjaya dikemaskini.')
+    } catch (err) {
+      await amaran(err.message || 'Gagal kemaskini.')
+    } finally {
+      setSedang(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={kemaskini}
+      disabled={sedang}
+      className="flex items-center gap-1.5 px-3 py-2 rounded-card text-xs font-semibold border border-border text-ink hover:bg-base disabled:opacity-60 mb-4"
+    >
+      <RefreshCw size={13} className={sedang ? 'animate-spin' : ''} />
+      {sedang ? 'Mengemaskini…' : 'Kemaskini Statistik Awam (Halaman Utama)'}
+    </button>
+  )
+}
 
 // Kad statistik besar (hero) - ikon dalam bulatan berwarna + angka besar,
 // gaya infografik "sekolah ceria" konsisten dengan Analisis Keberadaan &
@@ -49,6 +91,8 @@ export default function Analisis() {
 
   return (
     <div>
+      <ButangKemaskiniStatistikAwam senarai={senarai} />
+
       <div className="flex gap-2 mb-6 p-1 rounded-full bg-base w-fit overflow-x-auto max-w-full">
         {[
           { kunci: 'keseluruhan', label: 'Keseluruhan' },
