@@ -109,7 +109,7 @@ export default function ProfilSekolah() {
         </div>
       )}
 
-      <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-8 lg:py-16 space-y-6 max-w-4xl mx-auto">
+      <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-8 lg:py-16 space-y-6">
         <h1 className="text-xl sm:text-2xl font-bold text-ink text-center">Profil Sekolah</h1>
 
         {semuaKosong && (

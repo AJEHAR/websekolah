@@ -17,6 +17,14 @@ export const NAV_ITEMS_AWAM = [
 // dan SideDrawer (mobile, expand/collapse 'children' sebagai accordion).
 export const NAV_ITEMS = [
   { label: 'Utama', to: '/' },
+  // Maklumat Sekolah/Galeri/Hubungi ni laman AWAM (boleh diakses tanpa log
+  // masuk - lihat LALUAN_AWAM di App.jsx & NAV_ITEMS_AWAM di atas), tapi
+  // staff yg DAH log masuk pun perlu boleh sampai ke laman ni terus dari
+  // menu (bukan kena log keluar dulu baru nampak). Sebelum ni staff cuma
+  // nampak "Utama" - 3 menu ni hilang terus lepas log masuk (bug dilaporkan).
+  { label: 'Maklumat Sekolah', to: '/maklumat-sekolah' },
+  { label: 'Galeri', to: '/galeri' },
+  { label: 'Hubungi', to: '/hubungi' },
   {
     label: 'KURI',
     to: '/kurikulum',
