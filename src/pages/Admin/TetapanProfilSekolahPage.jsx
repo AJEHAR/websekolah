@@ -31,7 +31,14 @@ function Medan({ label, children }) {
   )
 }
 
-const kelasInput = 'w-full rounded-card border border-border px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-red/30'
+// kelasInputAsas TIADA lebar (width) sendiri - kelasInput (utk medan biasa,
+// bukan flex) tambah w-full di atasnya. Ini SENGAJA dipisah drpd kelasInput
+// tunggal spy elak konflik dua class lebar (cth: w-full + w-28) pada SATU
+// input yg sama (bug dilaporkan - medan "Simbol/Warna" dlm Penerangan
+// Lencana guna kelasInput + w-28 sekali, CSS pilih salah satu ikut susunan
+// stylesheet secara tak menentu, rosakkan flex sebelah jadi nampak terkecut).
+const kelasInputAsas = 'rounded-card border border-border px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-brand-red/30'
+const kelasInput = `w-full ${kelasInputAsas}`
 
 // mampatkan=false WAJIB utk gambar yg mesti kekal latar TELUS (lencana/logo
 // PNG) - mampatan tukar ke JPEG (tiada sokongan alpha), latar telus jadi
@@ -78,7 +85,7 @@ function SenaraiTeks({ label, senarai, onTukar }) {
         {senarai.map((butir, i) => (
           <div key={i} className="flex gap-2">
             <input
-              className={kelasInput}
+              className={`${kelasInputAsas} flex-1 min-w-0`}
               value={butir}
               onChange={(e) => onTukar(senarai.map((b, j) => (j === i ? e.target.value : b)))}
             />
@@ -159,8 +166,8 @@ function Isi({ user }) {
         <div className="space-y-2">
           {draf.peneranganLencana.map((baris, i) => (
             <div key={i} className="flex gap-2">
-              <input className={`${kelasInput} w-28 shrink-0`} placeholder="Simbol/Warna" value={baris.label} onChange={(e) => set('peneranganLencana', draf.peneranganLencana.map((b, j) => (j === i ? { ...b, label: e.target.value } : b)))} />
-              <input className={kelasInput} placeholder="Maksud" value={baris.keterangan} onChange={(e) => set('peneranganLencana', draf.peneranganLencana.map((b, j) => (j === i ? { ...b, keterangan: e.target.value } : b)))} />
+              <input className={`${kelasInputAsas} w-28 shrink-0`} placeholder="Simbol/Warna" value={baris.label} onChange={(e) => set('peneranganLencana', draf.peneranganLencana.map((b, j) => (j === i ? { ...b, label: e.target.value } : b)))} />
+              <input className={`${kelasInputAsas} flex-1 min-w-0`} placeholder="Maksud" value={baris.keterangan} onChange={(e) => set('peneranganLencana', draf.peneranganLencana.map((b, j) => (j === i ? { ...b, keterangan: e.target.value } : b)))} />
               <button type="button" onClick={() => set('peneranganLencana', draf.peneranganLencana.filter((_, j) => j !== i))} className="shrink-0 h-9 w-9 rounded-card border border-border text-inkmuted hover:bg-base flex items-center justify-center">
                 <Trash2 size={14} />
               </button>
