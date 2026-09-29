@@ -7,7 +7,6 @@
 // asal) sengaja BELUM ditambah - kandungan belum dibina lagi, elak pautan
 // mati.
 export const NAV_ITEMS_AWAM = [
-  { label: 'Utama', to: '/' },
   { label: 'Maklumat Sekolah', to: '/maklumat-sekolah' },
   { label: 'Galeri', to: '/galeri' },
   { label: 'Hubungi', to: '/hubungi' },
@@ -16,7 +15,9 @@ export const NAV_ITEMS_AWAM = [
 // Struktur nav dikongsi antara Navbar (desktop, guna terus 'to' - abaikan children)
 // dan SideDrawer (mobile, expand/collapse 'children' sebagai accordion).
 export const NAV_ITEMS = [
-  { label: 'Utama', to: '/' },
+  // Page "Utama" (Home.jsx) dibuang - "/" kini papar Profil Sekolah terus
+  // (lihat App.jsx), jadi menu "Maklumat Sekolah" di bawah dah cukup jadi
+  // pautan balik ke laman utama (logo pun sentiasa link ke "/").
   // Maklumat Sekolah/Galeri/Hubungi ni laman AWAM (boleh diakses tanpa log
   // masuk - lihat LALUAN_AWAM di App.jsx & NAV_ITEMS_AWAM di atas), tapi
   // staff yg DAH log masuk pun perlu boleh sampai ke laman ni terus dari

@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import ButangTerapung from './components/ButangTerapung.jsx'
-import Home from './pages/Home.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { useAksesStatus } from './hooks/useAksesStatus.js'
 
@@ -178,7 +177,12 @@ export default function App() {
         <PenggeraAksesTerhad>
         <Suspense fallback={<MemuatkanPage />}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Page "Utama" (Home.jsx) dibuang atas permintaan - selalu
+              bermasalah (seksyen Statistik/Galeri "hilang" secara tak
+              konsisten atas isu deploy/cache di luar kawalan kod). "/"
+              terus papar Profil Sekolah (sama content dgn /maklumat-sekolah)
+              - lebih ringkas & stabil drpd page pratonton berasingan. */}
+          <Route path="/" element={<ProfilSekolah />} />
 
           <Route path="/berita" element={<BeritaLayout />}>
             <Route index element={<BeritaList />} />
