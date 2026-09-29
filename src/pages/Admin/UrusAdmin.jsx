@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ShieldCheck, X, ChevronDown } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { ShieldCheck, X, ChevronDown, Search } from 'lucide-react'
 import { useAdminsList, tambahAdmin, kemaskiniPeranan, buangAdmin } from '../../hooks/useAdmins.js'
 import { SEKSYEN_ADMIN } from './seksyenAdmin.js'
 import { useDialog } from '../../context/DialogContext.jsx'
@@ -12,10 +12,22 @@ export default function UrusAdmin({ profiles, currentUser }) {
   const [ralat, setRalat] = useState(null)
   const [memproses, setMemproses] = useState(false)
   const [emelDibuka, setEmelDibuka] = useState(null) // emel yang tab "edit peranan" terbuka
+  const [carianStaf, setCarianStaf] = useState('') // tapis senarai staf ikut nama/emel bila lantik admin baru
 
   function namaUntukEmel(emel) {
     return profiles.find((p) => p.emel === emel)?.nama ?? null
   }
+
+  // Senarai staf ditapis ikut carian (nama ATAU emel, tak kira besar/kecil
+  // huruf) - senarai staf boleh panjang (semua staff sekolah), select biasa
+  // payah nak cari nama tertentu tanpa carian.
+  const profilDitapis = useMemo(() => {
+    const carian = carianStaf.trim().toLowerCase()
+    if (!carian) return profiles
+    return profiles.filter(
+      (p) => p.nama?.toLowerCase().includes(carian) || p.emel?.toLowerCase().includes(carian)
+    )
+  }, [profiles, carianStaf])
 
   function togglSeksyenBaru(kunci) {
     setPeranBaru((s) => (s.includes(kunci) ? s.filter((k) => k !== kunci) : [...s, kunci]))
@@ -90,13 +102,28 @@ export default function UrusAdmin({ profiles, currentUser }) {
       </p>
 
       <form onSubmit={tambah} className="mb-4 p-3 rounded-card border border-border bg-base">
+        <div className="relative mb-2">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-inkmuted" />
+          <input
+            type="text"
+            value={carianStaf}
+            onChange={(e) => setCarianStaf(e.target.value)}
+            placeholder="Cari nama atau emel staf…"
+            className="w-full h-10 pl-9 pr-3 rounded-card border border-border bg-surface text-sm"
+          />
+        </div>
         <select
           value={emelDipilih}
-          onChange={(e) => setEmelDipilih(e.target.value)}
+          onChange={(e) => {
+            setEmelDipilih(e.target.value)
+            if (e.target.value) setCarianStaf('') // reset carian lepas pilih - senang nak cari lagi utk lantikan seterusnya
+          }}
           className="w-full h-11 px-3 rounded-card border border-border bg-surface text-sm mb-3"
         >
-          <option value="">-- Pilih staff untuk jadi admin --</option>
-          {profiles.map((p) => (
+          <option value="">
+            {profilDitapis.length > 0 ? '-- Pilih staff untuk jadi admin --' : '-- Tiada staf sepadan --'}
+          </option>
+          {profilDitapis.map((p) => (
             <option key={p.id} value={p.emel}>{p.nama} ({p.emel})</option>
           ))}
         </select>

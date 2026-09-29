@@ -8,21 +8,21 @@ import { useGaleriKategori, tambahKategoriGaleri, padamKategoriGaleri } from '..
 import { pastikanAlbumUmum } from '../../lib/migrasiGaleriAlbum.js'
 import { muatNaikKeDrive } from '../../lib/driveUpload.js'
 import { useDialog } from '../../context/DialogContext.jsx'
+import AdminSeksyenGate from './AdminSeksyenGate.jsx'
 
+// NOTA: Galeri Sekolah dibuka kepada Admin Seksyen "galeri" (bukan Admin
+// Penuh sahaja macam Profil Sekolah) - lihat seksyenAdmin.js + firestore.rules
+// (isAdminSeksyen('galeri')). Profil Sekolah kekal Admin Penuh sahaja atas
+// permintaan - kandungan tu lebih sensitif/rasmi drpd gambar galeri.
 export default function TetapanGaleriPage() {
   const { user } = useOutletContext()
-  const { isSuperAdmin } = useIsAdmin(user)
+  const { adaSeksyen } = useIsAdmin(user)
 
-  if (!isSuperAdmin) {
-    return (
-      <div className="bg-surface border border-border rounded-card p-8 text-center">
-        <p className="text-sm font-medium text-ink mb-1">Akses Terhad</p>
-        <p className="text-xs text-inkmuted">Bahagian ini khas untuk Admin Penuh.</p>
-      </div>
-    )
-  }
-
-  return <Isi user={user} />
+  return (
+    <AdminSeksyenGate adaSeksyen={adaSeksyen} seksyen="galeri" namaSeksyen="Galeri Sekolah (Awam)">
+      <Isi user={user} />
+    </AdminSeksyenGate>
+  )
 }
 
 // Kad ringkas (dipakai utk Kategori & Album) - gambar kulit/ikon + tajuk +

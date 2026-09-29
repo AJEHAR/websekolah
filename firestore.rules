@@ -151,23 +151,24 @@ service cloud.firestore {
     }
 
     // Galeri Sekolah (gambar aktiviti/kemudahan) untuk halaman AWAM (Utama
-    // + /galeri) - sama corak dgn tetapanAwam di atas: baca sesiapa
-    // sahaja, tulis superadmin sahaja.
+    // + /galeri) - baca sesiapa sahaja; tulis dibuka kepada Admin Penuh
+    // ATAU Admin Seksyen 'galeri' (lihat seksyenAdmin.js - beza drpd
+    // Profil Sekolah/tetapanAwam yg kekal Admin Penuh sahaja).
     match /galeriSekolah/{docId} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow write: if isAdminSeksyen('galeri');
     }
 
     // Kategori & Album Galeri (struktur "album" - lihat useGaleriKategori.js
     // & useGaleriAlbum.js) - sama corak: baca sesiapa sahaja, tulis
-    // superadmin sahaja.
+    // Admin Penuh atau Admin Seksyen 'galeri'.
     match /galeriKategori/{docId} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow write: if isAdminSeksyen('galeri');
     }
     match /galeriAlbum/{docId} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      allow write: if isAdminSeksyen('galeri');
     }
 
     match /profiles/{docId} {

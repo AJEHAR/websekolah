@@ -5,4 +5,5 @@ export const SEKSYEN_ADMIN = [
   { kunci: 'ubks', label: 'KOKU - UBKS (Unit UBKS)' },
   { kunci: 'kurikulum', label: 'KURI (Kategori/Panitia)' },
   { kunci: 'kkgs', label: 'KKGS (Senarai Ahli, Yuran, Kewangan, Claim)' },
+  { kunci: 'galeri', label: 'Galeri Sekolah (Awam)' },
 ]

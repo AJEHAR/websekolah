@@ -1,7 +1,10 @@
-import { BookOpen, MapPin, Map, Award, Music, Target, Compass, CheckSquare } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { BookOpen, MapPin, Map, Award, Music, Target, Compass, CheckSquare, Settings } from 'lucide-react'
 import { useProfilSekolahAwam } from '../../hooks/useProfilSekolahAwam.js'
 import { useInView } from '../../hooks/useInView.js'
 import { warnaCeria } from '../MaklumatMurid/paletCeria.js'
+import { useAuth } from '../../context/AuthContext.jsx'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 
 // Tukar pautan YouTube biasa (watch?v=, youtu.be/, shorts/) kepada URL embed
 // - iframe embed WAJIB guna format /embed/{id}, bukan pautan "watch" biasa.
@@ -57,6 +60,8 @@ const SUB_NAV = [
 
 export default function ProfilSekolah() {
   const { data, loading } = useProfilSekolahAwam()
+  const { user } = useAuth()
+  const { isSuperAdmin } = useIsAdmin(user)
 
   if (loading) {
     return (
@@ -111,7 +116,17 @@ export default function ProfilSekolah() {
       )}
 
       <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-8 lg:py-16 space-y-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-ink text-center">Profil Sekolah</h1>
+        <div className="text-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-ink">Profil Sekolah</h1>
+          {isSuperAdmin && (
+            <Link
+              to="/admin/profil-sekolah"
+              className="inline-flex items-center gap-1.5 mt-4 h-9 px-4 rounded-card border border-border text-xs font-semibold text-ink hover:bg-base"
+            >
+              <Settings size={14} /> Tetapan Profil Sekolah
+            </Link>
+          )}
+        </div>
 
         {semuaKosong && (
           <div className="bg-surface border border-border rounded-card shadow-soft p-8 sm:p-12 text-center">

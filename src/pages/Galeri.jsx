@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { X, ChevronLeft, ChevronRight, Image as IkonImej } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { X, ChevronLeft, ChevronRight, Image as IkonImej, Settings } from 'lucide-react'
 import { useGaleriKategori } from '../hooks/useGaleriKategori.js'
 import { useGaleriAlbum } from '../hooks/useGaleriAlbum.js'
 import { useGaleriSekolah, gambarIkutAlbum } from '../hooks/useGaleriSekolah.js'
 import GambarKarusel from '../components/GambarKarusel.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
+import { useIsAdmin } from '../hooks/useIsAdmin.js'
 
 // Sehingga berapa gambar dari satu album dicampur dlm kad "bergerak" - had
 // kecil (bukan seluruh album) drpd terlalu banyak gambar dimuatkan skaligus
@@ -142,6 +144,12 @@ export default function Galeri() {
   const { senarai: gambarSenarai, loading: loadingGambar } = useGaleriSekolah()
   const [searchParams] = useSearchParams()
   const [albumTerbuka, setAlbumTerbuka] = useState(null)
+  const { user } = useAuth()
+  // Galeri dibuka kepada Admin Seksyen 'galeri' juga (bukan Admin Penuh
+  // sahaja) - beza drpd Profil Sekolah yg kekal Admin Penuh sahaja atas
+  // permintaan (kandungan tu lebih rasmi/sensitif drpd gambar galeri).
+  const { adaSeksyen } = useIsAdmin(user)
+  const bolehUrusGaleri = adaSeksyen('galeri')
 
   const loading = loadingKategori || loadingAlbum || loadingGambar
 
@@ -166,7 +174,17 @@ export default function Galeri() {
 
   return (
     <main className="px-4 sm:px-6 lg:px-10 xl:px-16 py-8 lg:py-16">
-      <h1 className="text-xl sm:text-2xl font-bold text-ink text-center mb-6">Galeri Sekolah</h1>
+      <div className="text-center mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-ink">Galeri Sekolah</h1>
+        {bolehUrusGaleri && (
+          <Link
+            to="/admin/galeri-sekolah"
+            className="inline-flex items-center gap-1.5 mt-4 h-9 px-4 rounded-card border border-border text-xs font-semibold text-ink hover:bg-base"
+          >
+            <Settings size={14} /> Tetapan Galeri Sekolah
+          </Link>
+        )}
+      </div>
 
       {loading ? (
         <SkeletonGaleri />
