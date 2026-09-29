@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { Users, ArrowRight } from 'lucide-react'
+import { Users, ArrowRight, Image as IkonImej } from 'lucide-react'
 import { useStatistikMuridAwam } from '../hooks/useStatistikMuridAwam.js'
-import { useGaleriSekolah } from '../hooks/useGaleriSekolah.js'
+import { useGaleriAlbum } from '../hooks/useGaleriAlbum.js'
+import { useGaleriSekolah, gambarIkutAlbum } from '../hooks/useGaleriSekolah.js'
 import { useInView } from '../hooks/useInView.js'
 import { useCountUp } from '../hooks/useCountUp.js'
 import { WARNA_LELAKI, WARNA_PEREMPUAN } from '../lib/warnaJantina.js'
@@ -123,25 +124,29 @@ function SeksyenStatistikMurid() {
   )
 }
 
+// Pratonton Galeri pada Utama kini papar KAD ALBUM terkini (bukan gambar
+// rata) - selaras dgn struktur album baharu (Kategori > Album > Gambar).
+// Klik kad terus buka slideshow album tu di /galeri (pautan ?album=id).
 function SeksyenGaleri() {
-  const { senarai, loading } = useGaleriSekolah()
+  const { senarai: albumSenarai, loading: loadingAlbum } = useGaleriAlbum()
+  const { senarai: gambarSenarai, loading: loadingGambar } = useGaleriSekolah()
   const [ref, kelihatan] = useInView()
+  const loading = loadingAlbum || loadingGambar
 
   if (loading) {
     return (
       <div className="bg-surface border border-border rounded-card shadow-soft p-5 sm:p-8 animate-pulse">
         <div className="h-5 w-32 bg-base rounded mb-4" />
-        <div className="columns-2 sm:columns-3 gap-3 [&>*]:mb-3">
-          <div className="h-40 bg-base rounded-card" />
-          <div className="h-24 bg-base rounded-card" />
-          <div className="h-32 bg-base rounded-card" />
-          <div className="h-28 bg-base rounded-card" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="aspect-video bg-base rounded-card" />
+          <div className="aspect-video bg-base rounded-card" />
+          <div className="aspect-video bg-base rounded-card" />
         </div>
       </div>
     )
   }
-  if (senarai.length === 0) return null
-  const pratonton = senarai.slice(0, 6)
+  if (albumSenarai.length === 0) return null
+  const pratonton = albumSenarai.slice(0, 6)
 
   return (
     <section
@@ -154,23 +159,24 @@ function SeksyenGaleri() {
           Lihat Semua <ArrowRight size={15} />
         </Link>
       </div>
-      {/* Masonry ringan guna CSS columns (bukan grid petak sama saiz) -
-          gambar kekal nisbah asal, tinggi tak seragam, rasa lebih hidup. */}
-      <div className="columns-2 sm:columns-3 gap-3">
-        {pratonton.map((g) => (
-          <div key={g.id} className="group relative rounded-card overflow-hidden bg-base border border-border mb-3 break-inside-avoid">
-            <img
-              src={g.imageUrl}
-              alt={g.tajuk || 'Galeri Sekolah'}
-              className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
-              loading="lazy"
-            />
-            {g.tajuk && (
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pt-4 pb-2">
-                <p className="text-[11px] font-medium text-white truncate">{g.tajuk}</p>
-              </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {pratonton.map((a) => (
+          <Link key={a.id} to={`/galeri?album=${a.id}`} className="group relative rounded-card overflow-hidden bg-base border border-border aspect-video">
+            {a.gambarKulitUrl ? (
+              <img
+                src={a.gambarKulitUrl}
+                alt={a.tajuk}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center"><IkonImej size={24} className="text-inkmuted" /></div>
             )}
-          </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pt-6 pb-2">
+              <p className="text-[11px] font-medium text-white truncate">{a.tajuk}</p>
+              <p className="text-[10px] text-white/70">{gambarIkutAlbum(gambarSenarai, a.id).length} gambar</p>
+            </div>
+          </Link>
         ))}
       </div>
     </section>

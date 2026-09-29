@@ -158,6 +158,18 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
+    // Kategori & Album Galeri (struktur "album" - lihat useGaleriKategori.js
+    // & useGaleriAlbum.js) - sama corak: baca sesiapa sahaja, tulis
+    // superadmin sahaja.
+    match /galeriKategori/{docId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+    match /galeriAlbum/{docId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
     match /profiles/{docId} {
       // Staff diluluskan/admin boleh baca semua profile (termasuk No. IC).
       // Staff SENDIRI (walaupun masih 'menunggu', atau malah SEBELUM

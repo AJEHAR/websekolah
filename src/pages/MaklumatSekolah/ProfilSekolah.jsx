@@ -78,9 +78,10 @@ export default function ProfilSekolah() {
   // (dulu: papar kotak "Maklumat akan dikemaskini" bertimpa-timpa bila
   // admin belum isi apa-apa - kesan pertama laman rasmi jadi nampak
   // "rosak"/separuh siap). Sub-nav pun ikut sorok pautan yg tiada seksyen.
+  const adaLokasi = Boolean(data.lokasiMapEmbedUrl || data.alamatBertulis)
   const navAktif = SUB_NAV.filter((n) => ({
     sejarah: Boolean(data.sejarahPenubuhan),
-    lokasi: Boolean(data.lokasiMapEmbedUrl),
+    lokasi: adaLokasi,
     pelan: adaPelan,
     lencana: adaLencana,
     lagu: adaLagu,
@@ -125,18 +126,23 @@ export default function ProfilSekolah() {
           </Seksyen>
         )}
 
-        {data.lokasiMapEmbedUrl && (
+        {adaLokasi && (
           <Seksyen id="lokasi" warna={warnaCeria(3)}>
             <Tajuk Ikon={MapPin} warna={warnaCeria(3)}>Lokasi Sekolah</Tajuk>
-            <div className="rounded-card overflow-hidden border border-border">
-              <iframe
-                src={data.lokasiMapEmbedUrl}
-                title="Lokasi Sekolah"
-                className="w-full h-64 sm:h-80"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
+            {data.alamatBertulis && (
+              <p className="text-sm text-ink whitespace-pre-line leading-relaxed mb-4">{data.alamatBertulis}</p>
+            )}
+            {data.lokasiMapEmbedUrl && (
+              <div className="rounded-card overflow-hidden border border-border">
+                <iframe
+                  src={data.lokasiMapEmbedUrl}
+                  title="Lokasi Sekolah"
+                  className="w-full h-64 sm:h-80"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            )}
           </Seksyen>
         )}
 
@@ -165,7 +171,12 @@ export default function ProfilSekolah() {
             <Tajuk Ikon={Award} warna={warnaCeria(4)}>Lencana Sekolah</Tajuk>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {data.lencanaUrl && (
-                <div className="text-center">
+                // items-center+justify-center (bukan cuma text-center) - lencana ni
+                // SAIZ TETAP (h-40), TAK membesar walau jadual sebelah jadi tinggi
+                // bila baris Penerangan Lencana bertambah banyak. Tanpa ni, lencana
+                // "tersadai" di atas dgn ruang kosong besar di bawah bila jadual
+                // panjang; dgn ni ia kekal ditengah menegak dlm ruang selnya.
+                <div className="text-center flex flex-col items-center justify-center h-full">
                   <img src={data.lencanaUrl} alt="Lencana Sekolah" className="h-40 mx-auto object-contain mb-3" />
                   {data.penciptaLencana && (
                     <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full" style={{ backgroundColor: warnaCeria(4).bg, color: warnaCeria(4).fg }}>

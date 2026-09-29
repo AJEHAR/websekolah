@@ -151,6 +151,9 @@ function Isi({ user }) {
       <Medan label="Sejarah Penubuhan">
         <textarea rows={6} className={kelasInput} value={draf.sejarahPenubuhan} onChange={(e) => set('sejarahPenubuhan', e.target.value)} />
       </Medan>
+      <Medan label="Alamat Bertulis Sekolah">
+        <textarea rows={3} className={kelasInput} value={draf.alamatBertulis} onChange={(e) => set('alamatBertulis', e.target.value)} placeholder="Contoh: Lorong Indera Mahkota 2, Bandar Indera Mahkota, 25200 Kuantan, Pahang" />
+      </Medan>
       <Medan label="URL Embed Google Maps (Google Maps → Kongsi → Benamkan peta → salin src iframe)">
         <input className={kelasInput} value={draf.lokasiMapEmbedUrl} onChange={(e) => set('lokasiMapEmbedUrl', e.target.value)} placeholder="https://www.google.com/maps/embed?..." />
       </Medan>

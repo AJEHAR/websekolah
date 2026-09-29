@@ -11,6 +11,7 @@ const REF_DOC = ['tetapanAwam', 'profilSekolah']
 
 const KOSONG = {
   sejarahPenubuhan: '',
+  alamatBertulis: '',
   lokasiMapEmbedUrl: '',
   pelanKawasanUrl: '',
   pelanKecemasanUrl: '',
