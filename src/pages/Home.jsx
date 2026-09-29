@@ -3,6 +3,13 @@ import { Users, ArrowRight, Image as IkonImej } from 'lucide-react'
 import { useStatistikMuridAwam } from '../hooks/useStatistikMuridAwam.js'
 import { useGaleriAlbum } from '../hooks/useGaleriAlbum.js'
 import { useGaleriSekolah, gambarIkutAlbum } from '../hooks/useGaleriSekolah.js'
+import GambarKarusel from '../components/GambarKarusel.jsx'
+
+const MAKS_GAMBAR_KARUSEL = 5
+function gambarUntukKarusel(album, gambar) {
+  if (gambar.length > 0) return gambar.slice(0, MAKS_GAMBAR_KARUSEL).map((g) => g.imageUrl)
+  return album.gambarKulitUrl ? [album.gambarKulitUrl] : []
+}
 import { useInView } from '../hooks/useInView.js'
 import { useCountUp } from '../hooks/useCountUp.js'
 import { WARNA_LELAKI, WARNA_PEREMPUAN } from '../lib/warnaJantina.js'
@@ -160,24 +167,22 @@ function SeksyenGaleri() {
         </Link>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {pratonton.map((a) => (
+        {pratonton.map((a) => {
+          const gambarAlbumIni = gambarIkutAlbum(gambarSenarai, a.id)
+          return (
           <Link key={a.id} to={`/galeri?album=${a.id}`} className="group relative rounded-card overflow-hidden bg-base border border-border aspect-video">
-            {a.gambarKulitUrl ? (
-              <img
-                src={a.gambarKulitUrl}
-                alt={a.tajuk}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-              />
+            {gambarAlbumIni.length > 0 || a.gambarKulitUrl ? (
+              <GambarKarusel senarai={gambarUntukKarusel(a, gambarAlbumIni)} alt={a.tajuk} className="transition-transform duration-300 group-hover:scale-105" />
             ) : (
               <div className="w-full h-full flex items-center justify-center"><IkonImej size={24} className="text-inkmuted" /></div>
             )}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pt-6 pb-2">
               <p className="text-[11px] font-medium text-white truncate">{a.tajuk}</p>
-              <p className="text-[10px] text-white/70">{gambarIkutAlbum(gambarSenarai, a.id).length} gambar</p>
+              <p className="text-[10px] text-white/70">{gambarAlbumIni.length} gambar</p>
             </div>
           </Link>
-        ))}
+          )
+        })}
       </div>
     </section>
   )

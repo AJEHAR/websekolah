@@ -4,6 +4,17 @@ import { X, ChevronLeft, ChevronRight, Image as IkonImej } from 'lucide-react'
 import { useGaleriKategori } from '../hooks/useGaleriKategori.js'
 import { useGaleriAlbum } from '../hooks/useGaleriAlbum.js'
 import { useGaleriSekolah, gambarIkutAlbum } from '../hooks/useGaleriSekolah.js'
+import GambarKarusel from '../components/GambarKarusel.jsx'
+
+// Sehingga berapa gambar dari satu album dicampur dlm kad "bergerak" - had
+// kecil (bukan seluruh album) drpd terlalu banyak gambar dimuatkan skaligus
+// utk SATU kad pratonton.
+const MAKS_GAMBAR_KARUSEL = 5
+
+function gambarUntukKarusel(album, gambar) {
+  if (gambar.length > 0) return gambar.slice(0, MAKS_GAMBAR_KARUSEL).map((g) => g.imageUrl)
+  return album.gambarKulitUrl ? [album.gambarKulitUrl] : []
+}
 
 // Tera air (watermark) nama sekolah lut sinar atas SETIAP gambar dlm
 // slideshow - bukan sekatan screenshot (mustahil disekat sepenuhnya di web,
@@ -100,9 +111,9 @@ function KadAlbum({ album, gambarSenarai, onKlik }) {
       onClick={onKlik}
       className="text-left rounded-card border border-border bg-surface overflow-hidden hover:shadow-soft transition-shadow"
     >
-      <div className="aspect-video bg-base flex items-center justify-center overflow-hidden">
-        {album.gambarKulitUrl ? (
-          <img src={album.gambarKulitUrl} alt={album.tajuk} className="w-full h-full object-cover" />
+      <div className="relative aspect-video bg-base flex items-center justify-center overflow-hidden">
+        {gambar.length > 0 || album.gambarKulitUrl ? (
+          <GambarKarusel senarai={gambarUntukKarusel(album, gambar)} alt={album.tajuk} />
         ) : (
           <IkonImej size={28} className="text-inkmuted" />
         )}
