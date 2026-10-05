@@ -117,11 +117,15 @@ export async function muatNaikKeDrive(failAsal, subfolder, { mampatkan = true } 
   return hasil
 }
 
-// Jana Kekuatan/Kelemahan/Penambahbaikan (OPR) guna AI - panggil Apps
-// Script (bukan terus ke Groq dari browser) supaya API key Groq kekal
+// Jana Laporan Ringkas + Penutup (OPR format baharu) guna AI - panggil
+// Apps Script (bukan terus ke Groq dari browser) supaya API key Groq kekal
 // RAHSIA di server, staff tak perlu key sendiri. Sahkan identiti sama
-// corak dengan muatNaikKeDrive (Firebase ID Token).
-export async function janaAiOpr(dataProgram) {
+// corak dengan muatNaikKeDrive (Firebase ID Token). Pulangkan
+// { laporanRingkas, penutup }.
+// NOTA: action 'generateOprRingkas' BERASINGAN daripada 'generateAI'
+// (format lama Kekuatan/Kelemahan/Penambahbaikan) - Code.gs kekalkan
+// kedua-dua, jadi tab pelayar lama yang belum muat semula tak rosak.
+export async function janaAiOprRingkas(dataProgram) {
   if (!isDriveUploadConfigured) {
     throw new Error('Ciri AI belum disetup (isi VITE_APPS_SCRIPT_URL dalam .env)')
   }
@@ -139,7 +143,7 @@ export async function janaAiOpr(dataProgram) {
     res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ idToken, action: 'generateAI', payload: dataProgram }),
+      body: JSON.stringify({ idToken, action: 'generateOprRingkas', payload: dataProgram }),
       signal: controller.signal,
     })
   } catch (err) {

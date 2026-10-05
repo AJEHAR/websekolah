@@ -130,6 +130,11 @@ function doPost(e) {
       return kendalikanJanaAI(data)
     }
 
+    // OPR format baharu - Laporan Ringkas + Penutup.
+    if (data.action === 'generateOprRingkas') {
+      return kendalikanJanaAIOprRingkas(data)
+    }
+
     if (data.action === 'generateLaporanUBKS') {
       return kendalikanJanaAILaporanUBKS(data)
     }
@@ -271,6 +276,93 @@ function kendalikanJanaAI(data) {
       kekuatan: hasil.kekuatan || '',
       kelemahan: hasil.kelemahan || '',
       penambahbaikan: hasil.penambahbaikan || '',
+    })
+  } catch (err) {
+    return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })
+  }
+}
+
+// OPR FORMAT BAHARU - jana Laporan Ringkas (2-3 ayat) + Penutup (1 ayat).
+// Formula ikut contoh OPR rujukan:
+//   "[Nama] telah berlangsung pada [Tarikh] di [Tempat]. Program ini
+//    menghimpunkan [Sasaran] bagi [Objektif]."
+// AI DILARANG reka fakta (bilangan peserta, nama penceramah, skop
+// "seluruh negara" dsb.) yang tiada dalam data. Handler lama
+// kendalikanJanaAI (Kekuatan/Kelemahan/Penambahbaikan) DIKEKALKAN untuk
+// keserasian tab pelayar lama.
+function kendalikanJanaAIOprRingkas(data) {
+  if (!GROQ_API_KEY) {
+    return jsonResponse({ error: 'AI belum disetup - GROQ_API_KEY tiada dalam Script Properties. Hubungi admin.' })
+  }
+
+  const d = data.payload || {}
+  if (!String(d.nama || '').trim() || !String(d.objektif || '').trim()) {
+    return jsonResponse({ error: 'Nama Program dan Objektif Program wajib diisi sebelum menjana AI.' })
+  }
+
+  const prompt =
+    'Anda menulis bahagian "Laporan Ringkas" dan "Penutup" untuk One Page Report (OPR) program sekolah dalam Bahasa Melayu formal.\n\n' +
+    'DATA PROGRAM (hanya ini fakta yang ada):\n' +
+    '- Unit/Kategori   : ' + (d.unit || '(tiada)') + '\n' +
+    '- Nama Program    : ' + d.nama + '\n' +
+    '- Hari            : ' + (d.hari || '(tiada)') + '\n' +
+    '- Tarikh          : ' + (d.tarikh || '(tiada)') + '\n' +
+    '- Masa            : ' + (d.masa || '(tiada)') + '\n' +
+    '- Tempat          : ' + (d.tempat || '(tiada)') + '\n' +
+    '- Kumpulan Sasaran: ' + (d.sasaran || '(tiada)') + '\n' +
+    '- Objektif Program: ' + d.objektif + '\n\n' +
+    'LAPORAN RINGKAS:\n' +
+    '- 2 hingga 3 ayat, 50-70 patah perkataan, SATU perenggan.\n' +
+    '- Ayat pertama ikut formula: "[Nama Program] telah berlangsung pada [Tarikh] di [Tempat]."\n' +
+    '- Ayat kedua ikut formula: "Program ini menghimpunkan [Kumpulan Sasaran] bagi [tujuan berdasarkan Objektif]."\n' +
+    '- Salin Nama Program, Tarikh dan Tempat TEPAT seperti data. Jika Tarikh atau Tempat "(tiada)", tinggalkan bahagian itu daripada ayat (jangan tulis "(tiada)").\n' +
+    '- Jika Kumpulan Sasaran "(tiada)", gunakan "peserta".\n\n' +
+    'PENUTUP:\n' +
+    '- 1 ayat sahaja, 20-35 patah perkataan.\n' +
+    '- Mula dengan "Secara keseluruhan," dan nyatakan impak program berdasarkan Objektif.\n\n' +
+    'LARANGAN:\n' +
+    '- JANGAN tambah fakta yang tiada dalam data (bilangan peserta, nama orang, penceramah, anjuran, "seluruh negara", hadiah, dsb.).\n' +
+    '- Jangan guna senarai bernombor, bullet atau markdown.\n\n' +
+    'OUTPUT - JSON SAHAJA:\n' +
+    '{"laporanRingkas":"...","penutup":"..."}'
+
+  try {
+    const res = UrlFetchApp.fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + GROQ_API_KEY },
+      payload: JSON.stringify({
+        model: 'openai/gpt-oss-120b',
+        messages: [
+          { role: 'system', content: 'Anda pembantu penulisan laporan sekolah. Balas HANYA JSON sah. Tiada markdown.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.5,
+        max_tokens: 900,
+        response_format: { type: 'json_object' },
+      }),
+      muteHttpExceptions: true,
+    })
+
+    const json = JSON.parse(res.getContentText())
+    if (res.getResponseCode() !== 200) {
+      const mesejRalat = (json && json.error && json.error.message) || ('HTTP ' + res.getResponseCode())
+      return jsonResponse({ error: 'Ralat Groq API: ' + mesejRalat })
+    }
+
+    let kandungan = json.choices[0].message.content.trim()
+    kandungan = kandungan.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim()
+
+    let hasil
+    try {
+      hasil = JSON.parse(kandungan)
+    } catch (pe) {
+      return jsonResponse({ error: 'Ralat format respons AI. Sila cuba lagi.' })
+    }
+
+    return jsonResponse({
+      laporanRingkas: String(hasil.laporanRingkas || '').trim(),
+      penutup: String(hasil.penutup || '').trim(),
     })
   } catch (err) {
     return jsonResponse({ error: 'Ralat sambungan ke Groq API: ' + err.message })

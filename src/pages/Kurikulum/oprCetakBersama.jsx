@@ -157,7 +157,10 @@ export function BarisChip({ rekod, opacity }) {
 
 // Blok Tandatangan - kotak BERASINGAN (bukan satu grid dibahagi), kalau
 // cuma 1 aktif jadi 40% lebar rapat kiri (bukan regang 100%).
+// tandatanganAktif === false (suis utama di borang) = sorok SELURUH blok.
+// Rekod lama tiada medan ni (undefined) = dianggap aktif seperti dulu.
 export function BlokTandatangan({ rekod, opacity }) {
+  if (rekod.tandatanganAktif === false) return null
   return (
     <div className="flex gap-4 shrink-0">
       <div className={`rounded-xl shadow-md p-3 text-center ${rekod.disahkanAktif ? 'flex-1' : ''}`} style={{ ...gayaKotak(opacity), ...(!rekod.disahkanAktif ? { width: '40%' } : {}) }}>
@@ -174,6 +177,107 @@ export function BlokTandatangan({ rekod, opacity }) {
           <p className="text-[10px] text-gray-600">{rekod.jawatanDisahkan}</p>
         </div>
       )}
+    </div>
+  )
+}
+
+// ============================================================
+// FORMAT OPR BAHARU (Laporan Ringkas + Penutup)
+// ============================================================
+
+function adaTeks(v) {
+  return typeof v === 'string' && v.trim() !== ''
+}
+
+// Rekod LAMA = Laporan Ringkas masih kosong TETAPI ada isi dalam mana-mana
+// medan format lama (Aktiviti/Kekuatan/Kelemahan/Penambahbaikan). Rekod ni
+// dicetak dengan templat lama (folder oprLama/). Objektif SENGAJA tidak
+// disemak - format baharu masih simpan Objektif (input AI), jadi ia bukan
+// penanda rekod lama. Sebaik sahaja staff isi Laporan Ringkas pada rekod
+// lama, rekod tu automatik bertukar ke templat baharu (data lama TIDAK
+// dipadam).
+export function adalahRekodOprLama(rekod) {
+  if (!rekod) return false
+  if (adaTeks(rekod.laporanRingkas)) return false
+  return ['aktiviti', 'kekuatan', 'kelemahan', 'penambahbaikan'].some((k) => adaTeks(rekod[k]))
+}
+
+// Tajuk bahagian berbentuk "pil" di tengah (gaya contoh OPR rujukan).
+export function TajukBahagian({ teks, opacity }) {
+  return (
+    <div className="flex justify-center -mb-2.5 relative z-10 shrink-0">
+      <span className="rounded-full shadow-md px-4 py-0.5 text-[11px] font-bold tracking-wide text-black uppercase border border-black/70" style={{ backgroundColor: `rgba(255,255,255,${Math.max((opacity ?? 70) / 100, 0.9)})` }}>
+        {teks}
+      </span>
+    </div>
+  )
+}
+
+// Kotak perenggan (Laporan Ringkas / Penutup) - teks rata kiri-kanan,
+// baris baharu dikekalkan (staff mungkin pecah perenggan sendiri).
+// tengahMenegak - untuk kotak yang diregang isi ruang (templat berlajur):
+// teks diletak di tengah kotak, bukan tersangkut di atas dengan ruang
+// kosong besar di bawah.
+export function KotakPerenggan({ label, teks, opacity, className = 'shrink-0', saizTeks = 'text-[11.5px] leading-relaxed', tengahMenegak = false }) {
+  return (
+    <div className={`flex flex-col ${className}`}>
+      <TajukBahagian teks={label} opacity={opacity} />
+      <div className={`rounded-xl shadow-md px-4 pt-4 pb-3 overflow-hidden flex-1 ${tengahMenegak ? 'flex flex-col justify-center' : ''}`} style={gayaKotak(opacity)}>
+        {adaTeks(teks) ? (
+          <p className={`${saizTeks} text-black text-justify whitespace-pre-line`}>{teks.trim()}</p>
+        ) : (
+          <p className="text-[11px] text-gray-400 text-center">-</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Baris maklumat program - Tempat & Kumpulan Sasaran (format baharu).
+export function BarisTempatSasaran({ rekod, opacity, labelSasaran = 'Kumpulan Sasaran', className = 'mb-2.5' }) {
+  return (
+    <div className={`flex gap-2 shrink-0 ${className}`}>
+      <div className="flex-1 rounded-xl shadow-md p-2.5 text-center overflow-hidden" style={gayaKotak(opacity)}><p className="text-xs font-bold text-black">Tempat : <span className="font-normal">{rekod.tempat || ''}</span></p></div>
+      <div className="flex-1 rounded-xl shadow-md p-2.5 text-center overflow-hidden" style={gayaKotak(opacity)}><p className="text-xs font-bold text-black">{labelSasaran}: <span className="font-normal">{rekod.sasaran || ''}</span></p></div>
+    </div>
+  )
+}
+
+// Kotak Nama Program (format baharu - tajuk lebih menonjol).
+export function KotakNamaProgram({ rekod, opacity, className = 'mb-2.5' }) {
+  return (
+    <div className={`rounded-xl shadow-md px-3 py-2.5 text-center shrink-0 overflow-hidden ${className}`} style={gayaKotak(opacity)}>
+      <p className="text-[10px] font-bold text-gray-700 uppercase tracking-wide">Nama Program</p>
+      <p className="text-sm font-bold text-black uppercase leading-snug mt-0.5">{rekod.nama}</p>
+    </div>
+  )
+}
+
+// Sentiasa 4 slot (kekal kedudukan asal - slot kosong dipapar sebagai
+// ruang biru lembut, sama seperti templat lama).
+export function slotGambar(rekod) {
+  const g = (rekod.gambar || []).slice(0, 4)
+  while (g.length < 4) g.push(null)
+  return g
+}
+
+export function teksSubTajuk(subHeader, rekod) {
+  const unit = rekod.unit || 'PROGRAM'
+  return subHeader ? subHeader.replace(/\{Unit\}/gi, unit) : ''
+}
+
+// Bekas halaman A4 (dikongsi semua templat baharu).
+export function HalamanA4({ rekod, className = 'p-8', children }) {
+  return (
+    <div
+      className={`text-black flex flex-col ${className}`}
+      style={{
+        width: '210mm', height: '297mm', overflow: 'hidden',
+        backgroundImage: rekod.latarBelakangUrl ? `url(${rekod.latarBelakangUrl})` : undefined,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+      }}
+    >
+      {children}
     </div>
   )
 }

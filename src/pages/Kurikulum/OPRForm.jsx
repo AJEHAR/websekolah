@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Sparkles, Upload, X, PenLine, Plus, Move, Printer, Eye } from 'lucide-react'
-import { muatNaikKeDrive, janaAiOpr } from '../../lib/driveUpload.js'
+import { muatNaikKeDrive, janaAiOprRingkas } from '../../lib/driveUpload.js'
+import { adalahRekodOprLama } from './oprCetakBersama.jsx'
 import { useDialog } from '../../context/DialogContext.jsx'
 import PemotongGambarModal from './PemotongGambarModal.jsx'
 // Import terus (bukan laluan rentetan ke public/) - Vite automatik
@@ -26,10 +27,16 @@ import TandatanganModal from './TandatanganModal.jsx'
 // (nisbah 1 asal), tapi bukan jaminan sempurna untuk kedua-dua Gaya.
 const NISBAH_GAMBAR_OPR = 1.4
 
+// FORMAT BAHARU: Objektif kekal sebagai INPUT SAHAJA (tidak dicetak -
+// bahan untuk AI), Laporan Ringkas + Penutup dicetak. Medan format lama
+// (aktiviti/kekuatan/kelemahan/penambahbaikan) SENGAJA tiada di sini -
+// rekod lama yang dibuka untuk edit masih bawa nilai tu melalui dataAwal
+// dan disimpan semula tanpa diusik (data lama TIDAK dipadam).
 const MEDAN_KOSONG = {
   unit: '', nama: '', hari: '', tarikh: '', masa: '', tempat: '', sasaran: '',
-  objektif: '', aktiviti: '', kekuatan: '', kelemahan: '', penambahbaikan: '',
+  objektif: '', laporanRingkas: '', penutup: '',
   gambar: [null, null, null, null],
+  tandatanganAktif: true,
   namaDisediakan: '', jawatanDisediakan: '', tandaTanganDisediakanUrl: '',
   namaDisahkan: '', jawatanDisahkan: '', tandaTanganDisahkanUrl: '',
   disahkanAktif: true,
@@ -39,19 +46,20 @@ const MEDAN_KOSONG = {
   kotakOpacity: 70,
 }
 
-function Medan({ label, value, onChange, textarea, placeholder }) {
+function Medan({ label, value, onChange, textarea, placeholder, rows = 3, nota }) {
   const Komponen = textarea ? 'textarea' : 'input'
   return (
     <div>
       <label className="block text-xs font-medium text-ink mb-1">{label}</label>
       <Komponen
         type={textarea ? undefined : 'text'}
-        rows={textarea ? 3 : undefined}
+        rows={textarea ? rows : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={`w-full px-3 rounded-card border border-border bg-surface text-sm ${textarea ? 'py-2 resize-y' : 'h-10'}`}
       />
+      {nota && <p className="text-[10px] text-inkmuted mt-1">{nota}</p>}
     </div>
   )
 }
@@ -94,16 +102,24 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
     onBatal()
   }
 
+  // Jana Laporan Ringkas + Penutup. Syarat: Nama Program & Objektif
+  // (AI dilarang reka fakta - tanpa Objektif ia terpaksa meneka tujuan).
   async function janaAI() {
-    if (!data.objektif.trim() && !data.aktiviti.trim()) {
-      setRalat('Sila isi sekurang-kurangnya Objektif Program atau Aktiviti sebelum menjana dengan AI.')
+    if (!data.nama.trim() || !(data.objektif ?? '').trim()) {
+      setRalat('Sila isi Nama Program dan Objektif Program sebelum menjana dengan AI.')
       return
     }
+    const adaTeksSedia = (data.laporanRingkas ?? '').trim() || (data.penutup ?? '').trim()
+    if (adaTeksSedia && !(await konfirm('Laporan Ringkas / Penutup sedia ada akan diganti dengan hasil AI. Teruskan?'))) return
     setRalat(null)
     setMenjanaAI(true)
     try {
-      const hasil = await janaAiOpr(data)
-      setData((d) => ({ ...d, kekuatan: hasil.kekuatan, kelemahan: hasil.kelemahan, penambahbaikan: hasil.penambahbaikan }))
+      const hasil = await janaAiOprRingkas({
+        unit: data.unit, nama: data.nama, hari: data.hari, tarikh: data.tarikh, masa: data.masa,
+        tempat: data.tempat, sasaran: data.sasaran, objektif: data.objektif,
+      })
+      setDirty(true)
+      setData((d) => ({ ...d, laporanRingkas: hasil.laporanRingkas, penutup: hasil.penutup }))
     } catch (err) {
       setRalat(err.message || 'Gagal jana AI. Sila cuba lagi.')
     } finally {
@@ -202,12 +218,12 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
   }
 
   const PILIHAN_GAYA = [
-    { id: 'gaya1', nama: 'Templat 1 - Kotak Ringkas', ket: 'Kotak bersempadan lembut, gambar 4 sebaris', contoh: contohTemplat1 },
-    { id: 'gaya2', nama: 'Templat 2 - Kepala Bersempadan', ket: 'Kandungan kiri, gambar lajur sempit kanan', contoh: contohTemplat2 },
-    { id: 'gaya4', nama: 'Templat 3 - Bingkai Bulat', ket: '4 gambar dalam bingkai bulat/oval', contoh: contohTemplat3 },
-    { id: 'gaya5', nama: 'Templat 4 - Filem Menegak', ket: '4 gambar tersusun menegak, lebih dominan', contoh: contohTemplat4 },
-    { id: 'gaya6', nama: 'Templat 5 - Bingkai Heksagon', ket: '4 gambar dalam bingkai heksagon', contoh: contohTemplat5 },
-    { id: 'gaya3', nama: 'Templat 6 - Bucu Senget', ket: '4 gambar bingkai parallelogram, kesan dinamik', contoh: contohTemplat6 },
+    { id: 'gaya1', nama: 'Templat 1 - Kotak Ringkas', ket: 'Susunan menegak, 4 gambar besar (2 x 2)', contoh: contohTemplat1 },
+    { id: 'gaya2', nama: 'Templat 2 - Kepala Bersempadan', ket: 'Laporan di kiri, gambar lajur kanan', contoh: contohTemplat2 },
+    { id: 'gaya4', nama: 'Templat 3 - Bingkai Bulat', ket: '4 gambar dalam bingkai bulat (2 x 2)', contoh: contohTemplat3 },
+    { id: 'gaya5', nama: 'Templat 4 - Filem Menegak', ket: '4 gambar tersusun menegak di kiri', contoh: contohTemplat4 },
+    { id: 'gaya6', nama: 'Templat 5 - Bingkai Heksagon', ket: '4 gambar heksagon gaya sarang lebah', contoh: contohTemplat5 },
+    { id: 'gaya3', nama: 'Templat 6 - Bucu Senget', ket: '4 gambar bingkai senget di kiri, kesan dinamik', contoh: contohTemplat6 },
   ]
 
   return (
@@ -310,26 +326,36 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
       </div>
 
       <div>
-        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">4. Laporan Pengurusan</p>
+        <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">4. Laporan</p>
+        {adalahRekodOprLama(data) && (
+          <div className="mb-3 p-3 rounded-card bg-[#FFFBEB] border border-[#FCD34D] text-[11px] text-[#92400E] leading-snug">
+            Ini laporan format <b>lama</b> (Aktiviti/Kekuatan/Kelemahan/Penambahbaikan) dan akan terus dicetak dalam templat lama.
+            Isi <b>Laporan Ringkas</b> di bawah untuk menukarnya ke format baharu. Data lama tidak dipadam.
+          </div>
+        )}
         <div className="space-y-3">
-          <Medan label="Objektif Program" value={data.objektif} onChange={(v) => u('objektif', v)} textarea />
-          <Medan label="Aktiviti" value={data.aktiviti} onChange={(v) => u('aktiviti', v)} textarea />
+          <Medan
+            label="Objektif Program"
+            value={data.objektif ?? ''}
+            onChange={(v) => u('objektif', v)}
+            textarea
+            nota="Tidak dicetak - digunakan oleh AI untuk menulis Laporan Ringkas & Penutup."
+          />
 
           <div className="p-3 rounded-card bg-[#F5F3FF] border border-[#C4B5FD]">
-            <p className="text-xs text-[#5B21B6] mb-2">✨ Isi <b>Objektif</b> & <b>Aktiviti</b> dahulu, kemudian jana dengan AI</p>
+            <p className="text-xs text-[#5B21B6] mb-2">✨ Isi <b>Nama Program</b> & <b>Objektif</b> dahulu (Tarikh, Tempat & Kumpulan Sasaran juga digunakan), kemudian jana dengan AI</p>
             <button
               type="button"
               onClick={janaAI}
               disabled={menjanaAI}
               className="w-full h-10 rounded-card bg-[#7C3AED] text-white text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-60"
             >
-              <Sparkles size={14} /> {menjanaAI ? 'AI sedang menjana…' : 'Jana AI — Kekuatan, Kelemahan & Penambahbaikan'}
+              <Sparkles size={14} /> {menjanaAI ? 'AI sedang menjana…' : 'Jana AI — Laporan Ringkas & Penutup'}
             </button>
           </div>
 
-          <Medan label="Kekuatan" value={data.kekuatan} onChange={(v) => u('kekuatan', v)} textarea />
-          <Medan label="Kelemahan" value={data.kelemahan} onChange={(v) => u('kelemahan', v)} textarea />
-          <Medan label="Penambahbaikan" value={data.penambahbaikan} onChange={(v) => u('penambahbaikan', v)} textarea />
+          <Medan label="Laporan Ringkas" value={data.laporanRingkas ?? ''} onChange={(v) => u('laporanRingkas', v)} textarea rows={5} nota="2-3 ayat. Boleh ditaip sendiri atau dijana AI, kemudian diedit." />
+          <Medan label="Penutup" value={data.penutup ?? ''} onChange={(v) => u('penutup', v)} textarea rows={2} nota="1 ayat." />
         </div>
       </div>
 
@@ -377,6 +403,19 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
 
       <div>
         <p className="text-xs font-bold text-inkmuted uppercase tracking-wide mb-2">6. Pengesahan Dokumen</p>
+        <div className="flex items-center justify-between p-3 rounded-card border border-border mb-4">
+          <span className="text-xs font-medium text-ink">Papar ruang tandatangan dalam cetakan</span>
+          <button
+            type="button"
+            onClick={() => u('tandatanganAktif', data.tandatanganAktif === false)}
+            role="switch"
+            aria-checked={data.tandatanganAktif !== false}
+            className={`relative h-6 w-11 rounded-full transition-colors shrink-0 ml-3 ${data.tandatanganAktif !== false ? 'bg-brand-red' : 'bg-border'}`}
+          >
+            <span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${data.tandatanganAktif !== false ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
+        </div>
+        {data.tandatanganAktif !== false && (
         <div className="space-y-4">
           <BlokTandatangan
             label="Disediakan Oleh"
@@ -416,6 +455,7 @@ export default function OPRForm({ dataAwal, senaraiUnit, senaraiLatarBelakang, o
             />
           )}
         </div>
+        )}
       </div>
 
       {ralat && <p className="text-sm text-brand-red">{ralat}</p>}
